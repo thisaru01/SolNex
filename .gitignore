@@ -1,0 +1,34 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio and VS Code
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Test results and coverage
+TestResults/
+*.trx
+coverage/
+
+# NuGet and publish output
+packages/
+publish/
+*.nupkg
+*.snupkg
+
+# Local environment and secrets
+.env
+.env.*
+!appsettings.json
+!appsettings.Development.json
+appsettings.Local.json
+secrets.json
+
+# OS files
+.DS_Store
+Thumbs.db
