@@ -1,10 +1,10 @@
 using MongoDB.Driver;
+using SolNex.Api.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-var mongoConnectionString = builder.Configuration.GetSection("DatabaseSettings:ConnectionString").Value;
-builder.Services.AddSingleton<IMongoClient>(new MongoClient(mongoConnectionString));
+// Register the MongoDbContext as a Singleton service
+builder.Services.AddSingleton<MongoDbContext>();
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -41,13 +41,13 @@ app.MapGet("/weatherforecast", () =>
 .WithName("GetWeatherForecast");
 
 // Endpoint to test MongoDB connectivity
-app.MapGet("/test-db", async (IMongoClient mongoClient) =>
+app.MapGet("/test-db", async (MongoDbContext dbContext) =>
 {
     try
     {
         // The ping command is a lightweight way to check the connection
-        var result = await mongoClient.GetDatabase("admin").RunCommandAsync<MongoDB.Bson.BsonDocument>(new MongoDB.Bson.BsonDocument("ping", 1));
-        return Results.Ok(new { status = "success", message = "Connected to MongoDB successfully!", details = result.ToString() });
+        var result = await dbContext.Database.RunCommandAsync<MongoDB.Bson.BsonDocument>(new MongoDB.Bson.BsonDocument("ping", 1));
+        return Results.Ok(new { status = "success", message = "Connected to MongoDB successfully via MongoDbContext!", details = result.ToString() });
     }
     catch (Exception ex)
     {
