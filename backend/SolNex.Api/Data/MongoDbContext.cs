@@ -1,5 +1,6 @@
 using MongoDB.Driver;
 using Microsoft.Extensions.Configuration;
+using SolNex.Api.Models;
 
 namespace SolNex.Api.Data;
 
@@ -16,8 +17,11 @@ public class MongoDbContext
         _database = client.GetDatabase(databaseName);
     }
 
-    // You will add your collections here later, for example:
-    // public IMongoCollection<User> Users => _database.GetCollection<User>("Users");
+    public IMongoCollection<User> Users => _database.GetCollection<User>("Users");
+    public IMongoCollection<SolarStationInfo> SolarStations => _database.GetCollection<SolarStationInfo>("SolarStationInfo");
+    public IMongoCollection<EnergyBookingSlot> EnergyBookingSlots => _database.GetCollection<EnergyBookingSlot>("EnergyBookingSlots");
+    public IMongoCollection<EnergyReservation> EnergyReservations => _database.GetCollection<EnergyReservation>("EnergyReservations");
+    public IMongoCollection<EnergyTransaction> EnergyTransactions => _database.GetCollection<EnergyTransaction>("EnergyTransactions");
     
     // We expose this for our /test-db endpoint
     public IMongoDatabase Database => _database;
