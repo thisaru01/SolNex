@@ -1,7 +1,8 @@
 # SolNex
 
 **Smart Solar Microgrid Trading System**
-*SE4040 — Enterprise Application Development*
+
+## 1. Project Information
 
 A client-server based Smart Solar Microgrid Trading System consisting of:
 
@@ -11,19 +12,6 @@ A client-server based Smart Solar Microgrid Trading System consisting of:
 - MongoDB NoSQL database
 
 The system allows back-office users, grid operators, and solar prosumers to manage solar microgrid stations, energy booking slots, reservations, and energy-transfer transactions.
-
-## 1. Project Information
-
-- **Module:** SE4040 — Enterprise Application Development
-- **Academic Year:** 2026 — Year 4 Semester 2
-- **Project Type:** Group Assignment
-- **Group Members:** 4
-
-### Submission
-
-- **Deadline:** 30 September 2026, 11:59 PM
-
-> The final submission must contain the complete project source code, report, required diagrams, screenshots, Git repository information, and a video demonstrating the application.
 
 ## 2. System Architecture
 
