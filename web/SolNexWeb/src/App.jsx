@@ -1,19 +1,26 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import AppLayout from "./components/layout/AppLayout"
 import Dashboard from "./pages/Dashboard"
-import Stations from "./pages/Stations"
-import CreateStation from "./pages/CreateStation"
-import StationDetails from "./pages/StationDetails"
-import EditStation from "./pages/EditStation"
-import StationSchedule from "./pages/StationSchedule"
-import StationAvailability from "./pages/StationAvailability"
-import StationMap from "./pages/StationMap"
+import Stations from "./pages/stations/Stations"
+import CreateStation from "./pages/stations/CreateStation"
+import StationDetails from "./pages/stations/StationDetails"
+import EditStation from "./pages/stations/EditStation"
+import StationSchedule from "./pages/stations/StationSchedule"
+import StationAvailability from "./pages/stations/StationAvailability"
+import StationMap from "./pages/stations/StationMap"
 import ProtectedRoute from "./components/layout/ProtectedRoute"
+import Login from "./pages/auth/Login"
+import Register from "./pages/auth/Register"
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public / Standalone Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        {/* Main Application Routes (with Sidebar Layout) */}
         <Route path="/" element={<AppLayout />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
