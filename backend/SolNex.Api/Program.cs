@@ -1,10 +1,16 @@
 using MongoDB.Driver;
 using SolNex.Api.Data;
+using SolNex.Api.Repositories;
+using SolNex.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Register the MongoDbContext as a Singleton service
 builder.Services.AddSingleton<MongoDbContext>();
+
+// Register Repositories and Services
+builder.Services.AddScoped<IStationRepository, StationRepository>();
+builder.Services.AddScoped<IStationService, StationService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
