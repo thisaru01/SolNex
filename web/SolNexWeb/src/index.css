@@ -1,1 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 @import "tailwindcss";
+
+:root {
+	color: #14271f;
+	background: #f2f6ef;
+	font-family: 'DM Sans', sans-serif;
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; }
+button, input { font: inherit; }
+
+.login-shell {
+	display: grid;
+	grid-template-columns: minmax(0, 1.08fr) minmax(420px, .92fr);
+	min-height: 100vh;
+	background: #f2f6ef;
+}
+
+.brand-panel {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	overflow: hidden;
+	padding: clamp(3rem, 9vw, 8rem);
+	color: #f5f8ed;
+	background: #173b2c;
+}
+
+.brand-panel::before, .brand-panel::after {
+	position: absolute;
+	content: '';
+	border: 1px solid rgba(209, 239, 164, .22);
+	border-radius: 50%;
+}
+.brand-panel::before { width: 35rem; height: 35rem; right: -13rem; top: -8rem; }
+.brand-panel::after { width: 22rem; height: 22rem; right: -4rem; top: 1rem; }
+
+.brand-mark {
+	display: grid;
+	place-items: center;
+	width: 3rem;
+	height: 3rem;
+	margin-bottom: 4rem;
+	color: #173b2c;
+	font: 700 1.6rem 'Space Grotesk', sans-serif;
+	background: #d1efa4;
+	border-radius: 50%;
+}
+.eyebrow { margin: 0 0 1.25rem; color: #86b590; font-size: .72rem; font-weight: 700; letter-spacing: .18em; }
+h1, h2 { margin: 0; font-family: 'Space Grotesk', sans-serif; letter-spacing: -.04em; }
+h1 { max-width: 650px; font-size: clamp(3rem, 5.3vw, 6rem); line-height: .98; }
+.brand-copy { max-width: 420px; margin: 2rem 0 0; color: #b6cfbd; font-size: 1.05rem; line-height: 1.7; }
+.network-line { display: flex; gap: .55rem; margin-top: 5rem; }
+.network-line span { width: 4.5rem; height: .3rem; background: #d1efa4; }
+.network-line span:nth-child(2) { width: 2rem; opacity: .55; }
+.network-line span:nth-child(3) { width: .7rem; opacity: .3; }
+
+.form-panel { display: flex; flex-direction: column; justify-content: center; padding: clamp(2rem, 7vw, 7rem); }
+.form-content { width: min(100%, 430px); margin: 0 auto; }
+.form-panel .eyebrow { color: #4a8763; }
+h2 { color: #173b2c; font-size: clamp(2rem, 3vw, 3rem); }
+.form-intro { margin: 1rem 0 2.5rem; color: #6b7e72; line-height: 1.6; }
+form { display: grid; gap: .7rem; }
+label { color: #274534; font-size: .84rem; font-weight: 700; }
+input { width: 100%; margin-bottom: 1rem; padding: 1rem 1.1rem; color: #173b2c; background: #fff; border: 1px solid #d8e2d5; border-radius: 4px; outline: none; transition: border-color .2s, box-shadow .2s; }
+input:focus { border-color: #4a8763; box-shadow: 0 0 0 3px rgba(74, 135, 99, .14); }
+input::placeholder { color: #a7b4aa; }
+.label-row { display: flex; justify-content: space-between; align-items: center; }
+.label-row span { color: #8a9a8d; font-size: .72rem; }
+button { display: flex; justify-content: space-between; align-items: center; margin-top: .5rem; padding: 1rem 1.15rem; color: #173b2c; font-weight: 700; background: #d1efa4; border: 0; border-radius: 4px; cursor: pointer; transition: background .2s, transform .2s; }
+button:hover:not(:disabled) { background: #bce487; transform: translateY(-1px); }
+button:disabled { cursor: wait; opacity: .65; }
+.status-message { margin: 1.25rem 0 0; padding: .8rem 1rem; border-radius: 4px; font-size: .88rem; }
+.status-message.success { color: #28613d; background: #e4f2db; }
+.status-message.error { color: #8c3b31; background: #fbe8e2; }
+.support-text { width: min(100%, 430px); margin: 4rem auto 0; color: #8a9a8d; font-size: .78rem; line-height: 1.5; }
+
+@media (max-width: 800px) {
+	.login-shell { grid-template-columns: 1fr; }
+	.brand-panel { min-height: 370px; padding: 2.5rem; }
+	.brand-mark { margin-bottom: 2.5rem; }
+	h1 { max-width: 520px; font-size: clamp(2.7rem, 11vw, 4rem); }
+	.brand-copy { margin-top: 1.25rem; }
+	.network-line { margin-top: 2.5rem; }
+	.form-panel { padding: 3.5rem 2.5rem; }
+	.support-text { margin-top: 3rem; }
+}
