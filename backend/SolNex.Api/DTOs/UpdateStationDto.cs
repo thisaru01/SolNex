@@ -4,6 +4,7 @@ namespace SolNex.Api.DTOs;
 
 public class UpdateStationDto
 {
+    [StringLength(100, MinimumLength = 3)]
     public string? StationName { get; set; }
     
     [Range(-90, 90)]
