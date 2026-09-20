@@ -61,7 +61,7 @@ export default function Dashboard() {
           <Button variant="outline" onClick={() => navigate("/stations")}>
             View All Stations
           </Button>
-          <Button disabled>
+          <Button onClick={() => navigate("/stations/create")}>
             Create Station
           </Button>
         </div>
@@ -168,7 +168,7 @@ export default function Dashboard() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" onClick={() => navigate("/stations")}>
+                        <Button variant="ghost" size="sm" onClick={() => navigate(`/stations/${station.id}`)}>
                           View
                         </Button>
                       </TableCell>

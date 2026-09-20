@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { stationApi } from "../services/stationApi"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -16,6 +17,7 @@ import {
 import { BatteryCharging, Search, RefreshCw, Power, PowerOff } from "lucide-react"
 
 export default function Stations() {
+  const navigate = useNavigate()
   const [stations, setStations] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -75,7 +77,7 @@ export default function Stations() {
           <h1 className="text-3xl font-bold tracking-tight">Stations Management</h1>
           <p className="text-muted-foreground mt-1">Manage and monitor all solar microgrid stations.</p>
         </div>
-        <Button disabled>
+        <Button onClick={() => navigate("/stations/create")}>
           Create Station
         </Button>
       </div>
@@ -166,7 +168,8 @@ export default function Stations() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="sm" disabled>Edit</Button>
+                          <Button variant="ghost" size="sm" onClick={() => navigate(`/stations/${station.id}`)}>View</Button>
+                          <Button variant="outline" size="sm" onClick={() => navigate(`/stations/${station.id}/edit`)}>Edit</Button>
                           {station.status === "Active" ? (
                             <Button variant="secondary" size="sm" onClick={() => handleDeactivate(station.id)} className="text-destructive hover:text-destructive">
                               <PowerOff className="h-3.5 w-3.5 mr-1" /> Deactivate
