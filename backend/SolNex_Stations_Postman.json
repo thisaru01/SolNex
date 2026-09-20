@@ -1,0 +1,247 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+		"name": "SolNex - Microgrid Management",
+		"description": "Postman collection for Microgrid Management APIs",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Create Station",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"stationId\": \"ST001\",\r\n  \"stationName\": \"Kurunegala Solar Hub\",\r\n  \"latitude\": 7.4863,\r\n  \"longitude\": 80.3623,\r\n  \"capacityKw\": 50.0,\r\n  \"totalBatterySlots\": 10,\r\n  \"schedule\": {\r\n    \"Monday\": \"08:00 - 18:00\",\r\n    \"Tuesday\": \"08:00 - 18:00\"\r\n  }\r\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/stations",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"stations"
+					]
+				}
+			}
+		},
+		{
+			"name": "2. Get All Stations",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/stations",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"stations"
+					]
+				}
+			}
+		},
+		{
+			"name": "3. Get Station By ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/stations/{{station_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"stations",
+						"{{station_id}}"
+					]
+				},
+				"description": "Replace {{station_id}} with the MongoDB ObjectId or the string stationId (e.g., ST001)."
+			}
+		},
+		{
+			"name": "4. Update Station",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"stationName\": \"Kurunegala Solar Hub - Updated\",\r\n  \"capacityKw\": 55.5\r\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/stations/{{station_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"stations",
+						"{{station_id}}"
+					]
+				}
+			}
+		},
+		{
+			"name": "5. Deactivate Station",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/stations/{{station_id}}/deactivate",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"stations",
+						"{{station_id}}",
+						"deactivate"
+					]
+				}
+			}
+		},
+		{
+			"name": "6. Get Nearby Stations",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/stations/nearby?lat=7.4863&lon=80.3623&radius=15.0",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"stations",
+						"nearby"
+					],
+					"query": [
+						{
+							"key": "lat",
+							"value": "7.4863"
+						},
+						{
+							"key": "lon",
+							"value": "80.3623"
+						},
+						{
+							"key": "radius",
+							"value": "15.0"
+						}
+					]
+				}
+			}
+		},
+		{
+			"name": "7. Get Station Availability",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/stations/{{station_id}}/availability",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"stations",
+						"{{station_id}}",
+						"availability"
+					]
+				}
+			}
+		},
+		{
+			"name": "8. Get Station Schedule",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/stations/{{station_id}}/schedule",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"stations",
+						"{{station_id}}",
+						"schedule"
+					]
+				}
+			}
+		},
+		{
+			"name": "9. Update Station Schedule",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"schedule\": {\r\n    \"Monday\": \"07:00 - 19:00\",\r\n    \"Tuesday\": \"07:00 - 19:00\",\r\n    \"Wednesday\": \"07:00 - 19:00\",\r\n    \"Thursday\": \"07:00 - 19:00\",\r\n    \"Friday\": \"07:00 - 19:00\",\r\n    \"Saturday\": \"09:00 - 14:00\",\r\n    \"Sunday\": \"Closed\"\r\n  }\r\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/stations/{{station_id}}/schedule",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"stations",
+						"{{station_id}}",
+						"schedule"
+					]
+				}
+			}
+		},
+		{
+			"name": "10. Activate Station",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/stations/{{station_id}}/activate",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"stations",
+						"{{station_id}}",
+						"activate"
+					]
+				}
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5097",
+			"type": "string"
+		},
+		{
+			"key": "station_id",
+			"value": "ST001",
+			"type": "string"
+		}
+	]
+}
