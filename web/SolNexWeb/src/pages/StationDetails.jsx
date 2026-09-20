@@ -68,20 +68,24 @@ export default function StationDetails() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => navigate(`/stations/${id}/edit`)}>
-            <Edit className="h-4 w-4 mr-2" /> Edit
-          </Button>
-          <Button variant="outline" onClick={() => navigate(`/stations/${id}/schedule`)}>
-            <Clock className="h-4 w-4 mr-2" /> Schedule
-          </Button>
-          {station.status === "Active" ? (
-            <Button variant="destructive" onClick={handleDeactivate}>
-              <PowerOff className="h-4 w-4 mr-2" /> Deactivate
-            </Button>
-          ) : (
-            <Button variant="default" className="bg-emerald-600 hover:bg-emerald-700" onClick={handleActivate}>
-              <Power className="h-4 w-4 mr-2" /> Activate
-            </Button>
+          {import.meta.env.VITE_USER_ROLE === "Backoffice" && (
+            <>
+              <Button variant="outline" onClick={() => navigate(`/stations/${id}/edit`)}>
+                <Edit className="h-4 w-4 mr-2" /> Edit
+              </Button>
+              <Button variant="outline" onClick={() => navigate(`/stations/${id}/schedule`)}>
+                <Clock className="h-4 w-4 mr-2" /> Schedule
+              </Button>
+              {station.status === "Active" ? (
+                <Button variant="destructive" onClick={handleDeactivate}>
+                  <PowerOff className="h-4 w-4 mr-2" /> Deactivate
+                </Button>
+              ) : (
+                <Button variant="default" className="bg-emerald-600 hover:bg-emerald-700" onClick={handleActivate}>
+                  <Power className="h-4 w-4 mr-2" /> Activate
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -153,7 +157,10 @@ export default function StationDetails() {
               </div>
             ) : (
               <div className="text-center py-6 text-muted-foreground">
-                No schedule defined. <Link to={`/stations/${id}/schedule`} className="text-primary hover:underline">Set schedule</Link>
+                No schedule defined. 
+                {import.meta.env.VITE_USER_ROLE === "Backoffice" && (
+                  <> <Link to={`/stations/${id}/schedule`} className="text-primary hover:underline">Set schedule</Link></>
+                )}
               </div>
             )}
           </CardContent>

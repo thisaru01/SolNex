@@ -8,6 +8,7 @@ import EditStation from "./pages/EditStation"
 import StationSchedule from "./pages/StationSchedule"
 import StationAvailability from "./pages/StationAvailability"
 import StationMap from "./pages/StationMap"
+import ProtectedRoute from "./components/layout/ProtectedRoute"
 
 function App() {
   return (
@@ -17,12 +18,12 @@ function App() {
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="stations" element={<Stations />} />
-          <Route path="stations/create" element={<CreateStation />} />
-          <Route path="stations/map" element={<StationMap />} />
+          <Route path="stations/create" element={<ProtectedRoute allowedRoles={["Backoffice"]}><CreateStation /></ProtectedRoute>} />
+          <Route path="stations/map" element={<ProtectedRoute allowedRoles={["GridOperator"]}><StationMap /></ProtectedRoute>} />
           <Route path="stations/:id" element={<StationDetails />} />
-          <Route path="stations/:id/edit" element={<EditStation />} />
-          <Route path="stations/:id/schedule" element={<StationSchedule />} />
-          <Route path="stations/:id/availability" element={<StationAvailability />} />
+          <Route path="stations/:id/edit" element={<ProtectedRoute allowedRoles={["Backoffice"]}><EditStation /></ProtectedRoute>} />
+          <Route path="stations/:id/schedule" element={<ProtectedRoute allowedRoles={["Backoffice"]}><StationSchedule /></ProtectedRoute>} />
+          <Route path="stations/:id/availability" element={<ProtectedRoute allowedRoles={["GridOperator"]}><StationAvailability /></ProtectedRoute>} />
           
           {/* Placeholders for future routes */}
           <Route path="history" element={<div className="p-4">Operational History Coming Soon</div>} />

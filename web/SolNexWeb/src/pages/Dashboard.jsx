@@ -61,9 +61,11 @@ export default function Dashboard() {
           <Button variant="outline" onClick={() => navigate("/stations")}>
             View All Stations
           </Button>
-          <Button onClick={() => navigate("/stations/create")}>
-            Create Station
-          </Button>
+          {import.meta.env.VITE_USER_ROLE === "Backoffice" && (
+            <Button onClick={() => navigate("/stations/create")}>
+              Create Station
+            </Button>
+          )}
         </div>
       </div>
 
