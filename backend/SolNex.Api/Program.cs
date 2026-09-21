@@ -1,5 +1,7 @@
 using MongoDB.Driver;
+using Microsoft.AspNetCore.Identity;
 using SolNex.Api.Data;
+using SolNex.Api.Models;
 using SolNex.Api.Repositories;
 using SolNex.Api.Services;
 
@@ -11,6 +13,9 @@ builder.Services.AddSingleton<MongoDbContext>();
 // Register Repositories and Services
 builder.Services.AddScoped<IStationRepository, StationRepository>();
 builder.Services.AddScoped<IStationService, StationService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 // Configure CORS
 builder.Services.AddCors(options =>
