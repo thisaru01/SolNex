@@ -3,6 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace SolNex.Api.Models;
 
+[BsonIgnoreExtraElements]
 public class EnergyBookingSlot
 {
     [BsonId]

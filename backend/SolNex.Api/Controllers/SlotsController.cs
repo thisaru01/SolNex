@@ -64,6 +64,51 @@ public class SlotsController : ControllerBase
         }
     }
 
+    // Updates the status of an existing energy booking slot (e.g., Available -> Reserved)
+    [HttpPut("{id}/status")]
+    public async Task<ActionResult<SlotDto>> UpdateSlotStatus(string id, [FromBody] UpdateSlotStatusDto updateStatusDto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var updatedSlot = await _slotService.UpdateSlotStatusAsync(id, updateStatusDto.Status);
+            if (updatedSlot == null)
+            {
+                return NotFound(new { message = $"Slot with ID '{id}' not found." });
+            }
+
+            return Ok(updatedSlot);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // Direct endpoint to reserve a slot (marks status as Reserved)
+    [HttpPut("{id}/reserve")]
+    public async Task<ActionResult<SlotDto>> ReserveSlot(string id)
+    {
+        try
+        {
+            var updatedSlot = await _slotService.UpdateSlotStatusAsync(id, "Reserved");
+            if (updatedSlot == null)
+            {
+                return NotFound(new { message = $"Slot with ID '{id}' not found." });
+            }
+
+            return Ok(new { message = "Slot successfully reserved.", slot = updatedSlot });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     // Removes an existing energy booking slot by its unique identifier
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteSlot(string id)

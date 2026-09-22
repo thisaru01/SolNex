@@ -89,6 +89,29 @@ public class EnergyBookingSlotService : IEnergyBookingSlotService
         return MapToDto(slot);
     }
 
+    // Updates the status of an energy booking slot (e.g., Available -> Reserved)
+    public async Task<SlotDto?> UpdateSlotStatusAsync(string id, string status)
+    {
+        var slot = await _slotRepository.GetSlotByIdAsync(id)
+                ?? await _slotRepository.GetSlotBySlotIdAsync(id);
+
+        if (slot == null || slot.Id == null)
+        {
+            return null;
+        }
+
+        if (!Enum.TryParse<SlotStatus>(status, true, out var newStatus))
+        {
+            throw new ArgumentException($"Invalid status '{status}'. Valid statuses are: {string.Join(", ", Enum.GetNames<SlotStatus>())}");
+        }
+
+        slot.SlotStatus = newStatus;
+        slot.UpdatedAt = DateTime.UtcNow;
+
+        await _slotRepository.UpdateSlotAsync(slot.Id, slot);
+        return MapToDto(slot);
+    }
+
     // Removes an existing booking slot from repository
     public async Task DeleteSlotAsync(string id)
     {
