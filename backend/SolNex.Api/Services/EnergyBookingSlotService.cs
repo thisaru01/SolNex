@@ -52,17 +52,15 @@ public class EnergyBookingSlotService : IEnergyBookingSlotService
     {
         var slotId = $"{createDto.StationId}_{createDto.DayOfWeek}_{createDto.StartTime.Replace(":", "")}";
 
-        // Prevent duplicate slot creation for the same station, day of week, and time
-        var existingSlot = await _slotRepository.GetSlotBySlotIdAsync(slotId);
-        if (existingSlot != null)
-        {
-            throw new InvalidOperationException($"A slot already exists for station '{createDto.StationId}' on {createDto.DayOfWeek} at {createDto.StartTime}.");
-        }
-
         var scheduleDict = await _stationService.GetStationScheduleAsync(createDto.StationId);
 
         // Validate that requested slot falls within the station's operating hours for the given day
         var scheduleTime = ValidateSlotAgainstSchedule(createDto.DayOfWeek, createDto.StartTime, createDto.EndTime, scheduleDict);
+
+        // Prevent overlapping slots for the same station on the same day
+        var existingSlots = await _slotRepository.GetSlotsByStationIdAsync(createDto.StationId);
+        var slotsOnSameDay = existingSlots.Where(s => string.Equals(s.DayOfWeek, createDto.DayOfWeek, StringComparison.OrdinalIgnoreCase));
+        ValidateNoOverlap(createDto.StartTime, createDto.EndTime, slotsOnSameDay);
 
         var slot = new EnergyBookingSlot
         {
@@ -158,6 +156,29 @@ public class EnergyBookingSlotService : IEnergyBookingSlotService
         }
 
         return scheduleTime;
+    }
+
+    // Checks if the requested time range overlaps with any existing slots
+    private static void ValidateNoOverlap(string requestedStartTime, string requestedEndTime, IEnumerable<EnergyBookingSlot> existingSlots)
+    {
+        if (!DateTime.TryParse(requestedStartTime, out var reqStart) ||
+            !DateTime.TryParse(requestedEndTime, out var reqEnd))
+        {
+            throw new ArgumentException("Invalid requested slot time format.");
+        }
+
+        foreach (var slot in existingSlots)
+        {
+            if (DateTime.TryParse(slot.StartTime, out var slotStart) &&
+                DateTime.TryParse(slot.EndTime, out var slotEnd))
+            {
+                // Overlap condition: Request starts before existing ends AND request ends after existing starts
+                if (reqStart.TimeOfDay < slotEnd.TimeOfDay && reqEnd.TimeOfDay > slotStart.TimeOfDay)
+                {
+                    throw new InvalidOperationException($"The requested time slot ({requestedStartTime} - {requestedEndTime}) overlaps with an existing slot ({slot.StartTime} - {slot.EndTime}).");
+                }
+            }
+        }
     }
 
     // Maps internal entity to API Data Transfer Object
