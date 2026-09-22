@@ -24,6 +24,12 @@ public class EnergyBookingSlot
     [BsonElement("endTime")]
     public string EndTime { get; set; } = null!;
 
+    [BsonElement("dayOfWeek")]
+    public string? DayOfWeek { get; set; }
+
+    [BsonElement("scheduleTime")]
+    public string? ScheduleTime { get; set; }
+
     [BsonElement("slotStatus")]
     [BsonRepresentation(BsonType.String)]
     public SlotStatus SlotStatus { get; set; } = SlotStatus.Available;

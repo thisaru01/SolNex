@@ -16,6 +16,9 @@ public class CreateSlotDto : IValidatableObject
     [Required]
     public string EndTime { get; set; } = null!;
 
+    [Required]
+    public string DayOfWeek { get; set; } = null!;
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (DateTime.TryParse(StartTime, out var start) && DateTime.TryParse(EndTime, out var end))

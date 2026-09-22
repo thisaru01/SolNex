@@ -10,11 +10,13 @@ public class SlotsController : ControllerBase
 {
     private readonly IEnergyBookingSlotService _slotService;
 
+    // Initializes the controller with the required slot service abstraction (Dependency Inversion Principle)
     public SlotsController(IEnergyBookingSlotService slotService)
     {
         _slotService = slotService;
     }
 
+    // Retrieves all energy booking slots across all stations
     [HttpGet]
     public async Task<ActionResult<IEnumerable<SlotDto>>> GetAllSlots()
     {
@@ -22,6 +24,7 @@ public class SlotsController : ControllerBase
         return Ok(slots);
     }
 
+    // Retrieves only currently available energy booking slots
     [HttpGet("available")]
     public async Task<ActionResult<IEnumerable<SlotDto>>> GetAvailableSlots()
     {
@@ -29,6 +32,7 @@ public class SlotsController : ControllerBase
         return Ok(slots);
     }
 
+    // Retrieves all booking slots for a specific charging/energy station
     [HttpGet("{stationId}")]
     public async Task<ActionResult<IEnumerable<SlotDto>>> GetSlotsByStationId(string stationId)
     {
@@ -36,6 +40,7 @@ public class SlotsController : ControllerBase
         return Ok(slots);
     }
 
+    // Validates and creates a new booking slot within the station's operating schedule
     [HttpPost]
     public async Task<ActionResult<SlotDto>> CreateSlot([FromBody] CreateSlotDto createDto)
     {
@@ -44,10 +49,18 @@ public class SlotsController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var createdSlot = await _slotService.CreateSlotAsync(createDto);
-        return CreatedAtAction(nameof(GetAllSlots), new { id = createdSlot.Id }, createdSlot);
+        try
+        {
+            var createdSlot = await _slotService.CreateSlotAsync(createDto);
+            return CreatedAtAction(nameof(GetAllSlots), new { id = createdSlot.Id }, createdSlot);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
+    // Removes an existing energy booking slot by its unique identifier
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteSlot(string id)
     {
