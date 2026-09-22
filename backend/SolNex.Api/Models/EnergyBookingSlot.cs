@@ -15,8 +15,6 @@ public class EnergyBookingSlot
     [BsonElement("stationId")]
     public string StationId { get; set; } = null!;
 
-    [BsonElement("slotDate")]
-    public DateTime SlotDate { get; set; }
 
     [BsonElement("startTime")]
     public string StartTime { get; set; } = null!;

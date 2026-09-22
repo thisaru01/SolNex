@@ -1,3 +1,4 @@
+using MongoDB.Driver;
 using SolNex.Api.DTOs;
 using SolNex.Api.Models;
 using SolNex.Api.Repositories;
@@ -49,7 +50,15 @@ public class EnergyBookingSlotService : IEnergyBookingSlotService
     // Validates operating schedule hours and creates a new booking slot
     public async Task<SlotDto> CreateSlotAsync(CreateSlotDto createDto)
     {
-        var slotId = $"{createDto.StationId}_{createDto.SlotDate:yyyyMMdd}_{createDto.StartTime.Replace(":", "")}";
+        var slotId = $"{createDto.StationId}_{createDto.DayOfWeek}_{createDto.StartTime.Replace(":", "")}";
+
+        // Prevent duplicate slot creation for the same station, day of week, and time
+        var existingSlot = await _slotRepository.GetSlotBySlotIdAsync(slotId);
+        if (existingSlot != null)
+        {
+            throw new InvalidOperationException($"A slot already exists for station '{createDto.StationId}' on {createDto.DayOfWeek} at {createDto.StartTime}.");
+        }
+
         var scheduleDict = await _stationService.GetStationScheduleAsync(createDto.StationId);
 
         // Validate that requested slot falls within the station's operating hours for the given day
@@ -59,7 +68,6 @@ public class EnergyBookingSlotService : IEnergyBookingSlotService
         {
             SlotId = slotId,
             StationId = createDto.StationId,
-            SlotDate = createDto.SlotDate,
             StartTime = createDto.StartTime,
             EndTime = createDto.EndTime,
             DayOfWeek = createDto.DayOfWeek,
@@ -69,7 +77,15 @@ public class EnergyBookingSlotService : IEnergyBookingSlotService
             UpdatedAt = DateTime.UtcNow
         };
 
-        await _slotRepository.CreateSlotAsync(slot);
+        try
+        {
+            await _slotRepository.CreateSlotAsync(slot);
+        }
+        catch (MongoWriteException ex) when (ex.WriteError?.Category == ServerErrorCategory.DuplicateKey)
+        {
+            throw new InvalidOperationException($"A slot already exists for station '{createDto.StationId}' on {createDto.DayOfWeek} at {createDto.StartTime}.");
+        }
+
         return MapToDto(slot);
     }
 
@@ -129,7 +145,6 @@ public class EnergyBookingSlotService : IEnergyBookingSlotService
             Id = slot.Id,
             SlotId = slot.SlotId,
             StationId = slot.StationId,
-            SlotDate = slot.SlotDate,
             StartTime = slot.StartTime,
             EndTime = slot.EndTime,
             DayOfWeek = slot.DayOfWeek,

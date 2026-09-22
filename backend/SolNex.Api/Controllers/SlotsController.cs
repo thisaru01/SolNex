@@ -58,6 +58,10 @@ public class SlotsController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
     }
 
     // Removes an existing energy booking slot by its unique identifier

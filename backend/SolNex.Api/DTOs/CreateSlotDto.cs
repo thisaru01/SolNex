@@ -7,8 +7,6 @@ public class CreateSlotDto : IValidatableObject
     [Required]
     public string StationId { get; set; } = null!;
 
-    [Required]
-    public DateTime SlotDate { get; set; }
 
     [Required]
     public string StartTime { get; set; } = null!;
