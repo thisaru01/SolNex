@@ -1,8 +1,10 @@
 using SolNex.Api.DTOs;
+using SolNex.Api.DTOs.Stations;
 using SolNex.Api.Models;
 using SolNex.Api.Repositories;
+using SolNex.Api.Repositories.Stations;
 
-namespace SolNex.Api.Services;
+namespace SolNex.Api.Services.Stations;
 
 public class StationService : IStationService
 {

@@ -1,6 +1,7 @@
 using SolNex.Api.DTOs;
+using SolNex.Api.DTOs.Stations;
 
-namespace SolNex.Api.Services;
+namespace SolNex.Api.Services.Stations;
 
 public interface IStationService
 {

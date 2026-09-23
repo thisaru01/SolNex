@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using SolNex.Api.Attributes;
 
-namespace SolNex.Api.DTOs;
+namespace SolNex.Api.DTOs.Stations;
 
 public class CreateStationDto
 {

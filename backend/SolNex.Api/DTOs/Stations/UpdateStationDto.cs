@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace SolNex.Api.DTOs;
+namespace SolNex.Api.DTOs.Stations;
 
 public class UpdateStationDto
 {
