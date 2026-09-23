@@ -51,6 +51,12 @@ public class EnergyReservationService : IEnergyReservationService
     // Calculates the correct date and time based on the slot ID.
     public async Task<ReservationDto> CreateReservationAsync(CreateReservationDto createDto)
     {
+        // Validate that the slot belongs to the requested station
+        if (!createDto.SlotId.StartsWith(createDto.StationId + "_", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException("The provided slot ID does not belong to the specified station.");
+        }
+
         // Extract DayOfWeek and Time from SlotId (format: StationId_DayOfWeek_Time)
         var slotParts = createDto.SlotId.Split('_');
         if (slotParts.Length >= 3 && Enum.TryParse<DayOfWeek>(slotParts[1], true, out var targetDay))
