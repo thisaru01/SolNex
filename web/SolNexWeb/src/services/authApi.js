@@ -19,3 +19,18 @@ export async function registerProsumer(request) {
 
   return data
 }
+
+export async function login(request) {
+  const response = await fetch(`${API_URL}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  })
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.message || "Invalid credentials or inactive account.")
+  }
+
+  return data
+}

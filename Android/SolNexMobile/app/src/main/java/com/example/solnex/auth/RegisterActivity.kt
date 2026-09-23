@@ -1,5 +1,6 @@
 package com.example.solnex.auth
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -22,7 +23,10 @@ class RegisterActivity : ComponentActivity() {
                 RegisterScreen(
                     result = registrationResult,
                     onSubmit = ::submitRegistration,
-                    onBackToLogin = { finish() }
+                    onBackToLogin = {
+                        startActivity(Intent(this, LoginActivity::class.java))
+                        finish()
+                    }
                 )
             }
         }
