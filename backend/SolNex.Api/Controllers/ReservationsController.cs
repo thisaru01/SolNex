@@ -27,17 +27,7 @@ public class ReservationsController : ControllerBase
         {
             var createdReservation = await _reservationService.CreateReservationAsync(createDto);
             
-            var slotService = (IEnergyBookingSlotService?)HttpContext.RequestServices.GetService(typeof(IEnergyBookingSlotService));
-            if (slotService != null)
-            {
-                var slot = await slotService.GetSlotByIdAsync(createdReservation.SlotId);
-                if (slot != null)
-                {
-                    createdReservation.StartTime = slot.StartTime;
-                    createdReservation.EndTime = slot.EndTime;
-                    createdReservation.DayOfWeek = slot.DayOfWeek;
-                }
-            }
+            await PopulateSlotDetailsAsync(createdReservation);
 
             return CreatedAtAction(nameof(GetReservationById), new { id = createdReservation.Id }, createdReservation);
         }
@@ -71,6 +61,7 @@ public class ReservationsController : ControllerBase
         {
             return NotFound(new { message = $"Reservation with ID {id} not found." });
         }
+        await PopulateSlotDetailsAsync(reservation);
         return Ok(reservation);
     }
 
@@ -78,14 +69,18 @@ public class ReservationsController : ControllerBase
     public async Task<ActionResult<IEnumerable<ReservationDto>>> GetReservationsByNic(string nic)
     {
         var reservations = await _reservationService.GetReservationsByNicAsync(nic);
-        return Ok(reservations);
+        var reservationsList = reservations.ToList();
+        await PopulateSlotDetailsAsync(reservationsList);
+        return Ok(reservationsList);
     }
 
     [HttpGet("pending")]
     public async Task<ActionResult<IEnumerable<ReservationDto>>> GetPendingReservations()
     {
         var reservations = await _reservationService.GetPendingReservationsAsync();
-        return Ok(reservations);
+        var reservationsList = reservations.ToList();
+        await PopulateSlotDetailsAsync(reservationsList);
+        return Ok(reservationsList);
     }
 
     [HttpPut("{id}")]
@@ -96,38 +91,90 @@ public class ReservationsController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var updatedReservation = await _reservationService.UpdateReservationAsync(id, updateDto);
-        if (updatedReservation == null)
+        try
         {
-            return NotFound(new { message = $"Reservation with ID {id} not found." });
+            var updatedReservation = await _reservationService.UpdateReservationAsync(id, updateDto);
+            if (updatedReservation == null)
+            {
+                return NotFound(new { message = $"Reservation with ID {id} not found." });
+            }
+            await PopulateSlotDetailsAsync(updatedReservation);
+            return Ok(new { message = "Reservation updated successfully.", reservation = updatedReservation });
         }
-        return Ok(new { message = "Reservation updated successfully.", reservation = updatedReservation });
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteReservation(string id)
     {
-        var reservation = await _reservationService.GetReservationByIdAsync(id);
-        if (reservation == null)
+        try
         {
-            return NotFound(new { message = $"Reservation with ID {id} not found." });
-        }
+            var reservation = await _reservationService.GetReservationByIdAsync(id);
+            if (reservation == null)
+            {
+                return NotFound(new { message = $"Reservation with ID {id} not found." });
+            }
 
-        await _reservationService.DeleteReservationAsync(id);
-        return NoContent();
+            await _reservationService.DeleteReservationAsync(id);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpGet("history")]
     public async Task<ActionResult<IEnumerable<ReservationDto>>> GetReservationHistory()
     {
         var reservations = await _reservationService.GetAllReservationsAsync();
-        return Ok(reservations);
+        var reservationsList = reservations.ToList();
+        await PopulateSlotDetailsAsync(reservationsList);
+        return Ok(reservationsList);
     }
 
     [HttpGet("search")]
     public async Task<ActionResult<IEnumerable<ReservationDto>>> SearchReservations([FromQuery] string? stationId, [FromQuery] string? status)
     {
         var reservations = await _reservationService.SearchReservationsAsync(stationId, status);
-        return Ok(reservations);
+        var reservationsList = reservations.ToList();
+        await PopulateSlotDetailsAsync(reservationsList);
+        return Ok(reservationsList);
+    }
+
+    private async Task PopulateSlotDetailsAsync(IEnumerable<ReservationDto> reservations)
+    {
+        var slotService = (IEnergyBookingSlotService?)HttpContext.RequestServices.GetService(typeof(IEnergyBookingSlotService));
+        if (slotService != null)
+        {
+            var uniqueSlotIds = reservations.Select(r => r.SlotId).Distinct();
+            var slotDict = new Dictionary<string, SlotDto>();
+            foreach (var slotId in uniqueSlotIds)
+            {
+                var slot = await slotService.GetSlotByIdAsync(slotId);
+                if (slot != null)
+                {
+                    slotDict[slotId] = slot;
+                }
+            }
+
+            foreach (var reservation in reservations)
+            {
+                if (slotDict.TryGetValue(reservation.SlotId, out var slot))
+                {
+                    reservation.StartTime = slot.StartTime;
+                    reservation.EndTime = slot.EndTime;
+                    reservation.DayOfWeek = slot.DayOfWeek;
+                }
+            }
+        }
+    }
+
+    private async Task PopulateSlotDetailsAsync(ReservationDto reservation)
+    {
+        await PopulateSlotDetailsAsync(new[] { reservation });
     }
 }

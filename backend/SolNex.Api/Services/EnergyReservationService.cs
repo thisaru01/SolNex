@@ -13,34 +13,79 @@ public class EnergyReservationService : IEnergyReservationService
         _reservationRepository = reservationRepository;
     }
 
+    // Retrieves all energy reservations from the repository.
     public async Task<IEnumerable<ReservationDto>> GetAllReservationsAsync()
     {
+        // Fetch all reservations from the database
         var reservations = await _reservationRepository.GetAllReservationsAsync();
         return reservations.Select(MapToDto);
     }
 
+    // Retrieves a specific reservation by its database ID or unique reservation ID.
     public async Task<ReservationDto?> GetReservationByIdAsync(string id)
     {
+        // Attempt to fetch the reservation by either internal ID or public ReservationId
         var reservation = await _reservationRepository.GetReservationByIdAsync(id)
                        ?? await _reservationRepository.GetReservationByReservationIdAsync(id);
 
         return reservation != null ? MapToDto(reservation) : null;
     }
 
+    // Retrieves all energy reservations associated with a specific NIC.
     public async Task<IEnumerable<ReservationDto>> GetReservationsByNicAsync(string nic)
     {
+        // Fetch reservations belonging to a particular user's NIC
         var reservations = await _reservationRepository.GetReservationsByNicAsync(nic);
         return reservations.Select(MapToDto);
     }
 
+    // Retrieves all energy reservations that are currently in a pending state.
     public async Task<IEnumerable<ReservationDto>> GetPendingReservationsAsync()
     {
+        // Fetch all reservations where the status is 'Pending'
         var reservations = await _reservationRepository.GetPendingReservationsAsync();
         return reservations.Select(MapToDto);
     }
 
+    // Creates a new energy reservation based on the provided details.
+    // Calculates the correct date and time based on the slot ID.
     public async Task<ReservationDto> CreateReservationAsync(CreateReservationDto createDto)
     {
+        // Extract DayOfWeek and Time from SlotId (format: StationId_DayOfWeek_Time)
+        var slotParts = createDto.SlotId.Split('_');
+        if (slotParts.Length >= 3 && Enum.TryParse<DayOfWeek>(slotParts[1], true, out var targetDay))
+        {
+            var today = DateTime.UtcNow.Date;
+            int daysUntil = ((int)targetDay - (int)today.DayOfWeek + 7) % 7;
+            
+            // Calculate the exact date within the next 7 days
+            var calculatedDate = today.AddDays(daysUntil);
+
+            // Parse time from SlotId (e.g., "1130" -> 11:30)
+            var timeStr = slotParts[2];
+            if (int.TryParse(timeStr, out _) && (timeStr.Length == 3 || timeStr.Length == 4))
+            {
+                int hour = int.Parse(timeStr.Length == 4 ? timeStr.Substring(0, 2) : timeStr.Substring(0, 1));
+                int minute = int.Parse(timeStr.Substring(timeStr.Length - 2));
+                calculatedDate = calculatedDate.AddHours(hour).AddMinutes(minute);
+            }
+
+            // If the calculated time has already passed today, schedule for next week
+            if (calculatedDate <= DateTime.UtcNow)
+            {
+                calculatedDate = calculatedDate.AddDays(7);
+            }
+
+            createDto.ReservationDate = calculatedDate;
+        }
+
+        // Validate that reservation is within 7 days
+        var timeDifference = createDto.ReservationDate.Date - DateTime.UtcNow.Date;
+        if (timeDifference.Days < 0 || timeDifference.Days > 7)
+        {
+            throw new ArgumentException("Reservations must be scheduled within 7 days from today.");
+        }
+
         // Prevent user from making multiple active reservations for the same slot on the same date
         var userReservations = await _reservationRepository.GetReservationsByNicAsync(createDto.Nic);
         var existingReservation = userReservations.FirstOrDefault(r => 
@@ -69,16 +114,27 @@ public class EnergyReservationService : IEnergyReservationService
             UpdatedAt = DateTime.UtcNow
         };
 
+        // Save the newly created reservation to the database
         await _reservationRepository.CreateReservationAsync(reservation);
         return MapToDto(reservation);
     }
 
+    // Updates the status or details of an existing reservation.
+    // Requires at least 12 hours' notice before the reservation time.
     public async Task<ReservationDto?> UpdateReservationAsync(string id, UpdateReservationDto updateDto)
     {
+        // Fetch the existing reservation to update
         var reservation = await _reservationRepository.GetReservationByIdAsync(id)
                        ?? await _reservationRepository.GetReservationByReservationIdAsync(id);
 
         if (reservation == null) return null;
+
+        // Enforce 12 hours' notice for updates
+        var timeUntilReservation = reservation.ReservationDate - DateTime.UtcNow;
+        if (timeUntilReservation.TotalHours < 12)
+        {
+            throw new InvalidOperationException("Updates and cancellations require at least 12 hours' notice.");
+        }
 
         bool updated = false;
 
@@ -115,25 +171,39 @@ public class EnergyReservationService : IEnergyReservationService
         return MapToDto(reservation);
     }
 
+    // Deletes an existing reservation by its ID.
+    // Requires at least 12 hours' notice before the reservation time.
     public async Task DeleteReservationAsync(string id)
     {
+        // Fetch the reservation to ensure it exists before deleting
         var reservation = await _reservationRepository.GetReservationByIdAsync(id)
                        ?? await _reservationRepository.GetReservationByReservationIdAsync(id);
 
         if (reservation != null && reservation.Id != null)
         {
+            // Enforce 12 hours' notice for cancellations
+            var timeUntilReservation = reservation.ReservationDate - DateTime.UtcNow;
+            if (timeUntilReservation.TotalHours < 12)
+            {
+                throw new InvalidOperationException("Updates and cancellations require at least 12 hours' notice.");
+            }
+
             await _reservationRepository.DeleteReservationAsync(reservation.Id);
         }
     }
 
+    // Searches for reservations matching the provided station ID and/or status.
     public async Task<IEnumerable<ReservationDto>> SearchReservationsAsync(string? stationId, string? status)
     {
+        // Fetch and filter reservations based on search parameters
         var reservations = await _reservationRepository.SearchReservationsAsync(stationId, status);
         return reservations.Select(MapToDto);
     }
 
+    // Maps an EnergyReservation entity to a ReservationDto object.
     private ReservationDto MapToDto(EnergyReservation reservation)
     {
+        // Map fields one by one to ensure the data format is correct for API clients
         return new ReservationDto
         {
             Id = reservation.Id,
