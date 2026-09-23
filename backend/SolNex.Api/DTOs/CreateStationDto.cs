@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using SolNex.Api.Attributes;
 
 namespace SolNex.Api.DTOs;
 
@@ -29,5 +30,6 @@ public class CreateStationDto
     [Range(0, int.MaxValue)]
     public int TotalBatterySlots { get; set; }
 
+    [ValidSchedule]
     public Dictionary<string, string>? Schedule { get; set; }
 }

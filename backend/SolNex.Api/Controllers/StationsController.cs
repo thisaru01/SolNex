@@ -36,9 +36,16 @@ public class StationsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<StationDto>> CreateStation([FromBody] CreateStationDto createDto)
     {
-        var createdStation = await _stationService.CreateStationAsync(createDto);
-        // Using string interpolation for the URI as createdStation.Id could be string?
-        return CreatedAtAction(nameof(GetStationById), new { id = createdStation.Id }, createdStation);
+        try
+        {
+            var createdStation = await _stationService.CreateStationAsync(createDto);
+            // Using string interpolation for the URI as createdStation.Id could be string?
+            return CreatedAtAction(nameof(GetStationById), new { id = createdStation.Id }, createdStation);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
     }
 
     [HttpPut("{id}")]

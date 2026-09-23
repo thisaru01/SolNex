@@ -29,6 +29,12 @@ public class StationService : IStationService
 
     public async Task<StationDto> CreateStationAsync(CreateStationDto createDto)
     {
+        var existingStation = await _stationRepository.GetStationByStationIdAsync(createDto.StationId);
+        if (existingStation != null)
+        {
+            throw new InvalidOperationException($"Station with StationId '{createDto.StationId}' already exists.");
+        }
+
         var station = new SolarStationInfo
         {
             StationId = createDto.StationId,
