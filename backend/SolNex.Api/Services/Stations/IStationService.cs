@@ -1,6 +1,7 @@
 using SolNex.Api.DTOs;
+using SolNex.Api.DTOs.Stations;
 
-namespace SolNex.Api.Services;
+namespace SolNex.Api.Services.Stations;
 
 public interface IStationService
 {
@@ -14,4 +15,5 @@ public interface IStationService
     Task<int?> GetStationAvailabilityAsync(string id);
     Task<Dictionary<string, string>?> GetStationScheduleAsync(string id);
     Task<StationDto?> UpdateStationScheduleAsync(string id, UpdateScheduleDto scheduleDto);
+    Task<StationDto?> UpdateBatterySlotsAsync(string id, UpdateBatterySlotsDto updateDto);
 }

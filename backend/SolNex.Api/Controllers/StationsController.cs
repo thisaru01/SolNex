@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using SolNex.Api.DTOs;
+using SolNex.Api.DTOs.Stations;
 using SolNex.Api.Services;
+using SolNex.Api.Services.Stations;
 
 namespace SolNex.Api.Controllers;
 
@@ -36,9 +38,16 @@ public class StationsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<StationDto>> CreateStation([FromBody] CreateStationDto createDto)
     {
-        var createdStation = await _stationService.CreateStationAsync(createDto);
-        // Using string interpolation for the URI as createdStation.Id could be string?
-        return CreatedAtAction(nameof(GetStationById), new { id = createdStation.Id }, createdStation);
+        try
+        {
+            var createdStation = await _stationService.CreateStationAsync(createDto);
+            // Using string interpolation for the URI as createdStation.Id could be string?
+            return CreatedAtAction(nameof(GetStationById), new { id = createdStation.Id }, createdStation);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
     }
 
     [HttpPut("{id}")]
@@ -113,5 +122,23 @@ public class StationsController : ControllerBase
             return NotFound(new { message = $"Station with ID {id} not found." });
         }
         return Ok(new { message = "Station schedule updated successfully.", station = updatedStation });
+    }
+
+    [HttpPut("{id}/battery-slots")]
+    public async Task<IActionResult> UpdateBatterySlots(string id, [FromBody] UpdateBatterySlotsDto updateDto)
+    {
+        try
+        {
+            var updatedStation = await _stationService.UpdateBatterySlotsAsync(id, updateDto);
+            if (updatedStation == null)
+            {
+                return NotFound(new { message = $"Station with ID {id} not found." });
+            }
+            return Ok(new { message = "Battery slots updated successfully.", station = updatedStation });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }

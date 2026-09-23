@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Identity;
 using SolNex.Api.Data;
 using SolNex.Api.Models;
 using SolNex.Api.Repositories;
+using SolNex.Api.Repositories.Stations;
 using SolNex.Api.Services;
+using SolNex.Api.Services.Stations;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -230,6 +230,34 @@
 					]
 				}
 			}
+		},
+		{
+			"name": "11. Update Battery Slots",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"availableBatterySlots\": 5\r\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/stations/{{station_id}}/battery-slots",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"stations",
+						"{{station_id}}",
+						"battery-slots"
+					]
+				}
+			}
 		}
 	],
 	"variable": [

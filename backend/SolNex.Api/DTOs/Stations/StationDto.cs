@@ -1,4 +1,4 @@
-namespace SolNex.Api.DTOs;
+namespace SolNex.Api.DTOs.Stations;
 
 public class StationDto
 {
