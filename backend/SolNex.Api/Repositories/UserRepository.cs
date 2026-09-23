@@ -4,7 +4,7 @@ using SolNex.Api.Models;
 
 namespace SolNex.Api.Repositories;
 
-public sealed class UserRepository : IUserRepository
+public sealed partial class UserRepository : IUserRepository
 {
     private readonly IMongoCollection<User> _users;
 
@@ -28,5 +28,14 @@ public sealed class UserRepository : IUserRepository
     public Task CreateAsync(User user, CancellationToken cancellationToken = default)
     {
         return _users.InsertOneAsync(user, cancellationToken: cancellationToken);
+    }
+
+    public async Task<User?> FindByNicOrEmailAsync(string identifier, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<User>.Filter.Or(
+            Builders<User>.Filter.Eq(user => user.Nic, identifier),
+            Builders<User>.Filter.Eq(user => user.Email, identifier.ToLowerInvariant()));
+
+        return await _users.Find(filter).FirstOrDefaultAsync(cancellationToken);
     }
 }
