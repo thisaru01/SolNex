@@ -7,10 +7,12 @@ namespace SolNex.Api.Services;
 public class EnergyReservationService : IEnergyReservationService
 {
     private readonly IEnergyReservationRepository _reservationRepository;
+    private readonly IEnergyBookingSlotService _slotService;
 
-    public EnergyReservationService(IEnergyReservationRepository reservationRepository)
+    public EnergyReservationService(IEnergyReservationRepository reservationRepository, IEnergyBookingSlotService slotService)
     {
         _reservationRepository = reservationRepository;
+        _slotService = slotService;
     }
 
     // Retrieves all energy reservations from the repository.
@@ -55,6 +57,18 @@ public class EnergyReservationService : IEnergyReservationService
         if (!createDto.SlotId.StartsWith(createDto.StationId + "_", StringComparison.OrdinalIgnoreCase))
         {
             throw new ArgumentException("The provided slot ID does not belong to the specified station.");
+        }
+
+        // Fetch the slot to ensure it exists and is currently available
+        var slot = await _slotService.GetSlotByIdAsync(createDto.SlotId);
+        if (slot == null)
+        {
+            throw new ArgumentException("The specified slot does not exist.");
+        }
+
+        if (!string.Equals(slot.SlotStatus, "Available", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Reservations can only be made for available slots.");
         }
 
         // Extract DayOfWeek and Time from SlotId (format: StationId_DayOfWeek_Time)
@@ -172,6 +186,28 @@ public class EnergyReservationService : IEnergyReservationService
         {
             reservation.UpdatedAt = DateTime.UtcNow;
             await _reservationRepository.UpdateReservationAsync(reservation.Id!, reservation);
+
+            // Auto-reject other pending reservations for the same slot and date when approved
+            if (reservation.Status == ReservationStatus.Approved)
+            {
+                // Update slot status to Reserved
+                await _slotService.UpdateSlotStatusAsync(reservation.SlotId, "Reserved");
+
+                // Find and reject overlapping pending reservations
+                var pendingReservations = await _reservationRepository.GetPendingReservationsAsync();
+                var overlappingReservations = pendingReservations.Where(r =>
+                    r.SlotId == reservation.SlotId &&
+                    r.ReservationDate.Date == reservation.ReservationDate.Date &&
+                    r.Id != reservation.Id);
+
+                foreach (var overlapping in overlappingReservations)
+                {
+                    overlapping.Status = ReservationStatus.Rejected;
+                    overlapping.RejectedReason = "Slot already reserved by another user.";
+                    overlapping.UpdatedAt = DateTime.UtcNow;
+                    await _reservationRepository.UpdateReservationAsync(overlapping.Id!, overlapping);
+                }
+            }
         }
 
         return MapToDto(reservation);
