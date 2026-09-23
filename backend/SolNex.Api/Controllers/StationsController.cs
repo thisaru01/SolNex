@@ -121,4 +121,22 @@ public class StationsController : ControllerBase
         }
         return Ok(new { message = "Station schedule updated successfully.", station = updatedStation });
     }
+
+    [HttpPut("{id}/battery-slots")]
+    public async Task<IActionResult> UpdateBatterySlots(string id, [FromBody] UpdateBatterySlotsDto updateDto)
+    {
+        try
+        {
+            var updatedStation = await _stationService.UpdateBatterySlotsAsync(id, updateDto);
+            if (updatedStation == null)
+            {
+                return NotFound(new { message = $"Station with ID {id} not found." });
+            }
+            return Ok(new { message = "Battery slots updated successfully.", station = updatedStation });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

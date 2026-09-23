@@ -174,6 +174,25 @@ public class StationService : IStationService
         return MapToDto(station);
     }
 
+    public async Task<StationDto?> UpdateBatterySlotsAsync(string id, UpdateBatterySlotsDto updateDto)
+    {
+        var station = await _stationRepository.GetStationByIdAsync(id)
+                   ?? await _stationRepository.GetStationByStationIdAsync(id);
+
+        if (station == null) return null;
+
+        if (updateDto.AvailableBatterySlots > station.TotalBatterySlots)
+        {
+            throw new InvalidOperationException("Available battery slots cannot exceed total battery slots.");
+        }
+
+        station.AvailableBatterySlots = updateDto.AvailableBatterySlots;
+        station.UpdatedAt = DateTime.UtcNow;
+
+        await _stationRepository.UpdateStationAsync(station.Id!, station);
+        return MapToDto(station);
+    }
+
     private StationDto MapToDto(SolarStationInfo station)
     {
         return new StationDto
