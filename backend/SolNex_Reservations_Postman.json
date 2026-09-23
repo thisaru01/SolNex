@@ -1,0 +1,308 @@
+{
+	"info": {
+		"_postman_id": "d1c2b3a4-5678-90ab-cdef-1234567890ab",
+		"name": "SolNex - Reservation Management",
+		"description": "Postman collection for Member 3 (Reservation Management) APIs",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Create Slot",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"stationId\": \"ST001\",\r\n  \"slotDate\": \"2026-10-10T00:00:00Z\",\r\n  \"startTime\": \"10:00\",\r\n  \"endTime\": \"10:30\"\r\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/slots",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"slots"
+					]
+				}
+			}
+		},
+		{
+			"name": "2. Get All Slots",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/slots",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"slots"
+					]
+				}
+			}
+		},
+		{
+			"name": "3. Get Available Slots",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/slots/available",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"slots",
+						"available"
+					]
+				}
+			}
+		},
+		{
+			"name": "4. Get Slots By Station ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/slots/{{station_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"slots",
+						"{{station_id}}"
+					]
+				},
+				"description": "Replace {{station_id}} with the string stationId (e.g., ST001)."
+			}
+		},
+		{
+			"name": "5. Delete Slot",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/slots/{{slot_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"slots",
+						"{{slot_id}}"
+					]
+				}
+			}
+		},
+		{
+			"name": "6. Create Reservation",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"nic\": \"987654321V\",\r\n  \"stationId\": \"ST001\",\r\n  \"slotId\": \"ST001_20261010_1000\",\r\n  \"reservationDate\": \"2026-10-10T10:00:00Z\",\r\n  \"energyAmountKwh\": 15.5\r\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/reservations",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"reservations"
+					]
+				}
+			}
+		},
+		{
+			"name": "7. Get Reservation By ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/reservations/{{reservation_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"reservations",
+						"{{reservation_id}}"
+					]
+				},
+				"description": "Replace {{reservation_id}} with the MongoDB ObjectId or the string ReservationId."
+			}
+		},
+		{
+			"name": "8. Get Reservations By NIC",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/reservations/user/{{nic}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"reservations",
+						"user",
+						"{{nic}}"
+					]
+				}
+			}
+		},
+		{
+			"name": "9. Get Pending Reservations",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/reservations/pending",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"reservations",
+						"pending"
+					]
+				}
+			}
+		},
+		{
+			"name": "10. Update Reservation",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"status\": \"Approved\",\r\n  \"approvedBy\": \"Admin_123\",\r\n  \"approvedAt\": \"2026-09-20T10:00:00Z\"\r\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/reservations/{{reservation_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"reservations",
+						"{{reservation_id}}"
+					]
+				}
+			}
+		},
+		{
+			"name": "11. Delete Reservation",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/reservations/{{reservation_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"reservations",
+						"{{reservation_id}}"
+					]
+				}
+			}
+		},
+		{
+			"name": "12. Get Reservation History",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/reservations/history",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"reservations",
+						"history"
+					]
+				}
+			}
+		},
+		{
+			"name": "13. Search Reservations",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/reservations/search?stationId=ST001&status=Pending",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"reservations",
+						"search"
+					],
+					"query": [
+						{
+							"key": "stationId",
+							"value": "ST001"
+						},
+						{
+							"key": "status",
+							"value": "Pending"
+						}
+					]
+				}
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5097",
+			"type": "string"
+		},
+		{
+			"key": "station_id",
+			"value": "ST001",
+			"type": "string"
+		},
+		{
+			"key": "slot_id",
+			"value": "ST001_20261010_1000",
+			"type": "string"
+		},
+		{
+			"key": "reservation_id",
+			"value": "RES_12345678",
+			"type": "string"
+		},
+		{
+			"key": "nic",
+			"value": "987654321V",
+			"type": "string"
+		}
+	]
+}
