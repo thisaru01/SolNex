@@ -41,6 +41,19 @@ public class EnergyReservationService : IEnergyReservationService
 
     public async Task<ReservationDto> CreateReservationAsync(CreateReservationDto createDto)
     {
+        // Prevent user from making multiple active reservations for the same slot on the same date
+        var userReservations = await _reservationRepository.GetReservationsByNicAsync(createDto.Nic);
+        var existingReservation = userReservations.FirstOrDefault(r => 
+            r.SlotId == createDto.SlotId && 
+            r.ReservationDate.Date == createDto.ReservationDate.Date &&
+            r.Status != ReservationStatus.Cancelled &&
+            r.Status != ReservationStatus.Rejected);
+
+        if (existingReservation != null)
+        {
+            throw new InvalidOperationException("You already have an active reservation for this slot on the selected date.");
+        }
+
         var reservationId = $"RES_{Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper()}";
 
         var reservation = new EnergyReservation

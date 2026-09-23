@@ -23,8 +23,44 @@ public class ReservationsController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var createdReservation = await _reservationService.CreateReservationAsync(createDto);
-        return CreatedAtAction(nameof(GetReservationById), new { id = createdReservation.Id }, createdReservation);
+        try
+        {
+            var createdReservation = await _reservationService.CreateReservationAsync(createDto);
+            
+            var slotService = (IEnergyBookingSlotService?)HttpContext.RequestServices.GetService(typeof(IEnergyBookingSlotService));
+            if (slotService != null)
+            {
+                var slot = await slotService.GetSlotByIdAsync(createdReservation.SlotId);
+                if (slot != null)
+                {
+                    createdReservation.StartTime = slot.StartTime;
+                    createdReservation.EndTime = slot.EndTime;
+                    createdReservation.DayOfWeek = slot.DayOfWeek;
+                }
+            }
+
+            return CreatedAtAction(nameof(GetReservationById), new { id = createdReservation.Id }, createdReservation);
+        }
+        catch (InvalidOperationException ex) when (ex.Message == "You already have an active reservation for this slot on the selected date.")
+        {
+            var slotService = (IEnergyBookingSlotService?)HttpContext.RequestServices.GetService(typeof(IEnergyBookingSlotService));
+            var slot = slotService != null ? await slotService.GetSlotByIdAsync(createDto.SlotId) : null;
+
+            return BadRequest(new
+            {
+                message = ex.Message,
+                slotDetails = new
+                {
+                    startTime = slot?.StartTime,
+                    endTime = slot?.EndTime,
+                    dayOfWeek = slot?.DayOfWeek
+                }
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpGet("{id}")]
