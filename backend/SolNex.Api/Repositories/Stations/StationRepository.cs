@@ -3,7 +3,7 @@ using SolNex.Api.Data;
 using SolNex.Api.Models;
 using MongoDB.Bson;
 
-namespace SolNex.Api.Repositories;
+namespace SolNex.Api.Repositories.Stations;
 
 public class StationRepository : IStationRepository
 {

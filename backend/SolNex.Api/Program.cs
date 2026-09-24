@@ -4,7 +4,9 @@ using SolNex.Api.Data;
 using SolNex.Api.Extensions;
 using SolNex.Api.Models;
 using SolNex.Api.Repositories;
+using SolNex.Api.Repositories.Stations;
 using SolNex.Api.Services;
+using SolNex.Api.Services.Stations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +16,10 @@ builder.Services.AddSingleton<MongoDbContext>();
 // Register Repositories and Services
 builder.Services.AddScoped<IStationRepository, StationRepository>();
 builder.Services.AddScoped<IStationService, StationService>();
+builder.Services.AddScoped<IEnergyBookingSlotRepository, EnergyBookingSlotRepository>();
+builder.Services.AddScoped<IEnergyReservationRepository, EnergyReservationRepository>();
+builder.Services.AddScoped<IEnergyBookingSlotService, EnergyBookingSlotService>();
+builder.Services.AddScoped<IEnergyReservationService, EnergyReservationService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();

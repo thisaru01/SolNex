@@ -21,7 +21,9 @@ public sealed class AuthService : IAuthService
         _jwtTokenService = jwtTokenService;
     }
 
-    public async Task<LoginResponse?> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
+    public async Task<LoginResponse?> LoginAsync(
+        LoginRequest request,
+        CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.FindByIdentifierAsync(request.Identifier.Trim(), cancellationToken);
         if (user is null || user.AccountStatus != AccountStatus.Active)
@@ -36,6 +38,12 @@ public sealed class AuthService : IAuthService
         }
 
         var token = _jwtTokenService.CreateToken(user);
-        return new LoginResponse(token.Token, token.ExpiresAt, user.Nic, user.FullName, user.Email, user.Role.ToString());
+        return new LoginResponse(
+            token.Token,
+            token.ExpiresAt,
+            user.Nic,
+            user.FullName,
+            user.Email,
+            user.Role.ToString());
     }
 }

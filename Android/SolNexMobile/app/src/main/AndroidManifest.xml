@@ -30,6 +30,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".auth.LoginActivity"
+            android:exported="false"
+            android:label="Login"
+            android:theme="@style/Theme.SolNex" />
     </application>
 
 </manifest>

@@ -1,8 +1,10 @@
 using SolNex.Api.DTOs;
+using SolNex.Api.DTOs.Stations;
 using SolNex.Api.Models;
 using SolNex.Api.Repositories;
+using SolNex.Api.Repositories.Stations;
 
-namespace SolNex.Api.Services;
+namespace SolNex.Api.Services.Stations;
 
 public class StationService : IStationService
 {
@@ -29,6 +31,12 @@ public class StationService : IStationService
 
     public async Task<StationDto> CreateStationAsync(CreateStationDto createDto)
     {
+        var existingStation = await _stationRepository.GetStationByStationIdAsync(createDto.StationId);
+        if (existingStation != null)
+        {
+            throw new InvalidOperationException($"Station with StationId '{createDto.StationId}' already exists.");
+        }
+
         var station = new SolarStationInfo
         {
             StationId = createDto.StationId,
@@ -162,6 +170,25 @@ public class StationService : IStationService
             station.Schedule[kvp.Key] = kvp.Value;
         }
 
+        station.UpdatedAt = DateTime.UtcNow;
+
+        await _stationRepository.UpdateStationAsync(station.Id!, station);
+        return MapToDto(station);
+    }
+
+    public async Task<StationDto?> UpdateBatterySlotsAsync(string id, UpdateBatterySlotsDto updateDto)
+    {
+        var station = await _stationRepository.GetStationByIdAsync(id)
+                   ?? await _stationRepository.GetStationByStationIdAsync(id);
+
+        if (station == null) return null;
+
+        if (updateDto.AvailableBatterySlots > station.TotalBatterySlots)
+        {
+            throw new InvalidOperationException("Available battery slots cannot exceed total battery slots.");
+        }
+
+        station.AvailableBatterySlots = updateDto.AvailableBatterySlots;
         station.UpdatedAt = DateTime.UtcNow;
 
         await _stationRepository.UpdateStationAsync(station.Id!, station);

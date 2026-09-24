@@ -3,6 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace SolNex.Api.Models;
 
+[BsonIgnoreExtraElements]
 public class EnergyBookingSlot
 {
     [BsonId]
@@ -15,14 +16,18 @@ public class EnergyBookingSlot
     [BsonElement("stationId")]
     public string StationId { get; set; } = null!;
 
-    [BsonElement("slotDate")]
-    public DateTime SlotDate { get; set; }
 
     [BsonElement("startTime")]
     public string StartTime { get; set; } = null!;
 
     [BsonElement("endTime")]
     public string EndTime { get; set; } = null!;
+
+    [BsonElement("dayOfWeek")]
+    public string? DayOfWeek { get; set; }
+
+    [BsonElement("scheduleTime")]
+    public string? ScheduleTime { get; set; }
 
     [BsonElement("slotStatus")]
     [BsonRepresentation(BsonType.String)]
