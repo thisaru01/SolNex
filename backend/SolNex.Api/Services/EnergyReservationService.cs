@@ -161,9 +161,30 @@ public class EnergyReservationService : IEnergyReservationService
 
         if (!string.IsNullOrEmpty(updateDto.Status) && Enum.TryParse<ReservationStatus>(updateDto.Status, true, out var parsedStatus))
         {
-            if ((previousStatus == ReservationStatus.Rejected || previousStatus == ReservationStatus.Cancelled) && parsedStatus == ReservationStatus.Approved)
+            if (parsedStatus == ReservationStatus.Approved)
             {
-                throw new InvalidOperationException("A rejected or cancelled reservation cannot be approved again.");
+                if (previousStatus == ReservationStatus.CancellationRequested || previousStatus == ReservationStatus.Rejected || previousStatus == ReservationStatus.Cancelled)
+                {
+                    throw new InvalidOperationException($"A reservation with status {previousStatus} cannot be approved.");
+                }
+            }
+            else if (parsedStatus == ReservationStatus.Cancelled)
+            {
+                if (previousStatus == ReservationStatus.Approved)
+                {
+                    throw new InvalidOperationException("Approved reservations cannot be directly cancelled. A cancellation request must be submitted first.");
+                }
+                if (previousStatus == ReservationStatus.Rejected)
+                {
+                    throw new InvalidOperationException("A rejected reservation cannot be cancelled.");
+                }
+            }
+            else if (parsedStatus == ReservationStatus.Rejected)
+            {
+                if (previousStatus == ReservationStatus.Cancelled)
+                {
+                    throw new InvalidOperationException("A cancelled reservation cannot be rejected.");
+                }
             }
 
             reservation.Status = parsedStatus;
@@ -214,7 +235,7 @@ public class EnergyReservationService : IEnergyReservationService
                     await _reservationRepository.UpdateReservationAsync(overlapping.Id!, overlapping);
                 }
             }
-            else if (previousStatus == ReservationStatus.Approved && (reservation.Status == ReservationStatus.Rejected || reservation.Status == ReservationStatus.Cancelled))
+            else if ((previousStatus == ReservationStatus.Approved || previousStatus == ReservationStatus.CancellationRequested) && (reservation.Status == ReservationStatus.Rejected || reservation.Status == ReservationStatus.Cancelled))
             {
                 // Revert slot status to Available when an approved reservation is rejected or cancelled
                 await _slotService.UpdateSlotStatusAsync(reservation.SlotId, "Available");
@@ -239,6 +260,11 @@ public class EnergyReservationService : IEnergyReservationService
             if (timeUntilReservation.TotalHours < 12)
             {
                 throw new InvalidOperationException("Updates and cancellations require at least 12 hours' notice.");
+            }
+
+            if (reservation.Status == ReservationStatus.Approved)
+            {
+                throw new InvalidOperationException("Approved reservations cannot be directly deleted. You must submit a cancellation request.");
             }
 
             await _reservationRepository.DeleteReservationAsync(reservation.Id);
@@ -273,5 +299,37 @@ public class EnergyReservationService : IEnergyReservationService
             CreatedAt = reservation.CreatedAt,
             UpdatedAt = reservation.UpdatedAt
         };
+    }
+
+    public async Task<ReservationDto?> RequestCancellationAsync(string id)
+    {
+        var reservation = await _reservationRepository.GetReservationByIdAsync(id)
+                       ?? await _reservationRepository.GetReservationByReservationIdAsync(id);
+
+        if (reservation == null) return null;
+
+        var timeUntilReservation = reservation.ReservationDate - DateTime.UtcNow;
+        if (timeUntilReservation.TotalHours < 12)
+        {
+            throw new InvalidOperationException("Updates and cancellations require at least 12 hours' notice.");
+        }
+
+        if (reservation.Status == ReservationStatus.Pending)
+        {
+            reservation.Status = ReservationStatus.Cancelled;
+        }
+        else if (reservation.Status == ReservationStatus.Approved)
+        {
+            reservation.Status = ReservationStatus.CancellationRequested;
+        }
+        else
+        {
+            throw new InvalidOperationException($"Cannot cancel a reservation that is currently {reservation.Status}.");
+        }
+
+        reservation.UpdatedAt = DateTime.UtcNow;
+        await _reservationRepository.UpdateReservationAsync(reservation.Id!, reservation);
+
+        return MapToDto(reservation);
     }
 }

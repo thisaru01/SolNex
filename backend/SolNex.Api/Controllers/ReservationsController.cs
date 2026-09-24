@@ -111,6 +111,25 @@ public class ReservationsController : ControllerBase
         }
     }
 
+    [HttpPost("{id}/cancel-request")]
+    public async Task<IActionResult> RequestCancellation(string id)
+    {
+        try
+        {
+            var updatedReservation = await _reservationService.RequestCancellationAsync(id);
+            if (updatedReservation == null)
+            {
+                return NotFound(new { message = $"Reservation with ID {id} not found." });
+            }
+            await PopulateSlotDetailsAsync(updatedReservation);
+            return Ok(new { message = "Cancellation processed successfully.", reservation = updatedReservation });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteReservation(string id)
     {

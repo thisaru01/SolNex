@@ -53,5 +53,6 @@ public enum ReservationStatus
     Approved,
     Rejected,
     Cancelled,
+    CancellationRequested,
     Completed
 }
