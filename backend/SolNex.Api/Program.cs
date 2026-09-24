@@ -1,6 +1,7 @@
 using MongoDB.Driver;
 using Microsoft.AspNetCore.Identity;
 using SolNex.Api.Data;
+using SolNex.Api.Extensions;
 using SolNex.Api.Models;
 using SolNex.Api.Repositories;
 using SolNex.Api.Services;
@@ -16,6 +17,9 @@ builder.Services.AddScoped<IStationService, StationService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.AddSolNexJwtAuthentication(builder.Configuration);
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
 // Configure CORS
 builder.Services.AddCors(options =>
@@ -42,6 +46,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 var summaries = new[]
