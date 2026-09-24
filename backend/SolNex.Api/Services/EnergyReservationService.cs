@@ -156,10 +156,16 @@ public class EnergyReservationService : IEnergyReservationService
             throw new InvalidOperationException("Updates and cancellations require at least 12 hours' notice.");
         }
 
+        var previousStatus = reservation.Status;
         bool updated = false;
 
         if (!string.IsNullOrEmpty(updateDto.Status) && Enum.TryParse<ReservationStatus>(updateDto.Status, true, out var parsedStatus))
         {
+            if ((previousStatus == ReservationStatus.Rejected || previousStatus == ReservationStatus.Cancelled) && parsedStatus == ReservationStatus.Approved)
+            {
+                throw new InvalidOperationException("A rejected or cancelled reservation cannot be approved again.");
+            }
+
             reservation.Status = parsedStatus;
             updated = true;
         }
@@ -207,6 +213,11 @@ public class EnergyReservationService : IEnergyReservationService
                     overlapping.UpdatedAt = DateTime.UtcNow;
                     await _reservationRepository.UpdateReservationAsync(overlapping.Id!, overlapping);
                 }
+            }
+            else if (previousStatus == ReservationStatus.Approved && (reservation.Status == ReservationStatus.Rejected || reservation.Status == ReservationStatus.Cancelled))
+            {
+                // Revert slot status to Available when an approved reservation is rejected or cancelled
+                await _slotService.UpdateSlotStatusAsync(reservation.SlotId, "Available");
             }
         }
 
