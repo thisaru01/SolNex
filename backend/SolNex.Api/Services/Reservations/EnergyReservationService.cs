@@ -1,8 +1,11 @@
+using SolNex.Api.DTOs.Reservations;
+using SolNex.Api.Services.Reservations;
+using SolNex.Api.Repositories.Reservations;
 using SolNex.Api.DTOs;
 using SolNex.Api.Models;
 using SolNex.Api.Repositories;
 
-namespace SolNex.Api.Services;
+namespace SolNex.Api.Services.Reservations;
 
 public class EnergyReservationService : IEnergyReservationService
 {
@@ -440,3 +443,4 @@ public class EnergyReservationService : IEnergyReservationService
         return calculatedDate;
     }
 }
+

@@ -1,6 +1,6 @@
 using SolNex.Api.Models;
 
-namespace SolNex.Api.Repositories;
+namespace SolNex.Api.Repositories.Reservations;
 
 public interface IEnergyBookingSlotRepository
 {

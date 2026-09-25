@@ -1,6 +1,9 @@
+using SolNex.Api.DTOs.Reservations;
+using SolNex.Api.Services.Reservations;
+using SolNex.Api.Repositories.Reservations;
 using SolNex.Api.DTOs;
 
-namespace SolNex.Api.Services;
+namespace SolNex.Api.Services.Reservations;
 
 public interface IEnergyBookingSlotService
 {
@@ -12,3 +15,4 @@ public interface IEnergyBookingSlotService
     Task<SlotDto?> UpdateSlotStatusAsync(string id, string status);
     Task DeleteSlotAsync(string id);
 }
+

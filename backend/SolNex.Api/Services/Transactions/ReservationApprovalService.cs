@@ -1,3 +1,6 @@
+using SolNex.Api.DTOs.Reservations;
+using SolNex.Api.Services.Reservations;
+using SolNex.Api.Repositories.Reservations;
 using System.Security.Cryptography;
 using SolNex.Api.DTOs;
 using SolNex.Api.DTOs.Transactions;
