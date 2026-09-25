@@ -36,7 +36,8 @@ class LoginActivity : ComponentActivity() {
             runOnUiThread {
                 loginResult = result
                 if (result.success) {
-                    // The token is persisted by TokenStore; the dashboard can consume it later.
+                    startActivity(Intent(this, com.example.solnex.MainActivity::class.java))
+                    finish()
                 }
             }
         }

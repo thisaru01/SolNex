@@ -3,9 +3,18 @@ import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/s
 import { AppSidebar } from "./AppSidebar"
 import { Separator } from "@/components/ui/separator"
 
+function getStoredUser() {
+  try {
+    return JSON.parse(localStorage.getItem("solnex_user") || "null")
+  } catch {
+    return null
+  }
+}
+
 export default function AppLayout() {
-  const role = import.meta.env.VITE_USER_ROLE || "Backoffice"
-  const initials = role === "Backoffice" ? "BO" : "GO"
+  const user = getStoredUser()
+  const role = user?.role || "Guest"
+  const initials = role === "Backoffice" ? "BO" : role === "GridOperator" ? "GO" : "PS"
 
   return (
     <SidebarProvider>

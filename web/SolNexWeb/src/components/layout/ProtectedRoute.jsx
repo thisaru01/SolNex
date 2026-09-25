@@ -1,12 +1,24 @@
 import { Navigate } from "react-router-dom"
 
+function getStoredUser() {
+  try {
+    return JSON.parse(localStorage.getItem("solnex_user") || "null")
+  } catch {
+    return null
+  }
+}
+
 export default function ProtectedRoute({ allowedRoles, children }) {
-  const role = import.meta.env.VITE_USER_ROLE || "Backoffice"
-  
+  const user = getStoredUser()
+  const role = user?.role || "Guest"
+
+  if (!user) {
+    return <Navigate to="/login" replace />
+  }
+
   if (!allowedRoles.includes(role)) {
-    // If they don't have access, redirect them to the dashboard
     return <Navigate to="/dashboard" replace />
   }
-  
+
   return children
 }
