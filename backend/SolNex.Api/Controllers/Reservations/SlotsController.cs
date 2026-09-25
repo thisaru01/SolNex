@@ -119,10 +119,11 @@ public class SlotsController : ControllerBase
 
     // Removes an existing energy booking slot by its unique identifier
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Backoffice")]
     public async Task<IActionResult> DeleteSlot(string id)
     {
         await _slotService.DeleteSlotAsync(id);
-        return NoContent();
+        return Ok(new { message = $"Slot with ID '{id}' was successfully deleted." });
     }
 }
 
