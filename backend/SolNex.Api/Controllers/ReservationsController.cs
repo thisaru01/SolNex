@@ -10,12 +10,14 @@ public class ReservationsController : ControllerBase
 {
     private readonly IEnergyReservationService _reservationService;
 
+    // Initializes a new instance of the ReservationsController with the specified service.
     public ReservationsController(IEnergyReservationService reservationService)
     {
         _reservationService = reservationService;
     }
 
     [HttpPost]
+    // Creates a new energy reservation based on the provided details.
     public async Task<ActionResult<ReservationDto>> CreateReservation([FromBody] CreateReservationDto createDto)
     {
         if (!ModelState.IsValid)
@@ -58,6 +60,7 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    // Retrieves a specific reservation by its unique identifier.
     public async Task<ActionResult<ReservationDto>> GetReservationById(string id)
     {
         var reservation = await _reservationService.GetReservationByIdAsync(id);
@@ -70,6 +73,7 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpGet("user/{nic}")]
+    // Retrieves all energy reservations associated with a specific NIC.
     public async Task<ActionResult<IEnumerable<ReservationDto>>> GetReservationsByNic(string nic)
     {
         var reservations = await _reservationService.GetReservationsByNicAsync(nic);
@@ -79,6 +83,7 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpGet("pending")]
+    // Retrieves all energy reservations that are currently in a pending state.
     public async Task<ActionResult<IEnumerable<ReservationDto>>> GetPendingReservations()
     {
         var reservations = await _reservationService.GetPendingReservationsAsync();
@@ -88,6 +93,7 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    // Updates the status or specific details of an existing reservation.
     public async Task<IActionResult> UpdateReservation(string id, [FromBody] UpdateReservationDto updateDto)
     {
         if (!ModelState.IsValid)
@@ -109,9 +115,43 @@ public class ReservationsController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPut("{id}/details")]
+    // Updates the specific details (e.g., slot ID, energy amount) of a pending reservation.
+    public async Task<IActionResult> UpdateReservationDetails(string id, [FromBody] UpdateReservationDetailsDto updateDto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var updatedReservation = await _reservationService.UpdateReservationDetailsAsync(id, updateDto);
+            if (updatedReservation == null)
+            {
+                return NotFound(new { message = $"Reservation with ID {id} not found." });
+            }
+            await PopulateSlotDetailsAsync(updatedReservation);
+            return Ok(new { message = "Reservation details updated successfully.", reservation = updatedReservation });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("{id}/cancel-request")]
+    // Requests cancellation for an existing approved or pending reservation.
     public async Task<IActionResult> RequestCancellation(string id)
     {
         try
@@ -131,6 +171,7 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    // Deletes an existing reservation by its ID if permitted.
     public async Task<IActionResult> DeleteReservation(string id)
     {
         try
@@ -151,6 +192,7 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpGet("history")]
+    // Retrieves the history of all energy reservations.
     public async Task<ActionResult<IEnumerable<ReservationDto>>> GetReservationHistory()
     {
         var reservations = await _reservationService.GetAllReservationsAsync();
@@ -160,6 +202,7 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpGet("search")]
+    // Searches for reservations matching the optionally provided station ID and/or status.
     public async Task<ActionResult<IEnumerable<ReservationDto>>> SearchReservations([FromQuery] string? stationId, [FromQuery] string? status)
     {
         var reservations = await _reservationService.SearchReservationsAsync(stationId, status);
@@ -168,6 +211,7 @@ public class ReservationsController : ControllerBase
         return Ok(reservationsList);
     }
 
+    // Populates slot details such as start time, end time, and day of the week for a collection of reservations.
     private async Task PopulateSlotDetailsAsync(IEnumerable<ReservationDto> reservations)
     {
         var slotService = (IEnergyBookingSlotService?)HttpContext.RequestServices.GetService(typeof(IEnergyBookingSlotService));
@@ -196,6 +240,7 @@ public class ReservationsController : ControllerBase
         }
     }
 
+    // Populates slot details for a single reservation.
     private async Task PopulateSlotDetailsAsync(ReservationDto reservation)
     {
         await PopulateSlotDetailsAsync(new[] { reservation });

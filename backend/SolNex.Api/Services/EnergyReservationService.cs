@@ -72,32 +72,7 @@ public class EnergyReservationService : IEnergyReservationService
         }
 
         // Extract DayOfWeek and Time from SlotId (format: StationId_DayOfWeek_Time)
-        var slotParts = createDto.SlotId.Split('_');
-        if (slotParts.Length >= 3 && Enum.TryParse<DayOfWeek>(slotParts[1], true, out var targetDay))
-        {
-            var today = DateTime.UtcNow.Date;
-            int daysUntil = ((int)targetDay - (int)today.DayOfWeek + 7) % 7;
-            
-            // Calculate the exact date within the next 7 days
-            var calculatedDate = today.AddDays(daysUntil);
-
-            // Parse time from SlotId (e.g., "1130" -> 11:30)
-            var timeStr = slotParts[2];
-            if (int.TryParse(timeStr, out _) && (timeStr.Length == 3 || timeStr.Length == 4))
-            {
-                int hour = int.Parse(timeStr.Length == 4 ? timeStr.Substring(0, 2) : timeStr.Substring(0, 1));
-                int minute = int.Parse(timeStr.Substring(timeStr.Length - 2));
-                calculatedDate = calculatedDate.AddHours(hour).AddMinutes(minute);
-            }
-
-            // If the calculated time has already passed today, schedule for next week
-            if (calculatedDate <= DateTime.UtcNow)
-            {
-                calculatedDate = calculatedDate.AddDays(7);
-            }
-
-            createDto.ReservationDate = calculatedDate;
-        }
+        createDto.ReservationDate = CalculateReservationDate(createDto.SlotId);
 
         // Validate that reservation is within 7 days
         var timeDifference = createDto.ReservationDate.Date - DateTime.UtcNow.Date;
@@ -158,6 +133,12 @@ public class EnergyReservationService : IEnergyReservationService
 
         var previousStatus = reservation.Status;
         bool updated = false;
+
+        if (!string.IsNullOrEmpty(updateDto.SlotId) || updateDto.EnergyAmountKwh.HasValue)
+        {
+            bool detailsUpdated = await ApplyDetailsUpdateAsync(reservation, updateDto.SlotId, updateDto.EnergyAmountKwh);
+            if (detailsUpdated) updated = true;
+        }
 
         if (!string.IsNullOrEmpty(updateDto.Status) && Enum.TryParse<ReservationStatus>(updateDto.Status, true, out var parsedStatus))
         {
@@ -331,5 +312,131 @@ public class EnergyReservationService : IEnergyReservationService
         await _reservationRepository.UpdateReservationAsync(reservation.Id!, reservation);
 
         return MapToDto(reservation);
+    }
+
+    public async Task<ReservationDto?> UpdateReservationDetailsAsync(string id, UpdateReservationDetailsDto updateDto)
+    {
+        var reservation = await _reservationRepository.GetReservationByIdAsync(id)
+                       ?? await _reservationRepository.GetReservationByReservationIdAsync(id);
+
+        if (reservation == null) return null;
+
+        var timeUntilReservation = reservation.ReservationDate - DateTime.UtcNow;
+        if (timeUntilReservation.TotalHours < 12)
+        {
+            throw new InvalidOperationException("Updates and cancellations require at least 12 hours' notice.");
+        }
+
+        bool updated = await ApplyDetailsUpdateAsync(reservation, updateDto.SlotId, updateDto.EnergyAmountKwh);
+
+        if (updated)
+        {
+            reservation.UpdatedAt = DateTime.UtcNow;
+            await _reservationRepository.UpdateReservationAsync(reservation.Id!, reservation);
+        }
+
+        return MapToDto(reservation);
+    }
+
+    private async Task<bool> ApplyDetailsUpdateAsync(EnergyReservation reservation, string? newSlotId, double? newEnergyAmountKwh)
+    {
+        if (string.IsNullOrEmpty(newSlotId) && !newEnergyAmountKwh.HasValue)
+        {
+            return false;
+        }
+
+        if (reservation.Status != ReservationStatus.Pending)
+        {
+            throw new InvalidOperationException("Reservation details can only be updated when the status is Pending.");
+        }
+
+        bool updated = false;
+
+        if (!string.IsNullOrWhiteSpace(newSlotId) && !string.Equals(newSlotId, reservation.SlotId, StringComparison.OrdinalIgnoreCase))
+        {
+            if (!newSlotId.StartsWith(reservation.StationId + "_", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("The provided slot ID does not belong to the specified station.");
+            }
+
+            var slot = await _slotService.GetSlotByIdAsync(newSlotId);
+            if (slot == null)
+            {
+                throw new ArgumentException("The specified slot does not exist.");
+            }
+
+            if (!string.Equals(slot.SlotStatus, "Available", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("Reservations can only be made for available slots.");
+            }
+
+            var newReservationDate = CalculateReservationDate(newSlotId);
+            var timeDifference = newReservationDate.Date - DateTime.UtcNow.Date;
+            if (timeDifference.Days < 0 || timeDifference.Days > 7)
+            {
+                throw new ArgumentException("Reservations must be scheduled within 7 days from today.");
+            }
+
+            var userReservations = await _reservationRepository.GetReservationsByNicAsync(reservation.Nic);
+            var existingReservation = userReservations.FirstOrDefault(r =>
+                r.Id != reservation.Id &&
+                r.SlotId == newSlotId &&
+                r.ReservationDate.Date == newReservationDate.Date &&
+                r.Status != ReservationStatus.Cancelled &&
+                r.Status != ReservationStatus.Rejected);
+
+            if (existingReservation != null)
+            {
+                throw new InvalidOperationException("You already have an active reservation for this slot on the selected date.");
+            }
+
+            reservation.SlotId = newSlotId;
+            reservation.ReservationDate = newReservationDate;
+            updated = true;
+        }
+
+        if (newEnergyAmountKwh.HasValue)
+        {
+            if (newEnergyAmountKwh.Value <= 0)
+            {
+                throw new ArgumentException("Energy amount must be greater than zero.");
+            }
+
+            if (reservation.EnergyAmountKwh != newEnergyAmountKwh.Value)
+            {
+                reservation.EnergyAmountKwh = newEnergyAmountKwh.Value;
+                updated = true;
+            }
+        }
+
+        return updated;
+    }
+
+    private DateTime CalculateReservationDate(string slotId)
+    {
+        var today = DateTime.UtcNow.Date;
+        var calculatedDate = today;
+
+        var slotParts = slotId.Split('_');
+        if (slotParts.Length >= 3 && Enum.TryParse<DayOfWeek>(slotParts[1], true, out var targetDay))
+        {
+            int daysUntil = ((int)targetDay - (int)today.DayOfWeek + 7) % 7;
+            calculatedDate = today.AddDays(daysUntil);
+
+            var timeStr = slotParts[2];
+            if (int.TryParse(timeStr, out _) && (timeStr.Length == 3 || timeStr.Length == 4))
+            {
+                int hour = int.Parse(timeStr.Length == 4 ? timeStr.Substring(0, 2) : timeStr.Substring(0, 1));
+                int minute = int.Parse(timeStr.Substring(timeStr.Length - 2));
+                calculatedDate = calculatedDate.AddHours(hour).AddMinutes(minute);
+            }
+
+            if (calculatedDate <= DateTime.UtcNow)
+            {
+                calculatedDate = calculatedDate.AddDays(7);
+            }
+        }
+
+        return calculatedDate;
     }
 }
