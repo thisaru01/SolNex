@@ -10,6 +10,8 @@ public interface IEnergyReservationService
     Task<IEnumerable<ReservationDto>> GetPendingReservationsAsync();
     Task<ReservationDto> CreateReservationAsync(CreateReservationDto createDto);
     Task<ReservationDto?> UpdateReservationAsync(string id, UpdateReservationDto updateDto);
+    Task<ReservationDto?> UpdateReservationDetailsAsync(string id, UpdateReservationDetailsDto updateDto);
     Task DeleteReservationAsync(string id);
+    Task<ReservationDto?> RequestCancellationAsync(string id);
     Task<IEnumerable<ReservationDto>> SearchReservationsAsync(string? stationId, string? status);
 }

@@ -6,6 +6,7 @@ using SolNex.Api.Services.Stations;
 
 namespace SolNex.Api.Services;
 
+
 public class EnergyBookingSlotService : IEnergyBookingSlotService
 {
     private readonly IEnergyBookingSlotRepository _slotRepository;
