@@ -14,6 +14,7 @@ import Register from "./pages/auth/Register"
 import Transactions from "./pages/transactions/Transactions"
 import TransactionDetails from "./pages/transactions/TransactionDetails"
 import OperationalHistory from "./pages/transactions/OperationalHistory"
+import Users from "./pages/user/Users"
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
         <Route path="/" element={<AppLayout />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="users" element={<Users />} />
           <Route path="stations" element={<Stations />} />
           <Route path="stations/create" element={<ProtectedRoute allowedRoles={["Backoffice"]}><CreateStation /></ProtectedRoute>} />
           <Route path="stations/map" element={<ProtectedRoute allowedRoles={["GridOperator"]}><StationMap /></ProtectedRoute>} />

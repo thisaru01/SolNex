@@ -26,7 +26,6 @@ export async function login(request) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
   })
-
   const data = await response.json().catch(() => ({}))
   if (!response.ok) {
     throw new Error(data.message || "Invalid credentials or inactive account.")
