@@ -1,3 +1,5 @@
+using SolNex.Api.Services.Reservations;
+using SolNex.Api.Repositories.Reservations;
 using MongoDB.Driver;
 using Microsoft.AspNetCore.Identity;
 using SolNex.Api.Data;
@@ -103,3 +105,4 @@ record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
+

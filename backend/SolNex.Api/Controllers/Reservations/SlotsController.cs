@@ -1,8 +1,11 @@
+using SolNex.Api.DTOs.Reservations;
+using SolNex.Api.Services.Reservations;
+using SolNex.Api.Repositories.Reservations;
 using Microsoft.AspNetCore.Mvc;
 using SolNex.Api.DTOs;
 using SolNex.Api.Services;
 
-namespace SolNex.Api.Controllers;
+namespace SolNex.Api.Controllers.Reservations;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -117,3 +120,4 @@ public class SlotsController : ControllerBase
         return NoContent();
     }
 }
+

@@ -1,10 +1,13 @@
+using SolNex.Api.DTOs.Reservations;
+using SolNex.Api.Services.Reservations;
+using SolNex.Api.Repositories.Reservations;
 using MongoDB.Driver;
 using SolNex.Api.DTOs;
 using SolNex.Api.Models;
 using SolNex.Api.Repositories;
 using SolNex.Api.Services.Stations;
 
-namespace SolNex.Api.Services;
+namespace SolNex.Api.Services.Reservations;
 
 
 public class EnergyBookingSlotService : IEnergyBookingSlotService
@@ -201,3 +204,4 @@ public class EnergyBookingSlotService : IEnergyBookingSlotService
         };
     }
 }
+

@@ -1,3 +1,4 @@
+using SolNex.Api.DTOs.Reservations;
 using SolNex.Api.DTOs;
 
 namespace SolNex.Api.DTOs.Transactions;
