@@ -63,4 +63,67 @@ public sealed class UserService : IUserService
             user.AccountStatus.ToString(),
             user.CreatedAt);
     }
+
+    public async Task<IReadOnlyList<UserListItem>> GetUsersAsync(string? search, CancellationToken cancellationToken = default)
+    {
+        var users = await _userRepository.GetAsync(search, cancellationToken);
+        return users.Select(Map).ToList();
+    }
+
+    public async Task<IReadOnlyList<UserListItem>> GetPendingUsersAsync(CancellationToken cancellationToken = default)
+    {
+        var users = await _userRepository.GetAsync(null, cancellationToken);
+        return users.Where(user => user.AccountStatus == AccountStatus.Pending).Select(Map).ToList();
+    }
+
+    public async Task<UserListItem?> GetUserAsync(string nic, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByNicAsync(nic.Trim(), cancellationToken);
+        return user is null ? null : Map(user);
+    }
+
+    public async Task<UserListItem?> UpdateUserAsync(string nic, UpdateUserRequest request, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByNicAsync(nic.Trim(), cancellationToken);
+        if (user is null) return null;
+
+        user.FullName = request.FullName.Trim();
+        user.Email = request.Email.Trim().ToLowerInvariant();
+        user.Phone = request.Phone.Trim();
+        user.UpdatedAt = DateTime.UtcNow;
+        await _userRepository.UpdateAsync(user, cancellationToken);
+        return Map(user);
+    }
+
+    public async Task<UserListItem?> UpdateRoleAsync(string nic, UpdateUserRoleRequest request, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByNicAsync(nic.Trim(), cancellationToken);
+        if (user is null || !Enum.TryParse<UserRole>(request.Role, true, out var role)) return null;
+
+        user.Role = role;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _userRepository.UpdateAsync(user, cancellationToken);
+        return Map(user);
+    }
+
+    public async Task<UserListItem?> SetStatusAsync(string nic, AccountStatus status, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByNicAsync(nic.Trim(), cancellationToken);
+        if (user is null) return null;
+
+        user.AccountStatus = status;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _userRepository.UpdateAsync(user, cancellationToken);
+        return Map(user);
+    }
+
+    private static UserListItem Map(User user) => new(
+        user.Nic,
+        user.FullName,
+        user.Email,
+        user.Phone,
+        user.Role.ToString(),
+        user.AccountStatus.ToString(),
+        user.CreatedAt,
+        user.UpdatedAt);
 }

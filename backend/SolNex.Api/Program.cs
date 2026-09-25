@@ -1,8 +1,7 @@
-using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using MongoDB.Driver;
 using Microsoft.AspNetCore.Identity;
 using SolNex.Api.Data;
+using SolNex.Api.Extensions;
 using SolNex.Api.Models;
 using SolNex.Api.Repositories;
 using SolNex.Api.Repositories.Stations;
@@ -24,32 +23,9 @@ builder.Services.AddScoped<IEnergyReservationService, EnergyReservationService>(
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.AddSolNexJwtAuthentication(builder.Configuration);
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
-
-var jwtSettings = builder.Configuration.GetSection("Jwt");
-var jwtKey = jwtSettings["Key"];
-if (string.IsNullOrWhiteSpace(jwtKey))
-{
-    throw new InvalidOperationException("JWT signing key is missing. Configure it with dotnet user-secrets.");
-}
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            ValidateIssuer = true,
-            ValidIssuer = jwtSettings["Issuer"],
-            ValidateAudience = true,
-            ValidAudience = jwtSettings["Audience"],
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero
-        };
-    });
-builder.Services.AddAuthorization();
 
 // Configure CORS
 builder.Services.AddCors(options =>

@@ -2,6 +2,7 @@ using MongoDB.Driver;
 using SolNex.Api.DTOs;
 using SolNex.Api.Models;
 using SolNex.Api.Repositories;
+using SolNex.Api.Services.Stations;
 
 namespace SolNex.Api.Services;
 

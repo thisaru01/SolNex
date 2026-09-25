@@ -25,8 +25,7 @@ public sealed class AuthService : IAuthService
         LoginRequest request,
         CancellationToken cancellationToken = default)
     {
-        var identifier = request.Identifier.Trim();
-        var user = await _userRepository.FindByNicOrEmailAsync(identifier, cancellationToken);
+        var user = await _userRepository.FindByIdentifierAsync(request.Identifier.Trim(), cancellationToken);
         if (user is null || user.AccountStatus != AccountStatus.Active)
         {
             return null;

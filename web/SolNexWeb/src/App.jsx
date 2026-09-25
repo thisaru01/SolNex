@@ -11,6 +11,7 @@ import StationMap from "./pages/stations/StationMap"
 import ProtectedRoute from "./components/layout/ProtectedRoute"
 import Login from "./pages/auth/Login"
 import Register from "./pages/auth/Register"
+import Users from "./pages/user/Users"
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Route path="/" element={<AppLayout />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="users" element={<Users />} />
           <Route path="stations" element={<Stations />} />
           <Route path="stations/create" element={<ProtectedRoute allowedRoles={["Backoffice"]}><CreateStation /></ProtectedRoute>} />
           <Route path="stations/map" element={<ProtectedRoute allowedRoles={["GridOperator"]}><StationMap /></ProtectedRoute>} />
