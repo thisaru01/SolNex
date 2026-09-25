@@ -28,7 +28,7 @@ function App() {
         <Route path="/" element={<AppLayout />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
-          <Route path="users" element={<Users />} />
+          <Route path="users" element={<ProtectedRoute allowedRoles={["Backoffice"]}><Users /></ProtectedRoute>} />
           <Route path="stations" element={<Stations />} />
           <Route path="stations/create" element={<ProtectedRoute allowedRoles={["Backoffice"]}><CreateStation /></ProtectedRoute>} />
           <Route path="stations/map" element={<ProtectedRoute allowedRoles={["GridOperator"]}><StationMap /></ProtectedRoute>} />

@@ -17,6 +17,14 @@ import {
 } from "@/components/ui/sidebar"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
+function getStoredUser() {
+  try {
+    return JSON.parse(localStorage.getItem("solnex_user") || "null")
+  } catch {
+    return null
+  }
+}
+
 const backofficeItems = [
   { title: "Dashboard", url: "/dashboard", icon: <LayoutDashboard /> },
   { title: "Users", url: "/users", icon: <Users /> },
@@ -48,7 +56,8 @@ const operatorItems = [
 ]
 
 export function AppSidebar() {
-  const role = import.meta.env.VITE_USER_ROLE || "Backoffice"
+  const user = getStoredUser()
+  const role = user?.role || "Guest"
   const isBackoffice = role === "Backoffice"
   const items = isBackoffice ? backofficeItems : operatorItems
   const location = useLocation()
