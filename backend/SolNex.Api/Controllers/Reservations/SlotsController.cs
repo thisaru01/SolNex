@@ -122,8 +122,15 @@ public class SlotsController : ControllerBase
     [Authorize(Roles = "Backoffice")]
     public async Task<IActionResult> DeleteSlot(string id)
     {
-        await _slotService.DeleteSlotAsync(id);
-        return Ok(new { message = $"Slot with ID '{id}' was successfully deleted." });
+        try
+        {
+            await _slotService.DeleteSlotAsync(id);
+            return Ok(new { message = $"Slot with ID '{id}' was successfully deleted." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }
 

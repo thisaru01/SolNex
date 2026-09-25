@@ -125,6 +125,10 @@ public class EnergyBookingSlotService : IEnergyBookingSlotService
 
         if (slot != null && slot.Id != null)
         {
+            if (slot.SlotStatus == SlotStatus.Reserved)
+            {
+                throw new InvalidOperationException("Cannot delete a reserved slot. Only available slots can be deleted.");
+            }
             await _slotRepository.DeleteSlotAsync(slot.Id);
         }
     }
