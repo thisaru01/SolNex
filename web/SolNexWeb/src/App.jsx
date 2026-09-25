@@ -15,7 +15,9 @@ import Transactions from "./pages/transactions/Transactions"
 import TransactionDetails from "./pages/transactions/TransactionDetails"
 import OperationalHistory from "./pages/transactions/OperationalHistory"
 import Users from "./pages/user/Users"
-
+import ReservationList from "./pages/reservations/ReservationList"
+import ReservationHistory from "./pages/reservations/ReservationHistory"
+import BookingSlots from "./pages/reservations/BookingSlots"
 function App() {
   return (
     <BrowserRouter>
@@ -36,6 +38,9 @@ function App() {
           <Route path="stations/:id/edit" element={<ProtectedRoute allowedRoles={["Backoffice"]}><EditStation /></ProtectedRoute>} />
           <Route path="stations/:id/schedule" element={<ProtectedRoute allowedRoles={["Backoffice"]}><StationSchedule /></ProtectedRoute>} />
           <Route path="stations/:id/availability" element={<ProtectedRoute allowedRoles={["GridOperator"]}><StationAvailability /></ProtectedRoute>} />
+          <Route path="reservations" element={<ReservationList />} />
+          <Route path="reservations/history" element={<ReservationHistory />} />
+          <Route path="reservations/slots" element={<BookingSlots />} />
           <Route path="transactions" element={<ProtectedRoute allowedRoles={["GridOperator"]}><Transactions /></ProtectedRoute>}/>
           <Route path="transactions/:id" element={<ProtectedRoute allowedRoles={["GridOperator"]}><TransactionDetails /></ProtectedRoute>}/>
           <Route path="history" element={<ProtectedRoute allowedRoles={["GridOperator"]}><OperationalHistory /></ProtectedRoute>}/>

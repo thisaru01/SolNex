@@ -28,7 +28,14 @@ const backofficeItems = [
       { title: "Station Map", url: "/stations/map" }
     ]
   },
-  { title: "Reservations", url: "/reservations", icon: <Calendar /> },
+  { 
+    title: "Reservations", url: "/reservations", icon: <Calendar />,
+    subItems: [
+      { title: "Reservation List", url: "/reservations" },
+      { title: "Reservation History", url: "/reservations/history" },
+      { title: "Booking Slots", url: "/reservations/slots" }
+    ]
+  },
   { title: "Transactions", url: "/transactions", icon: <QrCode /> },
   { title: "Operational History", url: "/history", icon: <History /> },
 ]
@@ -42,7 +49,14 @@ const operatorItems = [
       { title: "Station Map", url: "/stations/map" }
     ]
   },
-  { title: "Reservations", url: "/reservations", icon: <Calendar /> },
+  { 
+    title: "Reservations", url: "/reservations", icon: <Calendar />,
+    subItems: [
+      { title: "Reservation List", url: "/reservations" },
+      { title: "Reservation History", url: "/reservations/history" },
+      { title: "Booking Slots", url: "/reservations/slots" }
+    ]
+  },
   { title: "Transactions", url: "/transactions", icon: <QrCode /> },
   { title: "Operational History", url: "/history", icon: <History /> },
 ]
