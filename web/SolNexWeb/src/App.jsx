@@ -11,6 +11,9 @@ import StationMap from "./pages/stations/StationMap"
 import ProtectedRoute from "./components/layout/ProtectedRoute"
 import Login from "./pages/auth/Login"
 import Register from "./pages/auth/Register"
+import Transactions from "./pages/transactions/Transactions"
+import TransactionDetails from "./pages/transactions/TransactionDetails"
+import OperationalHistory from "./pages/transactions/OperationalHistory"
 import Users from "./pages/user/Users"
 
 function App() {
@@ -33,9 +36,12 @@ function App() {
           <Route path="stations/:id/edit" element={<ProtectedRoute allowedRoles={["Backoffice"]}><EditStation /></ProtectedRoute>} />
           <Route path="stations/:id/schedule" element={<ProtectedRoute allowedRoles={["Backoffice"]}><StationSchedule /></ProtectedRoute>} />
           <Route path="stations/:id/availability" element={<ProtectedRoute allowedRoles={["GridOperator"]}><StationAvailability /></ProtectedRoute>} />
-          
+          <Route path="transactions" element={<ProtectedRoute allowedRoles={["GridOperator"]}><Transactions /></ProtectedRoute>}/>
+          <Route path="transactions/:id" element={<ProtectedRoute allowedRoles={["GridOperator"]}><TransactionDetails /></ProtectedRoute>}/>
+          <Route path="history" element={<ProtectedRoute allowedRoles={["GridOperator"]}><OperationalHistory /></ProtectedRoute>}/>
+
           {/* Placeholders for future routes */}
-          <Route path="history" element={<div className="p-4">Operational History Coming Soon</div>} />
+          {/* <Route path="history" element={<div className="p-4">Operational History Coming Soon</div>} /> */}
         </Route>
       </Routes>
     </BrowserRouter>

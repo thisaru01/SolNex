@@ -5,8 +5,10 @@ using SolNex.Api.Extensions;
 using SolNex.Api.Models;
 using SolNex.Api.Repositories;
 using SolNex.Api.Repositories.Stations;
+using SolNex.Api.Repositories.Transactions;
 using SolNex.Api.Services;
 using SolNex.Api.Services.Stations;
+using SolNex.Api.Services.Transactions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +28,11 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddSolNexJwtAuthentication(builder.Configuration);
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+
+builder.Services.AddScoped<IReservationApprovalRepository, ReservationApprovalRepository>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<IReservationApprovalService, ReservationApprovalService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
 
 // Configure CORS
 builder.Services.AddCors(options =>
