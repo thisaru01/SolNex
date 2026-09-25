@@ -69,4 +69,15 @@ class TokenStore(context: Context) {
     }
 
     fun token(): String? = preferences.getString("token", null)
+    fun nic(): String? = preferences.getString("nic", null)
+    fun fullName(): String? = preferences.getString("full_name", null)
+    fun role(): String? = preferences.getString("role", null)
+
+    fun updateProfile(fullName: String) {
+        preferences.edit().putString("full_name", fullName).apply()
+    }
+
+    fun clear() {
+        preferences.edit().clear().apply()
+    }
 }
