@@ -16,6 +16,14 @@ import {
 } from "@/components/ui/table"
 import { BatteryCharging, Search, RefreshCw, Power, PowerOff } from "lucide-react"
 
+function getStoredUser() {
+  try {
+    return JSON.parse(localStorage.getItem("solnex_user") || "null")
+  } catch {
+    return null
+  }
+}
+
 export default function Stations() {
   const navigate = useNavigate()
   const [stations, setStations] = useState([])
@@ -23,6 +31,8 @@ export default function Stations() {
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
+  const currentUser = getStoredUser()
+  const isBackoffice = currentUser?.role === "Backoffice"
 
   const fetchStations = async () => {
     try {
@@ -77,7 +87,7 @@ export default function Stations() {
           <h1 className="text-3xl font-bold tracking-tight">Stations Management</h1>
           <p className="text-muted-foreground mt-1">Manage and monitor all solar microgrid stations.</p>
         </div>
-        {import.meta.env.VITE_USER_ROLE === "Backoffice" && (
+        {isBackoffice && (
           <Button onClick={() => navigate("/stations/create")}>
             Create Station
           </Button>
@@ -172,7 +182,7 @@ export default function Stations() {
                         <div className="flex justify-end gap-2">
                           <Button variant="ghost" size="sm" onClick={() => navigate(`/stations/${station.id}`)}>View</Button>
                           
-                          {import.meta.env.VITE_USER_ROLE === "Backoffice" && (
+                          {isBackoffice && (
                             <>
                               <Button variant="outline" size="sm" onClick={() => navigate(`/stations/${station.id}/edit`)}>Edit</Button>
                               {station.status === "Active" ? (

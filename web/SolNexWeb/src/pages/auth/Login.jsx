@@ -22,7 +22,20 @@ export default function Login() {
       const response = await login({ identifier: identifier.trim(), password })
       localStorage.setItem("solnex_token", response.token)
       localStorage.setItem("solnex_user", JSON.stringify(response))
-      navigate("/dashboard", { replace: true })
+
+      if (response.role === "Backoffice") {
+        navigate("/dashboard", { replace: true })
+        return
+      }
+
+      if (response.role === "GridOperator") {
+        navigate("/stations", { replace: true })
+        return
+      }
+
+      setError("Solar prosumer access is available through the Android application.")
+      localStorage.removeItem("solnex_token")
+      localStorage.removeItem("solnex_user")
     } catch (loginError) {
       setError(loginError.message)
     } finally {

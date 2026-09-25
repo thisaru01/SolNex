@@ -15,11 +15,21 @@ import {
 } from "@/components/ui/table"
 import { BatteryCharging, Battery, Power, PowerOff, LayoutDashboard } from "lucide-react"
 
+function getStoredUser() {
+  try {
+    return JSON.parse(localStorage.getItem("solnex_user") || "null")
+  } catch {
+    return null
+  }
+}
+
 export default function Dashboard() {
   const [stations, setStations] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const navigate = useNavigate()
+  const currentUser = getStoredUser()
+  const isBackoffice = currentUser?.role === "Backoffice"
 
   useEffect(() => {
     const fetchStations = async () => {
@@ -61,7 +71,7 @@ export default function Dashboard() {
           <Button variant="outline" onClick={() => navigate("/stations")}>
             View All Stations
           </Button>
-          {import.meta.env.VITE_USER_ROLE === "Backoffice" && (
+          {isBackoffice && (
             <Button onClick={() => navigate("/stations/create")}>
               Create Station
             </Button>

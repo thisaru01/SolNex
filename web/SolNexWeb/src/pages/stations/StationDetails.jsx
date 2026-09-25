@@ -8,12 +8,22 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Separator } from "@/components/ui/separator"
 import { ArrowLeft, Edit, Clock, MapPin, BatteryCharging, Zap, Power, PowerOff } from "lucide-react"
 
+function getStoredUser() {
+  try {
+    return JSON.parse(localStorage.getItem("solnex_user") || "null")
+  } catch {
+    return null
+  }
+}
+
 export default function StationDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [station, setStation] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const currentUser = getStoredUser()
+  const isBackoffice = currentUser?.role === "Backoffice"
   
   const fetchStation = async () => {
     try {
@@ -68,7 +78,7 @@ export default function StationDetails() {
           </div>
         </div>
         <div className="flex gap-2">
-          {import.meta.env.VITE_USER_ROLE === "Backoffice" && (
+          {isBackoffice && (
             <>
               <Button variant="outline" onClick={() => navigate(`/stations/${id}/edit`)}>
                 <Edit className="h-4 w-4 mr-2" /> Edit
@@ -158,7 +168,7 @@ export default function StationDetails() {
             ) : (
               <div className="text-center py-6 text-muted-foreground">
                 No schedule defined. 
-                {import.meta.env.VITE_USER_ROLE === "Backoffice" && (
+                {isBackoffice && (
                   <> <Link to={`/stations/${id}/schedule`} className="text-primary hover:underline">Set schedule</Link></>
                 )}
               </div>
