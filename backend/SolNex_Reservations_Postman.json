@@ -276,6 +276,53 @@
 					]
 				}
 			}
+		},
+		{
+			"name": "14. Update Reservation Details",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"slotId\": \"ST001_20261010_1030\",\r\n  \"energyAmountKwh\": 20.0\r\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/reservations/{{reservation_id}}/details",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"reservations",
+						"{{reservation_id}}",
+						"details"
+					]
+				}
+			}
+		},
+		{
+			"name": "15. Request Cancellation",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/reservations/{{reservation_id}}/cancel-request",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"reservations",
+						"{{reservation_id}}",
+						"cancel-request"
+					]
+				}
+			}
 		}
 	],
 	"variable": [
