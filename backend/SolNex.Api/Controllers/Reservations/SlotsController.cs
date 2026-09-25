@@ -2,6 +2,7 @@ using SolNex.Api.DTOs.Reservations;
 using SolNex.Api.Services.Reservations;
 using SolNex.Api.Repositories.Reservations;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using SolNex.Api.DTOs;
 using SolNex.Api.Services;
 
@@ -45,6 +46,7 @@ public class SlotsController : ControllerBase
 
     // Validates and creates a new booking slot within the station's operating schedule
     [HttpPost]
+    [Authorize(Roles = "Backoffice")]
     public async Task<ActionResult<SlotDto>> CreateSlot([FromBody] CreateSlotDto createDto)
     {
         if (!ModelState.IsValid)
@@ -52,9 +54,12 @@ public class SlotsController : ControllerBase
             return BadRequest(ModelState);
         }
 
+        var backofficerId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var backofficerName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+
         try
         {
-            var createdSlot = await _slotService.CreateSlotAsync(createDto);
+            var createdSlot = await _slotService.CreateSlotAsync(createDto, backofficerId, backofficerName);
             return CreatedAtAction(nameof(GetAllSlots), new { id = createdSlot.Id }, createdSlot);
         }
         catch (ArgumentException ex)

@@ -53,7 +53,7 @@ public class EnergyBookingSlotService : IEnergyBookingSlotService
     }
 
     // Validates operating schedule hours and creates a new booking slot
-    public async Task<SlotDto> CreateSlotAsync(CreateSlotDto createDto)
+    public async Task<SlotDto> CreateSlotAsync(CreateSlotDto createDto, string? backofficerId = null, string? backofficerName = null)
     {
         var slotId = $"{createDto.StationId}_{createDto.DayOfWeek}_{createDto.StartTime.Replace(":", "")}";
 
@@ -77,7 +77,9 @@ public class EnergyBookingSlotService : IEnergyBookingSlotService
             ScheduleTime = scheduleTime,
             SlotStatus = SlotStatus.Available,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
+            CreatedBy = backofficerId,
+            CreatorName = backofficerName
         };
 
         try
@@ -200,7 +202,9 @@ public class EnergyBookingSlotService : IEnergyBookingSlotService
             ScheduleTime = slot.ScheduleTime,
             SlotStatus = slot.SlotStatus.ToString(),
             CreatedAt = slot.CreatedAt,
-            UpdatedAt = slot.UpdatedAt
+            UpdatedAt = slot.UpdatedAt,
+            CreatedBy = slot.CreatedBy,
+            CreatorName = slot.CreatorName
         };
     }
 }

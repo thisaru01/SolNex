@@ -14,4 +14,6 @@ public class SlotDto
     public string SlotStatus { get; set; } = null!;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public string? CreatedBy { get; set; }
+    public string? CreatorName { get; set; }
 }

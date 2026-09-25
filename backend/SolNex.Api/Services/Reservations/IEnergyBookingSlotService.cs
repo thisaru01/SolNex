@@ -11,7 +11,7 @@ public interface IEnergyBookingSlotService
     Task<IEnumerable<SlotDto>> GetSlotsByStationIdAsync(string stationId);
     Task<IEnumerable<SlotDto>> GetAvailableSlotsAsync();
     Task<SlotDto?> GetSlotByIdAsync(string id);
-    Task<SlotDto> CreateSlotAsync(CreateSlotDto createDto);
+    Task<SlotDto> CreateSlotAsync(CreateSlotDto createDto, string? backofficerId = null, string? backofficerName = null);
     Task<SlotDto?> UpdateSlotStatusAsync(string id, string status);
     Task DeleteSlotAsync(string id);
 }
