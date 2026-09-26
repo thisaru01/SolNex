@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
-import { Search, UserCheck, UserRoundX } from "lucide-react"
+import { Search, UserCheck, UserRoundX, UserPlus } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 import {
   activateUser,
   deactivateUser,
@@ -17,9 +18,10 @@ function statusClass(status) {
 }
 
 export default function Users() {
+  const navigate = useNavigate()
   const [users, setUsers] = useState([])
   const [search, setSearch] = useState("")
-  const [showPending, setShowPending] = useState(true)
+  const [filter, setFilter] = useState("all")
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
   const [workingNic, setWorkingNic] = useState("")
@@ -28,7 +30,17 @@ export default function Users() {
     setIsLoading(true)
     setError("")
     try {
-      setUsers(showPending ? await getPendingUsers() : await getUsers(search))
+      if (filter === "pending") {
+        setUsers(await getPendingUsers())
+      } else if (filter === "active") {
+        const allUsers = await getUsers(search)
+        setUsers(allUsers.filter(user => user.accountStatus === "Active"))
+      } else if (filter === "inactive") {
+        const allUsers = await getUsers(search)
+        setUsers(allUsers.filter(user => user.accountStatus === "Inactive"))
+      } else {
+        setUsers(await getUsers(search))
+      }
     } catch (loadError) {
       setError(loadError.message)
     } finally {
@@ -42,7 +54,18 @@ export default function Users() {
       setIsLoading(true)
       setError("")
       try {
-        const nextUsers = showPending ? await getPendingUsers() : await getUsers()
+        let nextUsers
+        if (filter === "pending") {
+          nextUsers = await getPendingUsers()
+        } else if (filter === "active") {
+          const allUsers = await getUsers()
+          nextUsers = allUsers.filter(user => user.accountStatus === "Active")
+        } else if (filter === "inactive") {
+          const allUsers = await getUsers()
+          nextUsers = allUsers.filter(user => user.accountStatus === "Inactive")
+        } else {
+          nextUsers = await getUsers()
+        }
         if (isCurrent) setUsers(nextUsers)
       } catch (loadError) {
         if (isCurrent) {
@@ -56,7 +79,7 @@ export default function Users() {
     }
     load()
     return () => { isCurrent = false }
-  }, [showPending])
+  }, [filter])
 
   async function changeStatus(user) {
     setWorkingNic(user.nic)
@@ -95,9 +118,26 @@ export default function Users() {
           <h1 className="text-3xl font-bold tracking-tight">User management</h1>
           <p className="mt-1 text-muted-foreground">Review prosumers, manage roles, and control account access.</p>
         </div>
-        <button type="button" onClick={() => setShowPending((current) => !current)} className="inline-flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium hover:bg-muted">
-          {showPending ? "View all users" : "Pending activation"}
-        </button>
+        <div className="flex gap-2">
+          <button type="button" onClick={() => navigate("/users/create")} className="inline-flex h-10 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+            <UserPlus className="size-4" />
+            Create user
+          </button>
+          <div className="flex rounded-md border">
+            <button type="button" onClick={() => setFilter("all")} className={`h-10 px-4 text-sm font-medium hover:bg-muted ${filter === "all" ? "bg-muted" : ""}`}>
+              All
+            </button>
+            <button type="button" onClick={() => setFilter("pending")} className={`h-10 px-4 text-sm font-medium hover:bg-muted border-l ${filter === "pending" ? "bg-muted" : ""}`}>
+              Pending
+            </button>
+            <button type="button" onClick={() => setFilter("active")} className={`h-10 px-4 text-sm font-medium hover:bg-muted border-l ${filter === "active" ? "bg-muted" : ""}`}>
+              Active
+            </button>
+            <button type="button" onClick={() => setFilter("inactive")} className={`h-10 px-4 text-sm font-medium hover:bg-muted border-l ${filter === "inactive" ? "bg-muted" : ""}`}>
+              Inactive
+            </button>
+          </div>
+        </div>
       </header>
 
       <div className="flex max-w-xl gap-2">
