@@ -24,6 +24,14 @@ public sealed class UserManagementController : ControllerBase
     public Task<IReadOnlyList<UserListItem>> GetUsers([FromQuery] string? search, CancellationToken cancellationToken) =>
         _userService.GetUsersAsync(search, cancellationToken);
 
+    [HttpPost("register")]
+    [Authorize(Roles = "Backoffice")]
+    public async Task<IActionResult> RegisterWebUser(RegisterWebUserRequest request, CancellationToken cancellationToken)
+    {
+        var user = await _userService.RegisterWebUserAsync(request, cancellationToken);
+        return Ok(user);
+    }
+
     [HttpGet("pending")]
     [Authorize(Roles = "Backoffice")]
     public Task<IReadOnlyList<UserListItem>> GetPendingUsers(CancellationToken cancellationToken) =>
@@ -69,6 +77,18 @@ public sealed class UserManagementController : ControllerBase
     public async Task<IActionResult> Deactivate(string nic, CancellationToken cancellationToken)
     {
         if (!User.IsInRole("Backoffice") && !string.Equals(User.FindFirstValue(ClaimTypes.NameIdentifier), nic, StringComparison.OrdinalIgnoreCase))
+        {
+            return Forbid();
+        }
+
+        return await SetStatus(nic, AccountStatus.Inactive, cancellationToken);
+    }
+
+    [HttpPut("{nic}/request-deactivation")]
+    public async Task<IActionResult> RequestDeactivation(string nic, CancellationToken cancellationToken)
+    {
+        var currentNic = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(currentNic) || !string.Equals(currentNic, nic, StringComparison.OrdinalIgnoreCase))
         {
             return Forbid();
         }
