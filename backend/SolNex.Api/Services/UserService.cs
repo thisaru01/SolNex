@@ -64,6 +64,58 @@ public sealed class UserService : IUserService
             user.CreatedAt);
     }
 
+    public async Task<RegisteredUserResponse> RegisterWebUserAsync(
+        RegisterWebUserRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var nic = request.Nic.Trim();
+        var email = request.Email.Trim().ToLowerInvariant();
+
+        if (!Enum.TryParse<UserRole>(request.Role, true, out var role))
+        {
+            throw new ArgumentException("Invalid role.");
+        }
+
+        if (await _userRepository.ExistsByNicOrEmailAsync(nic, email, cancellationToken))
+        {
+            throw new InvalidOperationException("A user with this NIC or email already exists.");
+        }
+
+        var now = DateTime.UtcNow;
+        var accountStatus = role == UserRole.Prosumer ? AccountStatus.Pending : AccountStatus.Active;
+        
+        var user = new User
+        {
+            Nic = nic,
+            FullName = request.FullName.Trim(),
+            Email = email,
+            Phone = request.Phone.Trim(),
+            Role = role,
+            AccountStatus = accountStatus,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+        user.PasswordHash = _passwordHasher.HashPassword(user, request.Password);
+
+        try
+        {
+            await _userRepository.CreateAsync(user, cancellationToken);
+        }
+        catch (MongoWriteException exception) when (exception.WriteError?.Category == ServerErrorCategory.DuplicateKey)
+        {
+            throw new InvalidOperationException("A user with this NIC or email already exists.", exception);
+        }
+
+        return new RegisteredUserResponse(
+            user.Nic,
+            user.FullName,
+            user.Email,
+            user.Phone,
+            user.Role.ToString(),
+            user.AccountStatus.ToString(),
+            user.CreatedAt);
+    }
+
     public async Task<IReadOnlyList<UserListItem>> GetUsersAsync(string? search, CancellationToken cancellationToken = default)
     {
         var users = await _userRepository.GetAsync(search, cancellationToken);

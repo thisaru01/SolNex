@@ -226,7 +226,7 @@ class MainActivity : ComponentActivity() {
 
         Thread {
             val success = try {
-                val connection = (URL("http://10.0.2.2:5097/api/users/$nic/deactivate").openConnection() as HttpURLConnection).apply {
+                val connection = (URL("http://10.0.2.2:5097/api/users/$nic/request-deactivation").openConnection() as HttpURLConnection).apply {
                     requestMethod = "PUT"
                     connectTimeout = 15_000
                     readTimeout = 15_000

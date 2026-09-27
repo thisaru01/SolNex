@@ -25,4 +25,13 @@ public sealed class AuthController : ControllerBase
             ? Unauthorized(new { message = "Invalid credentials or inactive account." })
             : Ok(response);
     }
+
+    [HttpPost("register")]
+    [ProducesResponseType(typeof(RegisteredUserResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Register(RegisterUserRequest request, CancellationToken cancellationToken)
+    {
+        var response = await _authService.RegisterProsumerAsync(request, cancellationToken);
+        return Ok(response);
+    }
 }
