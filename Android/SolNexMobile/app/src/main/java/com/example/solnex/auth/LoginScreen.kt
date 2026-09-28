@@ -39,14 +39,16 @@ fun LoginScreen(
     }
 
     fun submit() {
+        val trimmedIdentifier = identifier.trim()
         validationError = when {
-            identifier.trim().isEmpty() -> "Enter your NIC or email."
+            trimmedIdentifier.isEmpty() -> "Enter your NIC or email."
             password.isEmpty() -> "Enter your password."
+            trimmedIdentifier.all { it.isDigit() || it == 'V' || it == 'X' } && !trimmedIdentifier.matches(Regex("^(\\d{9}[VX]|\\d{12})$")) -> "NIC must be 9 digits ending with V/X or 12 digits."
             else -> null
         }
         if (validationError == null) {
             isSubmitting = true
-            onSubmit(LoginRequest(identifier.trim(), password))
+            onSubmit(LoginRequest(trimmedIdentifier, password))
         }
     }
 

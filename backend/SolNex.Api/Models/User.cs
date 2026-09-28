@@ -50,5 +50,6 @@ public enum AccountStatus
 {
     Pending,
     Active,
-    Inactive
+    Inactive,
+    DeactivationRequested
 }

@@ -25,6 +25,18 @@ public sealed partial class UserRepository : IUserRepository
         return _users.Find(filter).AnyAsync(cancellationToken);
     }
 
+    public Task<bool> ExistsByEmailExceptNicAsync(
+        string email,
+        string nic,
+        CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<User>.Filter.And(
+            Builders<User>.Filter.Eq(user => user.Email, email),
+            Builders<User>.Filter.Ne(user => user.Nic, nic));
+
+        return _users.Find(filter).AnyAsync(cancellationToken);
+    }
+
     public Task CreateAsync(User user, CancellationToken cancellationToken = default)
     {
         return _users.InsertOneAsync(user, cancellationToken: cancellationToken);
