@@ -4,6 +4,8 @@ import { Search, UserCheck, UserRoundX, UserPlus, Edit, Eye } from "lucide-react
 import {
   activateUser,
   deactivateUser,
+  approveDeactivation,
+  rejectDeactivation,
   getUsers,
 } from "../../services/userApi"
 
@@ -12,6 +14,7 @@ function statusClass(status) {
     Active: "bg-emerald-100 text-emerald-700",
     Pending: "bg-amber-100 text-amber-700",
     Inactive: "bg-slate-100 text-slate-600",
+    DeactivationRequested: "bg-orange-100 text-orange-700",
   }[status] || "bg-muted text-muted-foreground"
 }
 
@@ -85,6 +88,11 @@ export default function Prosumers() {
   async function changeStatus(user) {
     setWorkingNic(user.nic)
     try {
+      if (user.accountStatus === "DeactivationRequested") {
+        // For deactivation requests, don't allow direct toggle - use deactivation requests page
+        navigate("/deactivation-requests")
+        return
+      }
       if (user.accountStatus === "Active") await deactivateUser(user.nic)
       else await activateUser(user.nic)
       await loadUsers()

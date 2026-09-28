@@ -8,6 +8,7 @@ function statusClass(status) {
     Active: "bg-emerald-100 text-emerald-700",
     Pending: "bg-amber-100 text-amber-700",
     Inactive: "bg-slate-100 text-slate-600",
+    DeactivationRequested: "bg-orange-100 text-orange-700",
   }[status] || "bg-muted text-muted-foreground"
 }
 
@@ -40,6 +41,11 @@ export default function ProsumerDetails() {
     setIsWorking(true)
     setError("")
     try {
+      if (user.accountStatus === "DeactivationRequested") {
+        // For deactivation requests, navigate to deactivation requests page
+        navigate("/deactivation-requests")
+        return
+      }
       if (user.accountStatus === "Active") {
         await deactivateUser(nic)
       } else {
@@ -172,27 +178,40 @@ export default function ProsumerDetails() {
                     ? "Account is active and can use the system" 
                     : user.accountStatus === "Pending"
                     ? "Account is pending activation by Backoffice"
+                    : user.accountStatus === "DeactivationRequested"
+                    ? "Deactivation request is pending Backoffice approval"
                     : "Account is deactivated and cannot access the system"}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={handleStatusChange}
-                disabled={isWorking}
-                className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted disabled:cursor-wait disabled:opacity-50"
-              >
-                {isWorking ? "Processing..." : user.accountStatus === "Active" ? (
-                  <>
-                    <UserRoundX className="size-4" />
-                    Deactivate
-                  </>
-                ) : (
-                  <>
-                    <UserCheck className="size-4" />
-                    Activate
-                  </>
-                )}
-              </button>
+              {user.accountStatus !== "DeactivationRequested" && (
+                <button
+                  type="button"
+                  onClick={handleStatusChange}
+                  disabled={isWorking}
+                  className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted disabled:cursor-wait disabled:opacity-50"
+                >
+                  {isWorking ? "Processing..." : user.accountStatus === "Active" ? (
+                    <>
+                      <UserRoundX className="size-4" />
+                      Deactivate
+                    </>
+                  ) : (
+                    <>
+                      <UserCheck className="size-4" />
+                      Activate
+                    </>
+                  )}
+                </button>
+              )}
+              {user.accountStatus === "DeactivationRequested" && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/deactivation-requests")}
+                  className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
+                >
+                  Review deactivation request
+                </button>
+              )}
             </div>
 
             <div className="pt-4 border-t">

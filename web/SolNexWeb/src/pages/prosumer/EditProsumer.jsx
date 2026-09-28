@@ -15,6 +15,18 @@ export default function EditProsumer() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
 
+  // Format phone number with spaces
+  function formatPhoneNumber(value) {
+    const digits = value.replace(/\D/g, '')
+    if (digits.startsWith('94') && digits.length >= 11) {
+      return `+94 ${digits.substring(2, 5)} ${digits.substring(5, 8)} ${digits.substring(8)}`
+    }
+    if (digits.startsWith('0') && digits.length >= 10) {
+      return `${digits.substring(0, 3)} ${digits.substring(3, 6)} ${digits.substring(6)}`
+    }
+    return value
+  }
+
   useEffect(() => {
     async function loadUser() {
       setIsLoading(true)
@@ -24,7 +36,7 @@ export default function EditProsumer() {
         setFormData({
           fullName: userData.fullName,
           email: userData.email,
-          phone: userData.phone
+          phone: formatPhoneNumber(userData.phone)
         })
       } catch (err) {
         setError(err.message || "Failed to load prosumer details")
@@ -36,19 +48,36 @@ export default function EditProsumer() {
   }, [nic])
 
   function handleChange(event) {
-    setFormData(prev => ({
-      ...prev,
-      [event.target.name]: event.target.value
-    }))
+    const { name, value } = event.target
+    if (name === 'phone') {
+      setFormData(prev => ({ ...prev, [name]: formatPhoneNumber(value) }))
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }))
+    }
   }
 
   async function handleSubmit(event) {
     event.preventDefault()
     setError("")
+
+    const phoneDigits = formData.phone.replace(/\D/g, '')
+    if (phoneDigits.startsWith('94') && phoneDigits.length !== 11) {
+      setError("Phone must be +94 followed by 9 digits")
+      return
+    }
+    if (phoneDigits.startsWith('0') && phoneDigits.length !== 10) {
+      setError("Phone must be 0 followed by 9 digits")
+      return
+    }
+    if (!phoneDigits.startsWith('94') && !phoneDigits.startsWith('0')) {
+      setError("Phone must start with +94 or 0")
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
-      await updateUser(nic, formData)
+      await updateUser(nic, { ...formData, phone: phoneDigits })
       navigate(`/prosumers/${nic}`, { state: { message: "Profile updated successfully" } })
     } catch (err) {
       setError(err.message || "Failed to update profile")
@@ -150,7 +179,7 @@ export default function EditProsumer() {
               value={formData.phone}
               onChange={handleChange}
               required
-              placeholder="Enter phone number"
+              placeholder="+94 7XX XXX XXX or 0XX XXX XXXX"
               className="h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
           </div>
