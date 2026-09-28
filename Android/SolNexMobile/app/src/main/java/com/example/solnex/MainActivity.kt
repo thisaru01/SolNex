@@ -38,6 +38,9 @@ import com.example.solnex.ui.theme.SolNexTheme
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
+import androidx.compose.ui.platform.LocalContext
+import com.example.solnex.operator.OperatorActivity
+import com.example.solnex.operator.prosumer.ProsumerApprovedReservationsActivity
 
 private data class UserSession(
     val nic: String,
@@ -275,6 +278,7 @@ private fun DashboardScreen(
     var phone by remember(profile?.phone) { mutableStateOf(profile?.phone.orEmpty()) }
     var editMode by remember { mutableStateOf(false) }
     val profileStatus = profile?.accountStatus ?: "Pending"
+    val context = LocalContext.current
 
     LaunchedEffect(profile) {
         fullName = profile?.fullName ?: displayUser.fullName
@@ -368,6 +372,22 @@ private fun DashboardScreen(
                     }
 
                     Button(
+                onClick = {
+                    context.startActivity(
+                        Intent(
+                            context,
+                            ProsumerApprovedReservationsActivity::class.java
+                        )
+                    )
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    "Approved Reservations & QR"
+                )
+            }
+
+                    Button(
                         onClick = onRequestDeactivation,
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -376,14 +396,43 @@ private fun DashboardScreen(
                 }
             }
         } else {
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Operator mode", style = MaterialTheme.typography.titleMedium)
-                    Text("Ready to verify QR transactions and manage energy transfer approvals.")
-                    Text("Use the web dashboard for full administrative operations and the mobile app for quick mobile checks.")
+
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+
+            Text(
+                text = "Operator Mode",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Text(
+                text = "Scan prosumer transaction QR codes, verify transactions with the server, and finalize energy transfers."
+            )
+
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    context.startActivity(
+                        Intent(
+                            context,
+                            OperatorActivity::class.java
+                        )
+                    )
                 }
+            ) {
+                Text(
+                    text = "Open Operator Mode"
+                )
             }
         }
+    }
+}
 
         if (error != null) {
             Text(error, color = MaterialTheme.colorScheme.error)

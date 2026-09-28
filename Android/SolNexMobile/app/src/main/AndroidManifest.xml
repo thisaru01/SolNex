@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
 
     <application
         android:allowBackup="true"
@@ -13,7 +14,27 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.SolNex"
+        android:usesCleartextTraffic="true"
         tools:targetApi="31">
+
+        <activity
+            android:name=".operator.OperatorActivity"
+            android:exported="false"
+            android:label="Operator Mode"
+            android:theme="@style/Theme.SolNex" />
+        
+        <activity
+            android:name=".operator.prosumer.ProsumerApprovedReservationsActivity"
+            android:exported="false"
+            android:label="Approved Reservations"
+            android:theme="@style/Theme.SolNex" />
+
+        <activity
+            android:name=".operator.prosumer.ProsumerTransactionQrActivity"
+            android:exported="false"
+            android:label="Approved Reservation QR"
+            android:theme="@style/Theme.SolNex" />
+            
         <activity
             android:name=".MainActivity"
             android:exported="true"
