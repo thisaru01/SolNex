@@ -4,11 +4,31 @@ namespace SolNex.Api.Repositories.Transactions;
 
 public interface ITransactionRepository
 {
-    Task<EnergyTransaction?> GetByIdOrTransactionIdAsync(string id);
-    Task<EnergyTransaction?> GetByQrTokenAsync(string qrToken);
-    Task<EnergyTransaction?> GetByReservationIdAsync(string reservationId);
-    Task<IEnumerable<EnergyTransaction>> GetPendingAsync();
-    Task<IEnumerable<EnergyTransaction>> GetCompletedAsync();
-    Task CreateAsync(EnergyTransaction transaction);
-    Task UpdateAsync(EnergyTransaction transaction);
+    Task<EnergyTransaction?>
+        GetByIdOrTransactionIdAsync(
+            string id);
+
+    Task<EnergyTransaction?>
+        GetByQrTokenAsync(
+            string qrToken);
+
+    Task<EnergyTransaction?>
+        GetByReservationIdAsync(
+            string reservationId);
+
+    Task<IEnumerable<EnergyTransaction>>
+        GetPendingAsync();
+
+    Task<IEnumerable<EnergyTransaction>>
+        GetCompletedAsync();
+
+    Task<IEnumerable<EnergyTransaction>>
+        GetActiveByProsumerNicAsync(
+            string nic);
+
+    Task CreateAsync(
+        EnergyTransaction transaction);
+
+    Task UpdateAsync(
+        EnergyTransaction transaction);
 }

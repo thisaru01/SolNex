@@ -23,6 +23,8 @@ import CreateProsumer from "./pages/prosumer/CreateProsumer"
 import ReservationList from "./pages/reservations/ReservationList"
 import ReservationHistory from "./pages/reservations/ReservationHistory"
 import BookingSlots from "./pages/reservations/BookingSlots"
+import GridOperatorReservationList from "./pages/operator-reservations/GridOperatorReservationList"
+import GridOperatorReservationDetails from "./pages/operator-reservations/GridOperatorReservationDetails"
 function App() {
   return (
     <BrowserRouter>
@@ -55,6 +57,8 @@ function App() {
           <Route path="transactions" element={<ProtectedRoute allowedRoles={["GridOperator"]}><Transactions /></ProtectedRoute>}/>
           <Route path="transactions/:id" element={<ProtectedRoute allowedRoles={["GridOperator"]}><TransactionDetails /></ProtectedRoute>}/>
           <Route path="history" element={<ProtectedRoute allowedRoles={["GridOperator"]}><OperationalHistory /></ProtectedRoute>}/>
+          <Route path="operator/reservations" element={<ProtectedRoute allowedRoles={["GridOperator"]}><GridOperatorReservationList /></ProtectedRoute>}/>
+          <Route path="operator/reservations/:id" element={<ProtectedRoute allowedRoles={["GridOperator"]}><GridOperatorReservationDetails /></ProtectedRoute>}/>
 
           {/* Placeholders for future routes */}
           {/* <Route path="history" element={<div className="p-4">Operational History Coming Soon</div>} /> */}

@@ -4,11 +4,14 @@ using SolNex.Api.Repositories.Reservations;
 using Microsoft.AspNetCore.Mvc;
 using SolNex.Api.DTOs;
 using SolNex.Api.Services;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace SolNex.Api.Controllers.Reservations;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class ReservationsController : ControllerBase
 {
     private readonly IEnergyReservationService _reservationService;
@@ -63,6 +66,7 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize(Roles = "Backoffice,GridOperator,Prosumer")]
     // Retrieves a specific reservation by its unique identifier.
     public async Task<ActionResult<ReservationDto>> GetReservationById(string id)
     {
@@ -71,6 +75,17 @@ public class ReservationsController : ControllerBase
         {
             return NotFound(new { message = $"Reservation with ID {id} not found." });
         }
+        
+        if (!CanAccessReservation(reservation.Nic))
+        {
+            return Forbid();
+        }
+
+        if (User.IsInRole("GridOperator") && reservation.Status != "Approved")
+        {
+            return Forbid();
+        }
+
         await PopulateSlotDetailsAsync(reservation);
         return Ok(reservation);
     }
@@ -79,7 +94,18 @@ public class ReservationsController : ControllerBase
     // Retrieves all energy reservations associated with a specific NIC.
     public async Task<ActionResult<IEnumerable<ReservationDto>>> GetReservationsByNic(string nic)
     {
+        if (!CanAccessReservation(nic))
+        {
+            return Forbid();
+        }
+
         var reservations = await _reservationService.GetReservationsByNicAsync(nic);
+        
+        if (User.IsInRole("GridOperator"))
+        {
+            reservations = reservations.Where(r => r.Status == "Approved");
+        }
+
         var reservationsList = reservations.ToList();
         await PopulateSlotDetailsAsync(reservationsList);
         return Ok(reservationsList);
@@ -89,7 +115,19 @@ public class ReservationsController : ControllerBase
     // Retrieves all energy reservations that are currently in a pending state.
     public async Task<ActionResult<IEnumerable<ReservationDto>>> GetPendingReservations()
     {
+        if (User.IsInRole("GridOperator"))
+        {
+            return Forbid();
+        }
+
         var reservations = await _reservationService.GetPendingReservationsAsync();
+        
+        if (!User.IsInRole("Backoffice"))
+        {
+            var currentNic = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            reservations = reservations.Where(r => string.Equals(r.Nic, currentNic, StringComparison.OrdinalIgnoreCase));
+        }
+
         var reservationsList = reservations.ToList();
         await PopulateSlotDetailsAsync(reservationsList);
         return Ok(reservationsList);
@@ -157,6 +195,12 @@ public class ReservationsController : ControllerBase
     // Requests cancellation for an existing approved or pending reservation.
     public async Task<IActionResult> RequestCancellation(string id)
     {
+        var existingReservation = await _reservationService.GetReservationByIdAsync(id);
+        if (existingReservation != null && !CanAccessReservation(existingReservation.Nic))
+        {
+            return Forbid();
+        }
+
         try
         {
             var updatedReservation = await _reservationService.RequestCancellationAsync(id);
@@ -185,6 +229,17 @@ public class ReservationsController : ControllerBase
                 return NotFound(new { message = $"Reservation with ID {id} not found." });
             }
 
+            var currentNic = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(currentNic) || !string.Equals(currentNic, reservation.Nic, StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
+            if (reservation.Status != "Rejected" && reservation.Status != "Cancelled" && reservation.Status != "Completed")
+            {
+                return BadRequest(new { message = "Only completed, rejected, or cancelled reservations can be deleted." });
+            }
+
             await _reservationService.DeleteReservationAsync(id);
             return NoContent();
         }
@@ -198,17 +253,41 @@ public class ReservationsController : ControllerBase
     // Retrieves the history of all energy reservations.
     public async Task<ActionResult<IEnumerable<ReservationDto>>> GetReservationHistory()
     {
+        if (User.IsInRole("GridOperator"))
+        {
+            return Forbid();
+        }
+
         var reservations = await _reservationService.GetAllReservationsAsync();
+        
+        if (!User.IsInRole("Backoffice"))
+        {
+            var currentNic = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            reservations = reservations.Where(r => string.Equals(r.Nic, currentNic, StringComparison.OrdinalIgnoreCase));
+        }
+
         var reservationsList = reservations.ToList();
         await PopulateSlotDetailsAsync(reservationsList);
         return Ok(reservationsList);
     }
 
     [HttpGet("search")]
+    [Authorize(Roles = "Backoffice,GridOperator,Prosumer")]
     // Searches for reservations matching the optionally provided station ID and/or status.
     public async Task<ActionResult<IEnumerable<ReservationDto>>> SearchReservations([FromQuery] string? stationId, [FromQuery] string? status)
     {
         var reservations = await _reservationService.SearchReservationsAsync(stationId, status);
+        
+        if (User.IsInRole("GridOperator"))
+        {
+            reservations = reservations.Where(r => r.Status == "Approved");
+        }
+        else if (!User.IsInRole("Backoffice"))
+        {
+            var currentNic = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            reservations = reservations.Where(r => string.Equals(r.Nic, currentNic, StringComparison.OrdinalIgnoreCase));
+        }
+
         var reservationsList = reservations.ToList();
         await PopulateSlotDetailsAsync(reservationsList);
         return Ok(reservationsList);
@@ -247,6 +326,18 @@ public class ReservationsController : ControllerBase
     private async Task PopulateSlotDetailsAsync(ReservationDto reservation)
     {
         await PopulateSlotDetailsAsync(new[] { reservation });
+    }
+
+    private bool CanAccessReservation(string nic)
+    {
+        if (User.IsInRole("Backoffice") || User.IsInRole("GridOperator"))
+        {
+            return true;
+        }
+
+        var currentNic = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return !string.IsNullOrWhiteSpace(currentNic)
+            && string.Equals(currentNic, nic, StringComparison.OrdinalIgnoreCase);
     }
 }
 
