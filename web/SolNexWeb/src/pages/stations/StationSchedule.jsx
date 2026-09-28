@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Switch } from "@/components/ui/switch"
 import { ArrowLeft } from "lucide-react"
 import {
   AlertDialog,
@@ -96,23 +97,60 @@ export default function StationSchedule() {
       <Card className="max-w-3xl mx-auto">
         <CardHeader>
           <CardTitle>Operating Hours</CardTitle>
-          <CardDescription>Enter time ranges like "08:00 - 18:00" or type "Closed".</CardDescription>
+          <CardDescription>Toggle days and select exact opening and closing times.</CardDescription>
         </CardHeader>
         <CardContent>
           {error && <div className="p-3 mb-4 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>}
           
-          <form onSubmit={handlePreSubmit} className="space-y-4">
-            {DAYS_OF_WEEK.map((day) => (
-              <div key={day} className="flex items-center gap-4">
-                <div className="w-24 font-medium">{day}</div>
-                <Input 
-                  placeholder="e.g. 08:00 - 18:00" 
-                  value={schedule[day]}
-                  onChange={(e) => handleScheduleChange(day, e.target.value)}
-                  className="flex-1"
-                />
-              </div>
-            ))}
+          <form onSubmit={handlePreSubmit} className="space-y-0">
+            <div className="max-w-xl mx-auto">
+              {DAYS_OF_WEEK.map((day) => {
+                const isOpen = schedule[day] !== "Closed" && schedule[day] !== "" && schedule[day] !== undefined
+                const times = isOpen ? schedule[day].split(" - ") : ["08:00", "18:00"]
+                const startTime = times[0] || "08:00"
+                const endTime = times[1] || "18:00"
+
+                return (
+                  <div key={day} className="flex items-center gap-8 py-3.5 border-b last:border-0">
+                    <div className="w-28 font-medium flex-shrink-0">{day}</div>
+                    
+                    <div className="flex items-center gap-3 flex-shrink-0 w-24">
+                      <Switch 
+                        checked={isOpen} 
+                        onCheckedChange={(c) => handleScheduleChange(day, c ? "08:00 - 18:00" : "Closed")} 
+                      />
+                      <span className="text-sm text-muted-foreground">
+                        {isOpen ? "Open" : "Closed"}
+                      </span>
+                    </div>
+                    
+                    <div className="flex-1">
+                      {isOpen ? (
+                        <div className="flex items-center gap-4 animate-in fade-in zoom-in-95 duration-200">
+                          <Input 
+                            type="time" 
+                            value={startTime}
+                            onChange={(e) => handleScheduleChange(day, `${e.target.value} - ${endTime}`)}
+                            className="w-32"
+                            required
+                          />
+                          <span className="text-muted-foreground font-medium text-sm">to</span>
+                          <Input 
+                            type="time" 
+                            value={endTime}
+                            onChange={(e) => handleScheduleChange(day, `${startTime} - ${e.target.value}`)}
+                            className="w-32"
+                            required
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">Closed all day</span>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
 
             <div className="pt-6 flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => navigate(`/stations/${id}`)}>Cancel</Button>
