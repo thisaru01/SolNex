@@ -249,11 +249,22 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpGet("history")]
-    [Authorize(Roles = "Backoffice")]
     // Retrieves the history of all energy reservations.
     public async Task<ActionResult<IEnumerable<ReservationDto>>> GetReservationHistory()
     {
+        if (User.IsInRole("GridOperator"))
+        {
+            return Forbid();
+        }
+
         var reservations = await _reservationService.GetAllReservationsAsync();
+        
+        if (!User.IsInRole("Backoffice"))
+        {
+            var currentNic = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            reservations = reservations.Where(r => string.Equals(r.Nic, currentNic, StringComparison.OrdinalIgnoreCase));
+        }
+
         var reservationsList = reservations.ToList();
         await PopulateSlotDetailsAsync(reservationsList);
         return Ok(reservationsList);

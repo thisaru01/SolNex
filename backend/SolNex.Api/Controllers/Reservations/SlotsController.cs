@@ -22,6 +22,7 @@ public class SlotsController : ControllerBase
 
     // Retrieves all energy booking slots across all stations
     [HttpGet]
+    [Authorize(Roles = "Backoffice")]
     public async Task<ActionResult<IEnumerable<SlotDto>>> GetAllSlots()
     {
         var slots = await _slotService.GetAllSlotsAsync();
@@ -30,6 +31,7 @@ public class SlotsController : ControllerBase
 
     // Retrieves only currently available energy booking slots
     [HttpGet("available")]
+    [Authorize(Roles = "Backoffice,Prosumer")]
     public async Task<ActionResult<IEnumerable<SlotDto>>> GetAvailableSlots()
     {
         var slots = await _slotService.GetAvailableSlotsAsync();
@@ -38,6 +40,7 @@ public class SlotsController : ControllerBase
 
     // Retrieves all booking slots for a specific charging/energy station
     [HttpGet("{stationId}")]
+    [Authorize(Roles = "Backoffice")]
     public async Task<ActionResult<IEnumerable<SlotDto>>> GetSlotsByStationId(string stationId)
     {
         var slots = await _slotService.GetSlotsByStationIdAsync(stationId);
