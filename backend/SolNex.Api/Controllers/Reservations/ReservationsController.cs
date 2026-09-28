@@ -142,6 +142,34 @@ public class ReservationsController : ControllerBase
             return BadRequest(ModelState);
         }
 
+        var existingReservation = await _reservationService.GetReservationByIdAsync(id);
+        if (existingReservation == null)
+        {
+            return NotFound(new { message = $"Reservation with ID {id} not found." });
+        }
+
+        if (!string.IsNullOrEmpty(updateDto.Status) && Enum.TryParse<SolNex.Api.Models.ReservationStatus>(updateDto.Status, true, out var parsedStatus))
+        {
+            if (parsedStatus == SolNex.Api.Models.ReservationStatus.Cancelled)
+            {
+                if (existingReservation.Status == "CancellationRequested")
+                {
+                    if (!User.IsInRole("Backoffice"))
+                    {
+                        return Forbid();
+                    }
+                }
+                else
+                {
+                    var currentNic = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    if (string.IsNullOrWhiteSpace(currentNic) || !string.Equals(currentNic, existingReservation.Nic, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return Forbid();
+                    }
+                }
+            }
+        }
+
         try
         {
             var updatedReservation = await _reservationService.UpdateReservationAsync(id, updateDto);
@@ -171,6 +199,18 @@ public class ReservationsController : ControllerBase
             return BadRequest(ModelState);
         }
 
+        var existingReservation = await _reservationService.GetReservationByIdAsync(id);
+        if (existingReservation == null)
+        {
+            return NotFound(new { message = $"Reservation with ID {id} not found." });
+        }
+
+        var currentNic = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(currentNic) || !string.Equals(currentNic, existingReservation.Nic, StringComparison.OrdinalIgnoreCase))
+        {
+            return Forbid();
+        }
+
         try
         {
             var updatedReservation = await _reservationService.UpdateReservationDetailsAsync(id, updateDto);
@@ -196,7 +236,13 @@ public class ReservationsController : ControllerBase
     public async Task<IActionResult> RequestCancellation(string id)
     {
         var existingReservation = await _reservationService.GetReservationByIdAsync(id);
-        if (existingReservation != null && !CanAccessReservation(existingReservation.Nic))
+        if (existingReservation == null)
+        {
+            return NotFound(new { message = $"Reservation with ID {id} not found." });
+        }
+
+        var currentNic = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(currentNic) || !string.Equals(currentNic, existingReservation.Nic, StringComparison.OrdinalIgnoreCase))
         {
             return Forbid();
         }
