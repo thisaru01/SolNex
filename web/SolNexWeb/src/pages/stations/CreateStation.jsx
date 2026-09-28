@@ -7,11 +7,22 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export default function CreateStation() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [alertOpen, setAlertOpen] = useState(false)
   
   const [formData, setFormData] = useState({
     stationId: "",
@@ -27,8 +38,13 @@ export default function CreateStation() {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = async (e) => {
+  const handlePreSubmit = (e) => {
     e.preventDefault()
+    setAlertOpen(true)
+  }
+
+  const handleSubmit = async () => {
+    setAlertOpen(false)
     setLoading(true)
     setError(null)
     
@@ -52,18 +68,18 @@ export default function CreateStation() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate("/stations")}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Create New Station</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Create New Station</h1>
           <p className="text-muted-foreground mt-1">Register a new microgrid station to the network.</p>
         </div>
       </div>
 
-      <Card>
+      <Card className="max-w-3xl mx-auto">
         <CardHeader>
           <CardTitle>Station Details</CardTitle>
           <CardDescription>Fill out the basic information for the new station.</CardDescription>
@@ -71,8 +87,8 @@ export default function CreateStation() {
         <CardContent>
           {error && <div className="p-3 mb-4 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>}
           
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={handlePreSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="stationId">Station ID <span className="text-destructive">*</span></Label>
                 <Input 
@@ -97,7 +113,7 @@ export default function CreateStation() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="latitude">Latitude <span className="text-destructive">*</span></Label>
                 <Input 
@@ -124,7 +140,7 @@ export default function CreateStation() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="capacityKw">Capacity (kW) <span className="text-destructive">*</span></Label>
                 <Input 
@@ -165,6 +181,22 @@ export default function CreateStation() {
           </form>
         </CardContent>
       </Card>
+      
+      <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Create Station?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to create this new microgrid station? 
+              It will be available for reservations immediately.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSubmit}>Create</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

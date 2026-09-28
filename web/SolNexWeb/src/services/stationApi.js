@@ -3,8 +3,10 @@ const API_BASE_URL = 'http://localhost:5097/api';
 async function fetchWithConfig(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
   
+  const token = localStorage.getItem("solnex_token");
   const defaultHeaders = {
     'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 
   const config = {
@@ -19,7 +21,10 @@ async function fetchWithConfig(endpoint, options = {}) {
     const response = await fetch(url, config);
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `API Error: ${response.status} ${response.statusText}`);
+      const validationMessage = errorData.errors
+        ? Object.values(errorData.errors).flat().join(" ")
+        : (errorData.message || errorData.title || `API Error: ${response.status} ${response.statusText}`);
+      throw new Error(validationMessage);
     }
     // Handle 204 No Content or empty responses
     const text = await response.text();
