@@ -16,6 +16,7 @@ import TransactionDetails from "./pages/transactions/TransactionDetails"
 import OperationalHistory from "./pages/transactions/OperationalHistory"
 import Users from "./pages/user/Users"
 import CreateUser from "./pages/user/CreateUser"
+import DeactivationRequests from "./pages/user/DeactivationRequests"
 import Prosumers from "./pages/prosumer/Prosumers"
 import ProsumerDetails from "./pages/prosumer/ProsumerDetails"
 import EditProsumer from "./pages/prosumer/EditProsumer"
@@ -37,6 +38,7 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="users" element={<ProtectedRoute allowedRoles={["Backoffice"]}><Users /></ProtectedRoute>} />
           <Route path="users/create" element={<ProtectedRoute allowedRoles={["Backoffice"]}><CreateUser /></ProtectedRoute>} />
+          <Route path="deactivation-requests" element={<ProtectedRoute allowedRoles={["Backoffice"]}><DeactivationRequests /></ProtectedRoute>} />
           <Route path="prosumers" element={<ProtectedRoute allowedRoles={["Backoffice"]}><Prosumers /></ProtectedRoute>} />
           <Route path="prosumers/create" element={<ProtectedRoute allowedRoles={["Backoffice"]}><CreateProsumer /></ProtectedRoute>} />
           <Route path="prosumers/:nic" element={<ProtectedRoute allowedRoles={["Backoffice"]}><ProsumerDetails /></ProtectedRoute>} />
