@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom"
-import { BatteryCharging, LayoutDashboard, Calendar, QrCode, Users, UserSquare, History, Sun, Zap, ChevronDown, ChevronUp } from "lucide-react"
+import { BatteryCharging, LayoutDashboard, Calendar, QrCode, Users, UserSquare, History, Sun, Zap, ChevronDown, ChevronUp, UserX } from "lucide-react"
 
 import {
   Sidebar,
@@ -28,6 +28,7 @@ function getStoredUser() {
 const backofficeItems = [
   { title: "Dashboard", url: "/dashboard", icon: <LayoutDashboard /> },
   { title: "Users", url: "/users", icon: <Users /> },
+  { title: "Deactivation Requests", url: "/deactivation-requests", icon: <UserX /> },
   { title: "Prosumers", url: "/prosumers", icon: <UserSquare /> },
   { 
     title: "Stations", url: "/stations", icon: <BatteryCharging />,
@@ -57,11 +58,14 @@ const operatorItems = [
       { title: "Station Map", url: "/stations/map" }
     ]
   },
-  { title: "Reservations", url: "/operator/reservations", icon: <Calendar />,
-  subItems: [
-    { title: "Pending Approvals", url: "/operator/reservations",},
-  ],
-},
+  { 
+    title: "Reservations", url: "/reservations", icon: <Calendar />,
+    subItems: [
+      { title: "Reservation List", url: "/reservations" },
+      { title: "Booking Slots", url: "/reservations/slots" },
+      { title: "Pending Approvals", url: "/operator/reservations" }
+    ]
+  },
   { title: "Transactions", url: "/transactions", icon: <QrCode /> },
   { title: "Operational History", url: "/history", icon: <History /> },
 ]

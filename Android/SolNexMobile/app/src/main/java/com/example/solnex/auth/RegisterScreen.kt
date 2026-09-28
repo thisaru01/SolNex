@@ -37,8 +37,36 @@ fun RegisterScreen(
     var phone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var error by remember { mutableStateOf<String?>(null) }
+    var nicError by remember { mutableStateOf<String?>(null) }
+    var fullNameError by remember { mutableStateOf<String?>(null) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var phoneError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+    var confirmPasswordError by remember { mutableStateOf<String?>(null) }
     var isSubmitting by remember { mutableStateOf(false) }
+
+    // Format phone number with spaces
+    fun formatPhoneNumber(input: String): String {
+        val digits = input.filter { it.isDigit() }
+        return when {
+            digits.startsWith("94") && digits.length >= 11 -> {
+                val formatted = StringBuilder()
+                formatted.append("+94 ")
+                if (digits.length > 2) formatted.append(digits.substring(2, 5))
+                if (digits.length > 5) formatted.append(" ").append(digits.substring(5, 8))
+                if (digits.length > 8) formatted.append(" ").append(digits.substring(8))
+                formatted.toString()
+            }
+            digits.startsWith("0") && digits.length >= 10 -> {
+                val formatted = StringBuilder()
+                formatted.append(digits.substring(0, 3))
+                if (digits.length > 3) formatted.append(" ").append(digits.substring(3, 6))
+                if (digits.length > 6) formatted.append(" ").append(digits.substring(6))
+                formatted.toString()
+            }
+            else -> input
+        }
+    }
 
     LaunchedEffect(result) {
         if (result != null) {
@@ -47,18 +75,22 @@ fun RegisterScreen(
     }
 
     fun submit() {
-        error = when {
-            nic.trim().length < 5 -> "Enter a valid NIC."
-            fullName.trim().length < 2 -> "Enter your full name."
-            !android.util.Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches() -> "Enter a valid email."
-            phone.trim().isEmpty() -> "Enter your phone number."
-            password.length < 8 -> "Password must contain at least 8 characters."
-            password != confirmPassword -> "Passwords do not match."
+        nicError = if (!nic.trim().matches(Regex("^(\\d{9}[VX]|\\d{12})$"))) "NIC must be 9 digits ending with V/X or 12 digits." else null
+        fullNameError = if (fullName.trim().length < 2) "Enter your full name." else null
+        emailError = if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()) "Enter a valid email." else null
+        val phoneDigits = phone.filter { it.isDigit() }
+        phoneError = when {
+            phoneDigits.startsWith("94") && phoneDigits.length != 11 -> "Phone must be +94 followed by 9 digits."
+            phoneDigits.startsWith("0") && phoneDigits.length != 10 -> "Phone must be 0 followed by 9 digits."
+            !phoneDigits.startsWith("94") && !phoneDigits.startsWith("0") -> "Phone must start with +94 or 0."
             else -> null
         }
-        if (error == null) {
+        passwordError = if (password.length < 8) "Password must contain at least 8 characters." else null
+        confirmPasswordError = if (password != confirmPassword) "Passwords do not match." else null
+
+        if (nicError == null && fullNameError == null && emailError == null && phoneError == null && passwordError == null && confirmPasswordError == null) {
             isSubmitting = true
-            onSubmit(RegisterRequest(nic.trim(), fullName.trim(), email.trim(), phone.trim(), password))
+            onSubmit(RegisterRequest(nic.trim(), fullName.trim(), email.trim(), phoneDigits, password))
         }
     }
 
@@ -75,14 +107,37 @@ fun RegisterScreen(
                 "Register as a solar prosumer. Your account will be pending until it is activated.",
                 style = MaterialTheme.typography.bodyMedium
             )
-            OutlinedTextField(nic, { nic = it }, label = { Text("National Identity Card") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-            OutlinedTextField(fullName, { fullName = it }, label = { Text("Full name") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-            OutlinedTextField(email, { email = it }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth(), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email))
-            OutlinedTextField(phone, { phone = it }, label = { Text("Phone") }, modifier = Modifier.fillMaxWidth(), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone))
-            OutlinedTextField(password, { password = it }, label = { Text("Password") }, modifier = Modifier.fillMaxWidth(), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password))
-            OutlinedTextField(confirmPassword, { confirmPassword = it }, label = { Text("Confirm password") }, modifier = Modifier.fillMaxWidth(), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password))
+            OutlinedTextField(nic, { 
+                nic = it
+                nicError = null
+            }, label = { Text("National Identity Card") }, modifier = Modifier.fillMaxWidth(), singleLine = true, isError = nicError != null)
+            nicError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+            OutlinedTextField(fullName, { 
+                fullName = it
+                fullNameError = null
+            }, label = { Text("Full name") }, modifier = Modifier.fillMaxWidth(), singleLine = true, isError = fullNameError != null)
+            fullNameError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+            OutlinedTextField(email, { 
+                email = it
+                emailError = null
+            }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth(), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), isError = emailError != null)
+            emailError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+            OutlinedTextField(phone, { 
+                phone = formatPhoneNumber(it)
+                phoneError = null
+            }, label = { Text("Phone") }, modifier = Modifier.fillMaxWidth(), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), isError = phoneError != null)
+            phoneError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+            OutlinedTextField(password, { 
+                password = it
+                passwordError = null
+            }, label = { Text("Password") }, modifier = Modifier.fillMaxWidth(), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), isError = passwordError != null)
+            passwordError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+            OutlinedTextField(confirmPassword, { 
+                confirmPassword = it
+                confirmPasswordError = null
+            }, label = { Text("Confirm password") }, modifier = Modifier.fillMaxWidth(), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), isError = confirmPasswordError != null)
+            confirmPasswordError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
 
-            error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             result?.let {
                 Text(
                     it.message,

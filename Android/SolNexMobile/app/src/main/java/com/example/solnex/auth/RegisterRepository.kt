@@ -17,7 +17,7 @@ class ApiRegisterRepository(
     override fun register(request: RegisterRequest, callback: (RegisterResult) -> Unit) {
         executor.execute {
             val result = try {
-                val connection = (URL("$apiBaseUrl/api/users/register").openConnection() as HttpURLConnection).apply {
+                val connection = (URL("$apiBaseUrl/api/auth/register").openConnection() as HttpURLConnection).apply {
                     requestMethod = "POST"
                     connectTimeout = 15_000
                     readTimeout = 15_000
@@ -47,7 +47,7 @@ class ApiRegisterRepository(
                 val response = responseStream?.bufferedReader()?.use { it.readText() }.orEmpty()
                 connection.disconnect()
 
-                if (responseCode == HttpURLConnection.HTTP_CREATED) {
+                if (responseCode in 200..299) {
                     RegisterResult(true, "Registration submitted. Your account is pending activation.")
                 } else {
                     RegisterResult(false, extractMessage(response) ?: "Registration failed. Please try again.")

@@ -10,15 +10,18 @@ public sealed class AuthService : IAuthService
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher<User> _passwordHasher;
     private readonly IJwtTokenService _jwtTokenService;
+    private readonly IUserService _userService;
 
     public AuthService(
         IUserRepository userRepository,
         IPasswordHasher<User> passwordHasher,
-        IJwtTokenService jwtTokenService)
+        IJwtTokenService jwtTokenService,
+        IUserService userService)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _jwtTokenService = jwtTokenService;
+        _userService = userService;
     }
 
     public async Task<LoginResponse?> LoginAsync(
@@ -45,5 +48,10 @@ public sealed class AuthService : IAuthService
             user.FullName,
             user.Email,
             user.Role.ToString());
+    }
+
+    public async Task<RegisteredUserResponse> RegisterProsumerAsync(RegisterUserRequest request, CancellationToken cancellationToken = default)
+    {
+        return await _userService.RegisterProsumerAsync(request, cancellationToken);
     }
 }

@@ -2,6 +2,7 @@ using SolNex.Api.DTOs.Reservations;
 using SolNex.Api.Services.Reservations;
 using SolNex.Api.Repositories.Reservations;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using SolNex.Api.DTOs;
 using SolNex.Api.Services;
 
@@ -21,6 +22,7 @@ public class SlotsController : ControllerBase
 
     // Retrieves all energy booking slots across all stations
     [HttpGet]
+    [Authorize(Roles = "Backoffice")]
     public async Task<ActionResult<IEnumerable<SlotDto>>> GetAllSlots()
     {
         var slots = await _slotService.GetAllSlotsAsync();
@@ -29,6 +31,7 @@ public class SlotsController : ControllerBase
 
     // Retrieves only currently available energy booking slots
     [HttpGet("available")]
+    [Authorize(Roles = "Backoffice,Prosumer")]
     public async Task<ActionResult<IEnumerable<SlotDto>>> GetAvailableSlots()
     {
         var slots = await _slotService.GetAvailableSlotsAsync();
@@ -37,6 +40,7 @@ public class SlotsController : ControllerBase
 
     // Retrieves all booking slots for a specific charging/energy station
     [HttpGet("{stationId}")]
+    [Authorize(Roles = "Backoffice")]
     public async Task<ActionResult<IEnumerable<SlotDto>>> GetSlotsByStationId(string stationId)
     {
         var slots = await _slotService.GetSlotsByStationIdAsync(stationId);
@@ -45,6 +49,7 @@ public class SlotsController : ControllerBase
 
     // Validates and creates a new booking slot within the station's operating schedule
     [HttpPost]
+    [Authorize(Roles = "Backoffice")]
     public async Task<ActionResult<SlotDto>> CreateSlot([FromBody] CreateSlotDto createDto)
     {
         if (!ModelState.IsValid)
@@ -52,9 +57,12 @@ public class SlotsController : ControllerBase
             return BadRequest(ModelState);
         }
 
+        var backofficerId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var backofficerName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+
         try
         {
-            var createdSlot = await _slotService.CreateSlotAsync(createDto);
+            var createdSlot = await _slotService.CreateSlotAsync(createDto, backofficerId, backofficerName);
             return CreatedAtAction(nameof(GetAllSlots), new { id = createdSlot.Id }, createdSlot);
         }
         catch (ArgumentException ex)
@@ -92,6 +100,36 @@ public class SlotsController : ControllerBase
         }
     }
 
+    // Updates the start and end time of an available energy booking slot
+    [HttpPut("{id}/time")]
+    [Authorize(Roles = "Backoffice")]
+    public async Task<ActionResult<SlotDto>> UpdateSlotTime(string id, [FromBody] UpdateSlotTimeDto updateTimeDto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var updatedSlot = await _slotService.UpdateSlotTimeAsync(id, updateTimeDto.StartTime, updateTimeDto.EndTime);
+            if (updatedSlot == null)
+            {
+                return NotFound(new { message = $"Slot with ID '{id}' not found." });
+            }
+
+            return Ok(updatedSlot);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     // Direct endpoint to reserve a slot (marks status as Reserved)
     [HttpPut("{id}/reserve")]
     public async Task<ActionResult<SlotDto>> ReserveSlot(string id)
@@ -114,10 +152,18 @@ public class SlotsController : ControllerBase
 
     // Removes an existing energy booking slot by its unique identifier
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Backoffice")]
     public async Task<IActionResult> DeleteSlot(string id)
     {
-        await _slotService.DeleteSlotAsync(id);
-        return NoContent();
+        try
+        {
+            await _slotService.DeleteSlotAsync(id);
+            return Ok(new { message = $"Slot with ID '{id}' was successfully deleted." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }
 

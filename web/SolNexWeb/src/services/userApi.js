@@ -28,6 +28,14 @@ export function getPendingUsers() {
   return request("/api/users/pending")
 }
 
+export function getDeactivationRequests() {
+  return request("/api/users/deactivation-requests")
+}
+
+export function getUserByNic(nic) {
+  return request(`/api/users/${encodeURIComponent(nic)}`)
+}
+
 export function updateUser(nic, user) {
   return request(`/api/users/${encodeURIComponent(nic)}`, {
     method: "PUT",
@@ -48,4 +56,19 @@ export function activateUser(nic) {
 
 export function deactivateUser(nic) {
   return request(`/api/users/${encodeURIComponent(nic)}/deactivate`, { method: "PUT" })
+}
+
+export function approveDeactivation(nic) {
+  return request(`/api/users/${encodeURIComponent(nic)}/approve-deactivation`, { method: "PUT" })
+}
+
+export function rejectDeactivation(nic) {
+  return request(`/api/users/${encodeURIComponent(nic)}/reject-deactivation`, { method: "PUT" })
+}
+
+export function registerWebUser(user) {
+  return request("/api/users/register", {
+    method: "POST",
+    body: JSON.stringify(user),
+  })
 }

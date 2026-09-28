@@ -11,6 +11,18 @@ const initialForm = {
   password: "",
 }
 
+// Format phone number with spaces
+function formatPhoneNumber(value) {
+  const digits = value.replace(/\D/g, '')
+  if (digits.startsWith('94') && digits.length >= 11) {
+    return `+94 ${digits.substring(2, 5)} ${digits.substring(5, 8)} ${digits.substring(8)}`
+  }
+  if (digits.startsWith('0') && digits.length >= 10) {
+    return `${digits.substring(0, 3)} ${digits.substring(3, 6)} ${digits.substring(6)}`
+  }
+  return value
+}
+
 export default function Register() {
   const navigate = useNavigate()
   const [form, setForm] = useState(initialForm)
@@ -19,16 +31,49 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false)
 
   function updateField(event) {
-    setForm((current) => ({ ...current, [event.target.name]: event.target.value }))
+    const { name, value } = event.target
+    if (name === 'phone') {
+      setForm((current) => ({ ...current, [name]: formatPhoneNumber(value) }))
+    } else {
+      setForm((current) => ({ ...current, [name]: value }))
+    }
   }
 
   async function handleSubmit(event) {
     event.preventDefault()
     setError("")
+    
+    // Validate NIC format
+    if (!/^(\d{9}[VX]|\d{12})$/i.test(form.nic.trim())) {
+      setError("NIC must be 9 digits ending with V/X or 12 digits")
+      return
+    }
+    
+    // Validate phone format
+    const phoneDigits = form.phone.replace(/\D/g, '')
+    if (phoneDigits.startsWith('94') && phoneDigits.length !== 11) {
+      setError("Phone must be +94 followed by 9 digits")
+      return
+    }
+    if (phoneDigits.startsWith('0') && phoneDigits.length !== 10) {
+      setError("Phone must be 0 followed by 9 digits")
+      return
+    }
+    if (!phoneDigits.startsWith('94') && !phoneDigits.startsWith('0')) {
+      setError("Phone must start with +94 or 0")
+      return
+    }
+    
+    // Validate password length
+    if (form.password.length < 8) {
+      setError("Password must be at least 8 characters")
+      return
+    }
+    
     setIsSubmitting(true)
 
     try {
-      await registerProsumer(form)
+      await registerProsumer({ ...form, phone: phoneDigits })
       navigate("/login", {
         replace: true,
         state: {
@@ -58,9 +103,9 @@ export default function Register() {
           <div className="mb-7 space-y-3"><div className="flex size-11 items-center justify-center rounded-xl bg-[#e3f1d4] text-[#356545]"><Sun className="size-5" /></div><p className="pt-3 text-xs font-bold uppercase tracking-[0.2em] text-[#4b8661]">Solar prosumer</p><h2 className="text-4xl font-semibold tracking-[-0.045em] text-[#173b2c]">Create your account</h2><p className="text-sm leading-6 text-[#6c7e72]">Your account will be pending until a Backoffice officer activates it.</p></div>
           {error && <p role="alert" className="mb-5 rounded-lg border border-[#efc8bd] bg-[#fff1ed] px-4 py-3 text-sm leading-5 text-[#9a493d]">{error}</p>}
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2"><label htmlFor="nic" className="text-sm font-semibold text-[#274534]">National Identity Card</label><input id="nic" name="nic" value={form.nic} onChange={updateField} required minLength={5} maxLength={20} placeholder="Enter your NIC" className="h-11 w-full rounded-lg border border-[#d7e1d4] bg-white px-4 text-sm text-[#173b2c] outline-none transition focus:border-[#4b8661] focus:ring-4 focus:ring-[#4b8661]/10" /></div>
+            <div className="space-y-2"><label htmlFor="nic" className="text-sm font-semibold text-[#274534]">National Identity Card</label><input id="nic" name="nic" value={form.nic} onChange={updateField} required minLength={5} maxLength={20} placeholder="9 digits + V/X or 12 digits" className="h-11 w-full rounded-lg border border-[#d7e1d4] bg-white px-4 text-sm text-[#173b2c] outline-none transition focus:border-[#4b8661] focus:ring-4 focus:ring-[#4b8661]/10" /></div>
             <div className="space-y-2"><label htmlFor="fullName" className="text-sm font-semibold text-[#274534]">Full name</label><input id="fullName" name="fullName" value={form.fullName} onChange={updateField} required minLength={2} maxLength={120} placeholder="Enter your full name" className="h-11 w-full rounded-lg border border-[#d7e1d4] bg-white px-4 text-sm text-[#173b2c] outline-none transition focus:border-[#4b8661] focus:ring-4 focus:ring-[#4b8661]/10" /></div>
-            <div className="grid gap-4 sm:grid-cols-2"><div className="space-y-2"><label htmlFor="email" className="text-sm font-semibold text-[#274534]">Email</label><input id="email" name="email" type="email" value={form.email} onChange={updateField} required placeholder="name@example.com" className="h-11 w-full rounded-lg border border-[#d7e1d4] bg-white px-4 text-sm text-[#173b2c] outline-none transition focus:border-[#4b8661] focus:ring-4 focus:ring-[#4b8661]/10" /></div><div className="space-y-2"><label htmlFor="phone" className="text-sm font-semibold text-[#274534]">Phone</label><input id="phone" name="phone" type="tel" value={form.phone} onChange={updateField} required placeholder="+94 77 123 4567" className="h-11 w-full rounded-lg border border-[#d7e1d4] bg-white px-4 text-sm text-[#173b2c] outline-none transition focus:border-[#4b8661] focus:ring-4 focus:ring-[#4b8661]/10" /></div></div>
+            <div className="grid gap-4 sm:grid-cols-2"><div className="space-y-2"><label htmlFor="email" className="text-sm font-semibold text-[#274534]">Email</label><input id="email" name="email" type="email" value={form.email} onChange={updateField} required placeholder="name@example.com" className="h-11 w-full rounded-lg border border-[#d7e1d4] bg-white px-4 text-sm text-[#173b2c] outline-none transition focus:border-[#4b8661] focus:ring-4 focus:ring-[#4b8661]/10" /></div><div className="space-y-2"><label htmlFor="phone" className="text-sm font-semibold text-[#274534]">Phone</label><input id="phone" name="phone" type="tel" value={form.phone} onChange={updateField} required placeholder="+94 7XX XXX XXX or 0XX XXX XXXX" className="h-11 w-full rounded-lg border border-[#d7e1d4] bg-white px-4 text-sm text-[#173b2c] outline-none transition focus:border-[#4b8661] focus:ring-4 focus:ring-[#4b8661]/10" /></div></div>
             <div className="space-y-2"><label htmlFor="password" className="text-sm font-semibold text-[#274534]">Password</label><div className="relative"><input id="password" name="password" type={showPassword ? "text" : "password"} value={form.password} onChange={updateField} required minLength={8} maxLength={100} placeholder="At least 8 characters" className="h-11 w-full rounded-lg border border-[#d7e1d4] bg-white px-4 pr-12 text-sm text-[#173b2c] outline-none transition focus:border-[#4b8661] focus:ring-4 focus:ring-[#4b8661]/10" /><button type="button" onClick={() => setShowPassword((current) => !current)} aria-label={showPassword ? "Hide password" : "Show password"} className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-[#809287] hover:text-[#274534]">{showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button></div></div>
             <button type="submit" disabled={isSubmitting} className="flex h-12 w-full items-center justify-between rounded-lg bg-[#173b2c] px-5 text-sm font-semibold text-white transition hover:bg-[#24563f] disabled:cursor-wait disabled:opacity-60">{isSubmitting ? "Creating account..." : "Create account"}<ArrowRight className="size-4" /></button>
           </form>

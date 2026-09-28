@@ -40,6 +40,9 @@ class RegisterActivity : ComponentActivity() {
                 if (result.success) {
                     localUserDatabase.savePendingUser(request.nic)
                     Toast.makeText(this, result.message, Toast.LENGTH_LONG).show()
+                    // Navigate back to login after successful registration
+                    startActivity(Intent(this, LoginActivity::class.java))
+                    finish()
                 }
             }
         }

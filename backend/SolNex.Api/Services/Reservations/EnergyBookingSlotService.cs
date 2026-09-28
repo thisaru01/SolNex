@@ -53,7 +53,7 @@ public class EnergyBookingSlotService : IEnergyBookingSlotService
     }
 
     // Validates operating schedule hours and creates a new booking slot
-    public async Task<SlotDto> CreateSlotAsync(CreateSlotDto createDto)
+    public async Task<SlotDto> CreateSlotAsync(CreateSlotDto createDto, string? backofficerId = null, string? backofficerName = null)
     {
         var slotId = $"{createDto.StationId}_{createDto.DayOfWeek}_{createDto.StartTime.Replace(":", "")}";
 
@@ -77,7 +77,9 @@ public class EnergyBookingSlotService : IEnergyBookingSlotService
             ScheduleTime = scheduleTime,
             SlotStatus = SlotStatus.Available,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
+            CreatedBy = backofficerId,
+            CreatorName = backofficerName
         };
 
         try
@@ -115,6 +117,40 @@ public class EnergyBookingSlotService : IEnergyBookingSlotService
         return MapToDto(slot);
     }
 
+    // Updates the start time and end time of an available energy booking slot
+    public async Task<SlotDto?> UpdateSlotTimeAsync(string id, string startTime, string endTime)
+    {
+        var slot = await _slotRepository.GetSlotByIdAsync(id)
+                ?? await _slotRepository.GetSlotBySlotIdAsync(id);
+
+        if (slot == null || slot.Id == null)
+        {
+            return null;
+        }
+
+        if (slot.SlotStatus != SlotStatus.Available)
+        {
+            throw new InvalidOperationException("Only available slots can have their times updated.");
+        }
+
+        var scheduleDict = await _stationService.GetStationScheduleAsync(slot.StationId);
+        ValidateSlotAgainstSchedule(slot.DayOfWeek, startTime, endTime, scheduleDict);
+
+        var existingSlots = await _slotRepository.GetSlotsByStationIdAsync(slot.StationId);
+        var slotsOnSameDay = existingSlots.Where(s => 
+            string.Equals(s.DayOfWeek, slot.DayOfWeek, StringComparison.OrdinalIgnoreCase) && 
+            s.Id != slot.Id);
+            
+        ValidateNoOverlap(startTime, endTime, slotsOnSameDay);
+
+        slot.StartTime = startTime;
+        slot.EndTime = endTime;
+        slot.UpdatedAt = DateTime.UtcNow;
+
+        await _slotRepository.UpdateSlotAsync(slot.Id, slot);
+        return MapToDto(slot);
+    }
+
     // Removes an existing booking slot from repository
     public async Task DeleteSlotAsync(string id)
     {
@@ -123,6 +159,10 @@ public class EnergyBookingSlotService : IEnergyBookingSlotService
 
         if (slot != null && slot.Id != null)
         {
+            if (slot.SlotStatus == SlotStatus.Reserved)
+            {
+                throw new InvalidOperationException("Cannot delete a reserved slot. Only available slots can be deleted.");
+            }
             await _slotRepository.DeleteSlotAsync(slot.Id);
         }
     }
@@ -200,7 +240,9 @@ public class EnergyBookingSlotService : IEnergyBookingSlotService
             ScheduleTime = slot.ScheduleTime,
             SlotStatus = slot.SlotStatus.ToString(),
             CreatedAt = slot.CreatedAt,
-            UpdatedAt = slot.UpdatedAt
+            UpdatedAt = slot.UpdatedAt,
+            CreatedBy = slot.CreatedBy,
+            CreatorName = slot.CreatorName
         };
     }
 }
