@@ -38,12 +38,16 @@ public class EnergyBookingSlot
 
     [BsonElement("updatedAt")]
     public DateTime UpdatedAt { get; set; }
+
+    [BsonElement("createdBy")]
+    public string? CreatedBy { get; set; }
+
+    [BsonElement("creatorName")]
+    public string? CreatorName { get; set; }
 }
 
 public enum SlotStatus
 {
     Available,
-    Reserved,
-    Unavailable,
-    Completed
+    Reserved
 }

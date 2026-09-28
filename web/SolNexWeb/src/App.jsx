@@ -51,7 +51,7 @@ function App() {
           <Route path="stations/:id/schedule" element={<ProtectedRoute allowedRoles={["Backoffice"]}><StationSchedule /></ProtectedRoute>} />
           <Route path="stations/:id/availability" element={<ProtectedRoute allowedRoles={["GridOperator"]}><StationAvailability /></ProtectedRoute>} />
           <Route path="reservations" element={<ReservationList />} />
-          <Route path="reservations/history" element={<ReservationHistory />} />
+          <Route path="reservations/history" element={<ProtectedRoute allowedRoles={["Backoffice"]}><ReservationHistory /></ProtectedRoute>} />
           <Route path="reservations/slots" element={<BookingSlots />} />
           <Route path="transactions" element={<ProtectedRoute allowedRoles={["GridOperator"]}><Transactions /></ProtectedRoute>}/>
           <Route path="transactions/:id" element={<ProtectedRoute allowedRoles={["GridOperator"]}><TransactionDetails /></ProtectedRoute>}/>
