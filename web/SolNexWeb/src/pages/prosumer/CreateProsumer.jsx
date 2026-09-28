@@ -16,11 +16,25 @@ export default function CreateProsumer() {
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Format phone number with spaces
+  function formatPhoneNumber(value) {
+    const digits = value.replace(/\D/g, '')
+    if (digits.startsWith('94') && digits.length >= 11) {
+      return `+94 ${digits.substring(2, 5)} ${digits.substring(5, 8)} ${digits.substring(8)}`
+    }
+    if (digits.startsWith('0') && digits.length >= 10) {
+      return `${digits.substring(0, 3)} ${digits.substring(3, 6)} ${digits.substring(6)}`
+    }
+    return value
+  }
+
   function handleChange(event) {
-    setFormData(prev => ({
-      ...prev,
-      [event.target.name]: event.target.value
-    }))
+    const { name, value } = event.target
+    if (name === 'phone') {
+      setFormData(prev => ({ ...prev, [name]: formatPhoneNumber(value) }))
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }))
+    }
   }
 
   async function handleSubmit(event) {
@@ -37,13 +51,32 @@ export default function CreateProsumer() {
       return
     }
 
+    const phoneDigits = formData.phone.replace(/\D/g, '')
+    if (phoneDigits.startsWith('94') && phoneDigits.length !== 11) {
+      setError("Phone must be +94 followed by 9 digits")
+      return
+    }
+    if (phoneDigits.startsWith('0') && phoneDigits.length !== 10) {
+      setError("Phone must be 0 followed by 9 digits")
+      return
+    }
+    if (!phoneDigits.startsWith('94') && !phoneDigits.startsWith('0')) {
+      setError("Phone must start with +94 or 0")
+      return
+    }
+
+    if (!/^(\d{9}[VX]|\d{12})$/i.test(formData.nic.trim())) {
+      setError("NIC must be 9 digits ending with V/X or 12 digits")
+      return
+    }
+
     setIsSubmitting(true)
     try {
       await registerWebUser({
         nic: formData.nic.trim(),
         fullName: formData.fullName.trim(),
         email: formData.email.trim(),
-        phone: formData.phone.trim(),
+        phone: phoneDigits,
         password: formData.password,
         role: "Prosumer"
       })
@@ -93,7 +126,7 @@ export default function CreateProsumer() {
               required
               minLength={5}
               maxLength={20}
-              placeholder="Enter NIC"
+              placeholder="9 digits + V/X or 12 digits"
               className="h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
             <p className="text-xs text-muted-foreground">National Identity Card number serves as the primary key</p>
@@ -139,7 +172,7 @@ export default function CreateProsumer() {
                 value={formData.phone}
                 onChange={handleChange}
                 required
-                placeholder="Enter phone number"
+                placeholder="+94 7XX XXX XXX or 0XX XXX XXXX"
                 className="h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>

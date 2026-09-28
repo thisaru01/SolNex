@@ -16,6 +16,15 @@ export default function Login() {
   async function handleSubmit(event) {
     event.preventDefault()
     setError("")
+    
+    const trimmedIdentifier = identifier.trim()
+    
+    // Validate NIC format if identifier looks like a NIC (not an email)
+    if (!trimmedIdentifier.includes("@") && !/^(\d{9}[VX]|\d{12})$/i.test(trimmedIdentifier)) {
+      setError("NIC must be 9 digits ending with V/X or 12 digits")
+      return
+    }
+    
     setIsSubmitting(true)
 
     try {
