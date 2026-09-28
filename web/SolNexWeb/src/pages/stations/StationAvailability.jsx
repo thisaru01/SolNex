@@ -48,7 +48,7 @@ export default function StationAvailability() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Station Availability</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Station Availability</h1>
           <p className="text-muted-foreground mt-1">{station.stationName}</p>
         </div>
       </div>
@@ -85,7 +85,7 @@ export default function StationAvailability() {
               </div>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-xl sm:text-2xl font-bold text-blue-600">
                 {Math.round((availability / station.totalBatterySlots) * 100) || 0}%
               </div>
             </div>

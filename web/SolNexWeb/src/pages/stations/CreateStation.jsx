@@ -74,7 +74,7 @@ export default function CreateStation() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Create New Station</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Create New Station</h1>
           <p className="text-muted-foreground mt-1">Register a new microgrid station to the network.</p>
         </div>
       </div>
@@ -88,7 +88,7 @@ export default function CreateStation() {
           {error && <div className="p-3 mb-4 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>}
           
           <form onSubmit={handlePreSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="stationId">Station ID <span className="text-destructive">*</span></Label>
                 <Input 
@@ -113,7 +113,7 @@ export default function CreateStation() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="latitude">Latitude <span className="text-destructive">*</span></Label>
                 <Input 
@@ -140,7 +140,7 @@ export default function CreateStation() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="capacityKw">Capacity (kW) <span className="text-destructive">*</span></Label>
                 <Input 

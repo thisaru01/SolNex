@@ -84,7 +84,7 @@ export default function Stations() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Stations Management</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Stations Management</h1>
           <p className="text-muted-foreground mt-1">Manage and monitor all solar microgrid stations.</p>
         </div>
         {isBackoffice && (
@@ -111,8 +111,8 @@ export default function Stations() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="flex gap-2">
-              <div className="inline-flex items-center rounded-md border p-1 bg-muted/50">
+            <div className="flex flex-wrap sm:flex-nowrap gap-2 mt-2 sm:mt-0">
+              <div className="inline-flex items-center rounded-md border p-1 bg-muted/50 flex-wrap">
                 {["All", "Active", "Inactive"].map(status => (
                   <Button
                     key={status}
@@ -125,7 +125,7 @@ export default function Stations() {
                   </Button>
                 ))}
               </div>
-              <Button variant="outline" size="icon" onClick={fetchStations} disabled={loading} title="Refresh">
+              <Button variant="outline" size="icon" className="shrink-0" onClick={fetchStations} disabled={loading} title="Refresh">
                 <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               </Button>
             </div>

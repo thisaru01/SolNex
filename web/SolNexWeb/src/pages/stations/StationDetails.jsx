@@ -78,33 +78,33 @@ export default function StationDetails() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/stations")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">{station.stationName}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{station.stationName}</h1>
             <p className="text-muted-foreground mt-1 flex items-center gap-2">
               <Badge variant="outline">{station.stationId}</Badge>
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           {isBackoffice && (
             <>
-              <Button variant="outline" onClick={() => navigate(`/stations/${id}/edit`)}>
+              <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => navigate(`/stations/${id}/edit`)}>
                 <Edit className="h-4 w-4 mr-2" /> Edit
               </Button>
-              <Button variant="outline" onClick={() => navigate(`/stations/${id}/schedule`)}>
+              <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => navigate(`/stations/${id}/schedule`)}>
                 <Clock className="h-4 w-4 mr-2" /> Schedule
               </Button>
               {station.status === "Active" ? (
-                <Button variant="destructive" onClick={() => setDeactivateAlertOpen(true)}>
+                <Button variant="destructive" className="flex-1 sm:flex-none" onClick={() => setDeactivateAlertOpen(true)}>
                   <PowerOff className="h-4 w-4 mr-2" /> Deactivate
                 </Button>
               ) : (
-                <Button variant="default" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => setActivateAlertOpen(true)}>
+                <Button variant="default" className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700" onClick={() => setActivateAlertOpen(true)}>
                   <Power className="h-4 w-4 mr-2" /> Activate
                 </Button>
               )}

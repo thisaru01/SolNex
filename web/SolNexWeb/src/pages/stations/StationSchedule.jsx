@@ -109,7 +109,7 @@ export default function StationSchedule() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Station Schedule</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Station Schedule</h1>
           <p className="text-muted-foreground mt-1">{stationName}</p>
         </div>
       </div>
@@ -131,27 +131,29 @@ export default function StationSchedule() {
                 const endTime = times[1] || "18:00"
 
                 return (
-                  <div key={day} className="flex items-center gap-8 py-3.5 border-b last:border-0">
-                    <div className="w-28 font-medium flex-shrink-0">{day}</div>
-                    
-                    <div className="flex items-center gap-3 flex-shrink-0 w-24">
-                      <Switch 
-                        checked={isOpen} 
-                        onCheckedChange={(c) => handleScheduleChange(day, c ? "08:00 - 18:00" : "Closed")} 
-                      />
-                      <span className="text-sm text-muted-foreground">
-                        {isOpen ? "Open" : "Closed"}
-                      </span>
+                  <div key={day} className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 py-4 sm:py-3.5 border-b last:border-0">
+                    <div className="flex items-center justify-between sm:justify-start w-full sm:w-auto gap-4">
+                      <div className="w-28 font-medium flex-shrink-0">{day}</div>
+                      
+                      <div className="flex items-center justify-end sm:justify-start gap-3 flex-shrink-0 w-24">
+                        <Switch 
+                          checked={isOpen} 
+                          onCheckedChange={(c) => handleScheduleChange(day, c ? "08:00 - 18:00" : "Closed")} 
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          {isOpen ? "Open" : "Closed"}
+                        </span>
+                      </div>
                     </div>
                     
-                    <div className="flex-1">
+                    <div className="flex-1 w-full sm:w-auto">
                       {isOpen ? (
-                        <div className="flex items-center gap-4 animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex items-center gap-2 sm:gap-4 animate-in fade-in zoom-in-95 duration-200">
                           <Input 
                             type="time" 
                             value={startTime}
                             onChange={(e) => handleScheduleChange(day, `${e.target.value} - ${endTime}`)}
-                            className="w-32"
+                            className="flex-1 sm:flex-none sm:w-32"
                             required
                           />
                           <span className="text-muted-foreground font-medium text-sm">to</span>
@@ -159,7 +161,7 @@ export default function StationSchedule() {
                             type="time" 
                             value={endTime}
                             onChange={(e) => handleScheduleChange(day, `${startTime} - ${e.target.value}`)}
-                            className="w-32"
+                            className="flex-1 sm:flex-none sm:w-32"
                             required
                           />
                         </div>

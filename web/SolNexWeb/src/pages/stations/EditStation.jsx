@@ -101,7 +101,7 @@ export default function EditStation() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Edit Station</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Edit Station</h1>
           <p className="text-muted-foreground mt-1">Update station details and capacity limits.</p>
         </div>
       </div>
@@ -126,7 +126,7 @@ export default function EditStation() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="latitude">Latitude</Label>
                 <Input 
@@ -153,7 +153,7 @@ export default function EditStation() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="capacityKw">Capacity (kW)</Label>
                 <Input 
