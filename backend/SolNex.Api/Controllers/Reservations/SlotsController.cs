@@ -100,6 +100,36 @@ public class SlotsController : ControllerBase
         }
     }
 
+    // Updates the start and end time of an available energy booking slot
+    [HttpPut("{id}/time")]
+    [Authorize(Roles = "Backoffice")]
+    public async Task<ActionResult<SlotDto>> UpdateSlotTime(string id, [FromBody] UpdateSlotTimeDto updateTimeDto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var updatedSlot = await _slotService.UpdateSlotTimeAsync(id, updateTimeDto.StartTime, updateTimeDto.EndTime);
+            if (updatedSlot == null)
+            {
+                return NotFound(new { message = $"Slot with ID '{id}' not found." });
+            }
+
+            return Ok(updatedSlot);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     // Direct endpoint to reserve a slot (marks status as Reserved)
     [HttpPut("{id}/reserve")]
     public async Task<ActionResult<SlotDto>> ReserveSlot(string id)

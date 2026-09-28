@@ -117,6 +117,40 @@ public class EnergyBookingSlotService : IEnergyBookingSlotService
         return MapToDto(slot);
     }
 
+    // Updates the start time and end time of an available energy booking slot
+    public async Task<SlotDto?> UpdateSlotTimeAsync(string id, string startTime, string endTime)
+    {
+        var slot = await _slotRepository.GetSlotByIdAsync(id)
+                ?? await _slotRepository.GetSlotBySlotIdAsync(id);
+
+        if (slot == null || slot.Id == null)
+        {
+            return null;
+        }
+
+        if (slot.SlotStatus != SlotStatus.Available)
+        {
+            throw new InvalidOperationException("Only available slots can have their times updated.");
+        }
+
+        var scheduleDict = await _stationService.GetStationScheduleAsync(slot.StationId);
+        ValidateSlotAgainstSchedule(slot.DayOfWeek, startTime, endTime, scheduleDict);
+
+        var existingSlots = await _slotRepository.GetSlotsByStationIdAsync(slot.StationId);
+        var slotsOnSameDay = existingSlots.Where(s => 
+            string.Equals(s.DayOfWeek, slot.DayOfWeek, StringComparison.OrdinalIgnoreCase) && 
+            s.Id != slot.Id);
+            
+        ValidateNoOverlap(startTime, endTime, slotsOnSameDay);
+
+        slot.StartTime = startTime;
+        slot.EndTime = endTime;
+        slot.UpdatedAt = DateTime.UtcNow;
+
+        await _slotRepository.UpdateSlotAsync(slot.Id, slot);
+        return MapToDto(slot);
+    }
+
     // Removes an existing booking slot from repository
     public async Task DeleteSlotAsync(string id)
     {

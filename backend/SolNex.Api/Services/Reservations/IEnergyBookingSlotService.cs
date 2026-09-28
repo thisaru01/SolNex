@@ -13,6 +13,7 @@ public interface IEnergyBookingSlotService
     Task<SlotDto?> GetSlotByIdAsync(string id);
     Task<SlotDto> CreateSlotAsync(CreateSlotDto createDto, string? backofficerId = null, string? backofficerName = null);
     Task<SlotDto?> UpdateSlotStatusAsync(string id, string status);
+    Task<SlotDto?> UpdateSlotTimeAsync(string id, string startTime, string endTime);
     Task DeleteSlotAsync(string id);
 }
 
