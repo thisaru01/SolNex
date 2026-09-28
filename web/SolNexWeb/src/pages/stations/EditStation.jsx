@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ArrowLeft } from "lucide-react"
+import { GoogleMap, useJsApiLoader, Marker } from "@react-google-maps/api"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +18,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+
+const containerStyle = {
+  width: '100%',
+  height: '100%'
+}
+const defaultCenter = {
+  lat: 7.8731, 
+  lng: 80.7718
+}
 
 export default function EditStation() {
   const { id } = useParams()
@@ -35,6 +45,19 @@ export default function EditStation() {
     totalBatterySlots: "",
     availableBatterySlots: "",
   })
+
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "", 
+  })
+
+  const handleMapClick = (e) => {
+    setFormData(prev => ({
+      ...prev,
+      latitude: e.latLng.lat().toFixed(6),
+      longitude: e.latLng.lng().toFixed(6)
+    }))
+  }
 
   useEffect(() => {
     const fetchStation = async () => {
@@ -124,6 +147,34 @@ export default function EditStation() {
                 value={formData.stationName} 
                 onChange={handleChange} 
               />
+            </div>
+
+            <div className="space-y-3">
+              <Label>Location Selection <span className="text-muted-foreground font-normal">(Click on the map or enter coordinates below)</span></Label>
+              <div className="h-[300px] w-full rounded-md border overflow-hidden relative bg-muted/20">
+                {!isLoaded ? (
+                  <div className="w-full h-full bg-muted animate-pulse" />
+                ) : (
+                  <GoogleMap
+                    mapContainerStyle={containerStyle}
+                    center={
+                      formData.latitude && formData.longitude 
+                        ? { lat: parseFloat(formData.latitude), lng: parseFloat(formData.longitude) } 
+                        : defaultCenter
+                    }
+                    zoom={7}
+                    onClick={handleMapClick}
+                    options={{ disableDefaultUI: false, zoomControl: true, streetViewControl: false }}
+                  >
+                    {formData.latitude && formData.longitude && (
+                      <Marker 
+                        position={{ lat: parseFloat(formData.latitude), lng: parseFloat(formData.longitude) }} 
+                        icon={{ url: "http://maps.google.com/mapfiles/ms/icons/green-dot.png" }}
+                      />
+                    )}
+                  </GoogleMap>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
