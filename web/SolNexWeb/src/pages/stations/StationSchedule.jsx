@@ -6,6 +6,16 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ArrowLeft } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
@@ -17,6 +27,7 @@ export default function StationSchedule() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [alertOpen, setAlertOpen] = useState(false)
   
   const [schedule, setSchedule] = useState(
     DAYS_OF_WEEK.reduce((acc, day) => ({ ...acc, [day]: "" }), {})
@@ -48,8 +59,13 @@ export default function StationSchedule() {
     setSchedule(prev => ({ ...prev, [day]: value }))
   }
 
-  const handleSubmit = async (e) => {
+  const handlePreSubmit = (e) => {
     e.preventDefault()
+    setAlertOpen(true)
+  }
+
+  const handleSubmit = async () => {
+    setAlertOpen(false)
     setSaving(true)
     setError(null)
     
@@ -85,7 +101,7 @@ export default function StationSchedule() {
         <CardContent>
           {error && <div className="p-3 mb-4 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>}
           
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handlePreSubmit} className="space-y-4">
             {DAYS_OF_WEEK.map((day) => (
               <div key={day} className="flex items-center gap-4">
                 <div className="w-24 font-medium">{day}</div>
@@ -107,6 +123,22 @@ export default function StationSchedule() {
           </form>
         </CardContent>
       </Card>
+
+      <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save Schedule?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to update the operating hours for this station? 
+              This will affect when grid operators and prosumers can interact with it.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSubmit}>Save</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

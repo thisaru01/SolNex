@@ -7,6 +7,16 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ArrowLeft } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export default function EditStation() {
   const { id } = useParams()
@@ -15,6 +25,7 @@ export default function EditStation() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [alertOpen, setAlertOpen] = useState(false)
   
   const [formData, setFormData] = useState({
     stationName: "",
@@ -51,8 +62,13 @@ export default function EditStation() {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = async (e) => {
+  const handlePreSubmit = (e) => {
     e.preventDefault()
+    setAlertOpen(true)
+  }
+
+  const handleSubmit = async () => {
+    setAlertOpen(false)
     setSaving(true)
     setError(null)
     
@@ -98,7 +114,7 @@ export default function EditStation() {
         <CardContent>
           {error && <div className="p-3 mb-4 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>}
           
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handlePreSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="stationName">Station Name</Label>
               <Input 
@@ -187,6 +203,22 @@ export default function EditStation() {
           </form>
         </CardContent>
       </Card>
+      
+      <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save Changes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to update this station's configuration? 
+              Changes to capacity or battery slots may affect existing reservations.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSubmit}>Save Changes</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

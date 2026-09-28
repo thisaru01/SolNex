@@ -7,6 +7,16 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Separator } from "@/components/ui/separator"
 import { ArrowLeft, Edit, Clock, MapPin, BatteryCharging, Zap, Power, PowerOff } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 function getStoredUser() {
   try {
@@ -22,6 +32,9 @@ export default function StationDetails() {
   const [station, setStation] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [deactivateAlertOpen, setDeactivateAlertOpen] = useState(false)
+  const [activateAlertOpen, setActivateAlertOpen] = useState(false)
+  
   const currentUser = getStoredUser()
   const isBackoffice = currentUser?.role === "Backoffice"
   
@@ -87,11 +100,11 @@ export default function StationDetails() {
                 <Clock className="h-4 w-4 mr-2" /> Schedule
               </Button>
               {station.status === "Active" ? (
-                <Button variant="destructive" onClick={handleDeactivate}>
+                <Button variant="destructive" onClick={() => setDeactivateAlertOpen(true)}>
                   <PowerOff className="h-4 w-4 mr-2" /> Deactivate
                 </Button>
               ) : (
-                <Button variant="default" className="bg-emerald-600 hover:bg-emerald-700" onClick={handleActivate}>
+                <Button variant="default" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => setActivateAlertOpen(true)}>
                   <Power className="h-4 w-4 mr-2" /> Activate
                 </Button>
               )}
@@ -176,6 +189,36 @@ export default function StationDetails() {
           </CardContent>
         </Card>
       </div>
+
+      <AlertDialog open={deactivateAlertOpen} onOpenChange={setDeactivateAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deactivate Station?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to deactivate {station.stationName}? This will prevent any further interactions until it is reactivated.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setDeactivateAlertOpen(false); handleDeactivate(); }} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">Deactivate</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={activateAlertOpen} onOpenChange={setActivateAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Activate Station?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to activate {station.stationName}? It will become available to the network.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setActivateAlertOpen(false); handleActivate(); }} className="bg-emerald-600 hover:bg-emerald-700 text-white">Activate</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

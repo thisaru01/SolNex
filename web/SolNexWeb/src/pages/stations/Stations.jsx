@@ -181,21 +181,6 @@ export default function Stations() {
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button variant="ghost" size="sm" onClick={() => navigate(`/stations/${station.id}`)}>View</Button>
-                          
-                          {isBackoffice && (
-                            <>
-                              <Button variant="outline" size="sm" onClick={() => navigate(`/stations/${station.id}/edit`)}>Edit</Button>
-                              {station.status === "Active" ? (
-                                <Button variant="secondary" size="sm" onClick={() => handleDeactivate(station.id)} className="text-destructive hover:text-destructive">
-                                  <PowerOff className="h-3.5 w-3.5 mr-1" /> Deactivate
-                                </Button>
-                              ) : (
-                                <Button variant="outline" size="sm" onClick={() => handleActivate(station.id)} className="text-emerald-600 border-emerald-200 hover:bg-emerald-50">
-                                  <Power className="h-3.5 w-3.5 mr-1" /> Activate
-                                </Button>
-                              )}
-                            </>
-                          )}
                         </div>
                       </TableCell>
                     </TableRow>
