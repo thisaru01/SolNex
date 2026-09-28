@@ -66,6 +66,7 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize(Roles = "Backoffice,GridOperator,Prosumer")]
     // Retrieves a specific reservation by its unique identifier.
     public async Task<ActionResult<ReservationDto>> GetReservationById(string id)
     {
@@ -271,7 +272,7 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpGet("search")]
-    [Authorize(Roles = "Backoffice,GridOperator")]
+    [Authorize(Roles = "Backoffice,GridOperator,Prosumer")]
     // Searches for reservations matching the optionally provided station ID and/or status.
     public async Task<ActionResult<IEnumerable<ReservationDto>>> SearchReservations([FromQuery] string? stationId, [FromQuery] string? status)
     {
@@ -280,6 +281,11 @@ public class ReservationsController : ControllerBase
         if (User.IsInRole("GridOperator"))
         {
             reservations = reservations.Where(r => r.Status == "Approved");
+        }
+        else if (!User.IsInRole("Backoffice"))
+        {
+            var currentNic = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            reservations = reservations.Where(r => string.Equals(r.Nic, currentNic, StringComparison.OrdinalIgnoreCase));
         }
 
         var reservationsList = reservations.ToList();

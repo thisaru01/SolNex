@@ -42,6 +42,11 @@ export const slotApi = {
       method: "PUT",
       body: JSON.stringify({ status }),
     }),
+  updateSlotTime: (id, startTime, endTime) =>
+    request(`/api/slots/${id}/time`, {
+      method: "PUT",
+      body: JSON.stringify({ startTime, endTime }),
+    }),
   reserveSlot: (id) =>
     request(`/api/slots/${id}/reserve`, {
       method: "PUT",

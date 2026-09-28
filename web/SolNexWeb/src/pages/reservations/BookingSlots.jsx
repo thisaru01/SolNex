@@ -28,6 +28,7 @@ import {
   X,
   Filter,
   ShieldAlert,
+  Edit,
 } from "lucide-react"
 
 function getStoredUser() {
@@ -71,6 +72,17 @@ export default function BookingSlots() {
   })
   const [createLoading, setCreateLoading] = useState(false)
   const [createError, setCreateError] = useState(null)
+
+  // Edit Modal state
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editForm, setEditForm] = useState({
+    slotId: "",
+    displayId: "",
+    startTime: "",
+    endTime: "",
+  })
+  const [editLoading, setEditLoading] = useState(false)
+  const [editError, setEditError] = useState(null)
 
   // Delete Confirmation Modal state
   const [slotToDelete, setSlotToDelete] = useState(null)
@@ -152,6 +164,30 @@ export default function BookingSlots() {
       setCreateError(err.message || "Failed to create slot.")
     } finally {
       setCreateLoading(false)
+    }
+  }
+
+  // Edit slot handler
+  const handleEditSlotSubmit = async (e) => {
+    e.preventDefault()
+    setEditError(null)
+
+    if (!editForm.startTime || !editForm.endTime) {
+      setEditError("Please specify both Start Time and End Time.")
+      return
+    }
+
+    try {
+      setEditLoading(true)
+      await slotApi.updateSlotTime(editForm.slotId, editForm.startTime, editForm.endTime)
+
+      showToastNotification("success", `Booking slot '${editForm.displayId || editForm.slotId}' successfully updated!`)
+      setShowEditModal(false)
+      fetchSlotsAndStations()
+    } catch (err) {
+      setEditError(err.message || "Failed to update slot.")
+    } finally {
+      setEditLoading(false)
     }
   }
 
@@ -497,7 +533,34 @@ export default function BookingSlots() {
                         </TableCell>
 
                         {isBackoffice && (
-                          <TableCell className="text-right">
+                          <TableCell className="text-right space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled={isReserved}
+                              title={
+                                isReserved
+                                  ? "Reserved slots cannot be edited"
+                                  : "Edit slot time"
+                              }
+                              onClick={() => {
+                                setEditError(null)
+                                setEditForm({
+                                  slotId: slot.id || slot.slotId,
+                                  displayId: slot.slotId || slot.id,
+                                  startTime: slot.startTime,
+                                  endTime: slot.endTime,
+                                })
+                                setShowEditModal(true)
+                              }}
+                              className={
+                                isReserved
+                                  ? "opacity-40 cursor-not-allowed"
+                                  : "text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/20"
+                              }
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -514,8 +577,7 @@ export default function BookingSlots() {
                                   : "text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
                               }
                             >
-                              <Trash2 className="h-4 w-4 mr-1" />
-                              Delete
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </TableCell>
                         )}
@@ -693,6 +755,80 @@ export default function BookingSlots() {
                 )}
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* EDIT SLOT MODAL */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-200">
+          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-md w-full p-6 space-y-5 animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center border-b pb-3">
+              <div className="flex items-center gap-2">
+                <Edit className="h-5 w-5 text-primary" />
+                <h2 className="text-xl font-bold">Edit Slot Time</h2>
+              </div>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-muted-foreground hover:text-foreground rounded-md p-1"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {editError && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+                <span>{editError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleEditSlotSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Start Time</label>
+                  <Input
+                    type="text"
+                    placeholder="e.g. 8:30 or 08:30"
+                    value={editForm.startTime}
+                    onChange={(e) => setEditForm({ ...editForm, startTime: e.target.value })}
+                    required
+                  />
+                  <span className="text-[11px] text-muted-foreground mt-0.5 block">Format: HH:mm</span>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">End Time</label>
+                  <Input
+                    type="text"
+                    placeholder="e.g. 9:30 or 09:30"
+                    value={editForm.endTime}
+                    onChange={(e) => setEditForm({ ...editForm, endTime: e.target.value })}
+                    required
+                  />
+                  <span className="text-[11px] text-muted-foreground mt-0.5 block">Format: HH:mm</span>
+                </div>
+              </div>
+
+              <div className="pt-3 flex justify-end gap-3 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowEditModal(false)}
+                  disabled={editLoading}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={editLoading}>
+                  {editLoading ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Updating...
+                    </>
+                  ) : (
+                    "Update Slot"
+                  )}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}
