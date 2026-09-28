@@ -19,24 +19,33 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
 import com.example.solnex.operator.OperatorActivity
 import com.example.solnex.operator.prosumer.ProsumerApprovedReservationsActivity
 
-private data class UserSession(
-    val nic: String,
-    val fullName: String,
-    val role: String
-)
-
-private data class UserProfile(
-    val nic: String,
-    val fullName: String,
-    val email: String,
-    val phone: String,
-    val role: String,
-    val accountStatus: String
-)
-
+enum class BottomNavItem(val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
+    Home("Home", Icons.Default.Home),
+    Map("Map", Icons.Default.LocationOn),
+    Reservations("Reservations", Icons.Default.DateRange),
+    QR("QR", Icons.Default.Share),
+    Profile("Profile", Icons.Default.Person)
+}
 class MainActivity : ComponentActivity() {
     private val tokenStore by lazy { TokenStore(this) }
     private val profileRepository by lazy { ApiProfileRepository() }
@@ -67,24 +76,80 @@ class MainActivity : ComponentActivity() {
         loadProfile()
 
         setContent {
+            var currentTab by remember { mutableStateOf(BottomNavItem.Home) }
+
             SolNexTheme {
-                Scaffold { innerPadding ->
-                    DashboardScreen(
-                        modifier = Modifier.padding(innerPadding),
-                        user = currentUser,
-                        profile = profile,
-                        loading = loading,
-                        error = error,
-                        message = message,
-                        onLogout = {
-                            tokenStore.clear()
-                            startActivity(Intent(this, LoginActivity::class.java))
-                            finish()
-                        },
-                        onRefresh = ::loadProfile,
-                        onSaveProfile = ::saveProfile,
-                        onRequestDeactivation = ::requestDeactivation
-                    )
+                Scaffold(
+                    bottomBar = {
+                        NavigationBar {
+                            BottomNavItem.values().forEach { item ->
+                                NavigationBarItem(
+                                    icon = { Icon(item.icon, contentDescription = item.title) },
+                                    label = {
+                                        Text(
+                                            text = item.title,
+                                            maxLines = 1,
+                                            softWrap = false,
+                                            overflow = TextOverflow.Ellipsis,
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.5.sp)
+                                        )
+                                    },
+                                    selected = currentTab == item,
+                                    onClick = { currentTab = item }
+                                )
+                            }
+                        }
+                    }
+                ) { innerPadding ->
+                    when (currentTab) {
+                        BottomNavItem.Home -> {
+                            HomeScreen(
+                                modifier = Modifier.padding(innerPadding),
+                                user = currentUser,
+                                profile = profile,
+                                onNavigateToTab = { currentTab = it }
+                            )
+                        }
+                        BottomNavItem.Map -> {
+                            MapScreen(
+                                modifier = Modifier.padding(innerPadding),
+                                token = tokenStore.token().orEmpty()
+                            )
+                        }
+                        BottomNavItem.Reservations -> {
+                            ReservationsScreen(
+                                modifier = Modifier.padding(innerPadding)
+                            )
+                        }
+                        BottomNavItem.Profile -> {
+                            DashboardScreen(
+                                modifier = Modifier.padding(innerPadding),
+                                user = currentUser,
+                                profile = profile,
+                                loading = loading,
+                                error = error,
+                                message = message,
+                                onLogout = {
+                                    tokenStore.clear()
+                                    startActivity(Intent(this, LoginActivity::class.java))
+                                    finish()
+                                },
+                                onRefresh = ::loadProfile,
+                                onSaveProfile = ::saveProfile,
+                                onRequestDeactivation = ::requestDeactivation
+                            )
+                        }
+                        else -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(innerPadding),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("${currentTab.title} Screen Coming Soon")
+                            }
+                        }
+                    }
                 }
             }
         }
