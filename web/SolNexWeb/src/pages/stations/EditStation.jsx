@@ -79,18 +79,18 @@ export default function EditStation() {
   if (error && !saving) return <div className="p-8 text-destructive">{error}</div>
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate(`/stations/${id}`)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Edit Station</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Edit Station</h1>
           <p className="text-muted-foreground mt-1">Update station details and capacity limits.</p>
         </div>
       </div>
 
-      <Card>
+      <Card className="max-w-3xl mx-auto">
         <CardHeader>
           <CardTitle>Station Details</CardTitle>
           <CardDescription>Modify the properties below and save your changes.</CardDescription>

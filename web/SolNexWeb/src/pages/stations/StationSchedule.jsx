@@ -63,21 +63,21 @@ export default function StationSchedule() {
     }
   }
 
-  if (loading) return <div className="p-8"><Skeleton className="h-96 w-full max-w-2xl mx-auto" /></div>
+  if (loading) return <div className="p-8"><Skeleton className="h-96 w-full" /></div>
   
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate(`/stations/${id}`)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Station Schedule</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Station Schedule</h1>
           <p className="text-muted-foreground mt-1">{stationName}</p>
         </div>
       </div>
 
-      <Card>
+      <Card className="max-w-3xl mx-auto">
         <CardHeader>
           <CardTitle>Operating Hours</CardTitle>
           <CardDescription>Enter time ranges like "08:00 - 18:00" or type "Closed".</CardDescription>

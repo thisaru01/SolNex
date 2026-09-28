@@ -3,7 +3,7 @@ import { Map } from "lucide-react"
 
 export default function StationMap() {
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Stations Map</h1>
         <p className="text-muted-foreground mt-1">Geographical overview of all microgrid nodes.</p>

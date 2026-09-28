@@ -52,18 +52,18 @@ export default function CreateStation() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate("/stations")}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Create New Station</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Create New Station</h1>
           <p className="text-muted-foreground mt-1">Register a new microgrid station to the network.</p>
         </div>
       </div>
 
-      <Card>
+      <Card className="max-w-3xl mx-auto">
         <CardHeader>
           <CardTitle>Station Details</CardTitle>
           <CardDescription>Fill out the basic information for the new station.</CardDescription>

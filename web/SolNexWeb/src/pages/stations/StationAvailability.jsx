@@ -34,7 +34,7 @@ export default function StationAvailability() {
     fetchData()
   }, [id])
 
-  if (loading) return <div className="p-8"><Skeleton className="h-64 w-full max-w-xl mx-auto" /></div>
+  if (loading) return <div className="p-8"><Skeleton className="h-64 w-full" /></div>
   if (error) return <div className="p-8 text-destructive">{error}</div>
   if (!station) return <div className="p-8 text-muted-foreground">Station not found.</div>
 
@@ -42,7 +42,7 @@ export default function StationAvailability() {
   const isOperating = station.status === "Active"
 
   return (
-    <div className="max-w-xl mx-auto space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate(`/stations/${id}`)}>
           <ArrowLeft className="h-5 w-5" />
