@@ -3,8 +3,10 @@ const API_BASE_URL = 'http://localhost:5097/api';
 async function fetchWithConfig(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
   
+  const token = localStorage.getItem("solnex_token");
   const defaultHeaders = {
     'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 
   const config = {

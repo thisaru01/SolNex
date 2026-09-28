@@ -35,7 +35,7 @@ function App() {
         {/* Main Application Routes (with Sidebar Layout) */}
         <Route path="/" element={<AppLayout />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="dashboard" element={<ProtectedRoute allowedRoles={["Backoffice", "GridOperator"]}><Dashboard /></ProtectedRoute>} />
           <Route path="users" element={<ProtectedRoute allowedRoles={["Backoffice"]}><Users /></ProtectedRoute>} />
           <Route path="users/create" element={<ProtectedRoute allowedRoles={["Backoffice"]}><CreateUser /></ProtectedRoute>} />
           <Route path="deactivation-requests" element={<ProtectedRoute allowedRoles={["Backoffice"]}><DeactivationRequests /></ProtectedRoute>} />
@@ -43,16 +43,16 @@ function App() {
           <Route path="prosumers/create" element={<ProtectedRoute allowedRoles={["Backoffice"]}><CreateProsumer /></ProtectedRoute>} />
           <Route path="prosumers/:nic" element={<ProtectedRoute allowedRoles={["Backoffice"]}><ProsumerDetails /></ProtectedRoute>} />
           <Route path="prosumers/:nic/edit" element={<ProtectedRoute allowedRoles={["Backoffice"]}><EditProsumer /></ProtectedRoute>} />
-          <Route path="stations" element={<Stations />} />
+          <Route path="stations" element={<ProtectedRoute allowedRoles={["Backoffice", "GridOperator"]}><Stations /></ProtectedRoute>} />
           <Route path="stations/create" element={<ProtectedRoute allowedRoles={["Backoffice"]}><CreateStation /></ProtectedRoute>} />
-          <Route path="stations/map" element={<ProtectedRoute allowedRoles={["GridOperator"]}><StationMap /></ProtectedRoute>} />
-          <Route path="stations/:id" element={<StationDetails />} />
+          <Route path="stations/map" element={<ProtectedRoute allowedRoles={["Backoffice", "GridOperator"]}><StationMap /></ProtectedRoute>} />
+          <Route path="stations/:id" element={<ProtectedRoute allowedRoles={["Backoffice", "GridOperator"]}><StationDetails /></ProtectedRoute>} />
           <Route path="stations/:id/edit" element={<ProtectedRoute allowedRoles={["Backoffice"]}><EditStation /></ProtectedRoute>} />
           <Route path="stations/:id/schedule" element={<ProtectedRoute allowedRoles={["Backoffice"]}><StationSchedule /></ProtectedRoute>} />
-          <Route path="stations/:id/availability" element={<ProtectedRoute allowedRoles={["GridOperator"]}><StationAvailability /></ProtectedRoute>} />
-          <Route path="reservations" element={<ReservationList />} />
-          <Route path="reservations/history" element={<ReservationHistory />} />
-          <Route path="reservations/slots" element={<BookingSlots />} />
+          <Route path="stations/:id/availability" element={<ProtectedRoute allowedRoles={["GridOperator", "Backoffice"]}><StationAvailability /></ProtectedRoute>} />
+          <Route path="reservations" element={<ProtectedRoute allowedRoles={["Backoffice", "GridOperator"]}><ReservationList /></ProtectedRoute>} />
+          <Route path="reservations/history" element={<ProtectedRoute allowedRoles={["Backoffice", "GridOperator"]}><ReservationHistory /></ProtectedRoute>} />
+          <Route path="reservations/slots" element={<ProtectedRoute allowedRoles={["Backoffice", "GridOperator"]}><BookingSlots /></ProtectedRoute>} />
           <Route path="transactions" element={<ProtectedRoute allowedRoles={["GridOperator"]}><Transactions /></ProtectedRoute>}/>
           <Route path="transactions/:id" element={<ProtectedRoute allowedRoles={["GridOperator"]}><TransactionDetails /></ProtectedRoute>}/>
           <Route path="history" element={<ProtectedRoute allowedRoles={["GridOperator"]}><OperationalHistory /></ProtectedRoute>}/>
