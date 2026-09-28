@@ -42,4 +42,9 @@ export const reservationApi = {
     request(`/api/reservations/${encodeURIComponent(id)}`, {
       method: "DELETE",
     }),
+  updateReservationStatus: (id, status) =>
+    request(`/api/reservations/${encodeURIComponent(id)}`, {
+      method: "PUT",
+      body: JSON.stringify({ status }),
+    }),
 }

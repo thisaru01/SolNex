@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react"
 import { reservationApi } from "../../services/reservationApi"
+import { gridOperatorReservationApi } from "../../services/gridOperatorReservationApi"
+import { getUsers } from "../../services/userApi"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
@@ -12,6 +14,9 @@ export default function ReservationList() {
   const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
+  const [users, setUsers] = useState({})
+  const [selectedReservation, setSelectedReservation] = useState(null)
+  const [actionLoading, setActionLoading] = useState(false)
 
   useEffect(() => {
     const fetchReservations = async () => {
@@ -32,6 +37,17 @@ export default function ReservationList() {
           : []
           
         setReservations(activeReservations)
+
+        try {
+          const userList = await getUsers()
+          const userMap = {}
+          if (Array.isArray(userList)) {
+            userList.forEach(u => { userMap[u.nic] = u.fullName || "Unknown" })
+          }
+          setUsers(userMap)
+        } catch (err) {
+          console.error("Failed to fetch users for owner names", err)
+        }
       } catch (err) {
         setError(err.message || "Failed to load reservations")
       } finally {
@@ -40,6 +56,49 @@ export default function ReservationList() {
     }
     fetchReservations()
   }, [])
+
+  const handleApprovePending = async (res) => {
+    try {
+      setActionLoading(true)
+      const user = JSON.parse(localStorage.getItem("solnex_user") || "{}")
+      await gridOperatorReservationApi.approve(res.reservationId, user.nic)
+      setReservations(prev => prev.map(r => r.reservationId === res.reservationId ? { ...r, status: "Approved" } : r))
+      setSelectedReservation(null)
+    } catch (err) {
+      alert("Failed to approve reservation: " + err.message)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleRejectPending = async (res) => {
+    const reason = window.prompt("Please enter a reason for rejection:");
+    if (!reason) return;
+    try {
+      setActionLoading(true)
+      const user = JSON.parse(localStorage.getItem("solnex_user") || "{}")
+      await gridOperatorReservationApi.reject(res.reservationId, user.nic, reason)
+      setReservations(prev => prev.map(r => r.reservationId === res.reservationId ? { ...r, status: "Rejected" } : r))
+      setSelectedReservation(null)
+    } catch (err) {
+      alert("Failed to reject reservation: " + err.message)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleApproveCancel = async (res) => {
+    try {
+      setActionLoading(true)
+      await reservationApi.updateReservationStatus(res.reservationId, "Cancelled")
+      setReservations(prev => prev.map(r => r.reservationId === res.reservationId ? { ...r, status: "Cancelled" } : r))
+      setSelectedReservation(null)
+    } catch (err) {
+      alert("Failed to approve cancellation: " + err.message)
+    } finally {
+      setActionLoading(false)
+    }
+  }
 
   const stats = {
     pending: reservations.filter(r => r.status === "Pending").length,
@@ -143,7 +202,8 @@ export default function ReservationList() {
           <TableHeader className="bg-muted/50">
             <TableRow>
               <TableHead>Res ID</TableHead>
-              <TableHead>Prosumer</TableHead>
+              <TableHead>Owner</TableHead>
+              <TableHead>Prosumer NIC</TableHead>
               <TableHead>Station</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Time</TableHead>
@@ -167,8 +227,17 @@ export default function ReservationList() {
               filteredReservations.map((res) => {
                 const displayStatus = res.status === "CancellationRequested" ? "Cancel Request" : res.status
                 return (
-                  <TableRow key={res.id || res.reservationId}>
+                  <TableRow 
+                    key={res.id || res.reservationId}
+                    className={`transition-colors ${res.status !== "Pending" ? "cursor-pointer hover:bg-muted/50" : ""}`}
+                    onClick={() => {
+                      if (res.status !== "Pending") {
+                        setSelectedReservation(res)
+                      }
+                    }}
+                  >
                     <TableCell className="font-medium">{res.reservationId}</TableCell>
+                    <TableCell>{users[res.nic] || "Unknown"}</TableCell>
                     <TableCell>{res.nic}</TableCell>
                     <TableCell>{res.stationId}</TableCell>
                     <TableCell>{res.reservationDate ? new Date(res.reservationDate).toLocaleDateString() : ""}</TableCell>
@@ -191,6 +260,103 @@ export default function ReservationList() {
           </TableBody>
         </Table>
       </div>
+
+      {selectedReservation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setSelectedReservation(null)}>
+          <div className="bg-background w-full max-w-lg rounded-xl shadow-lg border border-border overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4">Reservation Details</h2>
+              <div className="space-y-3 mb-6">
+                <div className="grid grid-cols-3 border-b border-border pb-2">
+                  <span className="text-muted-foreground font-medium">Res ID:</span>
+                  <span className="col-span-2 font-medium">{selectedReservation.reservationId}</span>
+                </div>
+                <div className="grid grid-cols-3 border-b border-border pb-2">
+                  <span className="text-muted-foreground font-medium">Owner Name:</span>
+                  <span className="col-span-2">{users[selectedReservation.nic] || "Unknown"}</span>
+                </div>
+                <div className="grid grid-cols-3 border-b border-border pb-2">
+                  <span className="text-muted-foreground font-medium">NIC:</span>
+                  <span className="col-span-2">{selectedReservation.nic}</span>
+                </div>
+                <div className="grid grid-cols-3 border-b border-border pb-2">
+                  <span className="text-muted-foreground font-medium">Station ID:</span>
+                  <span className="col-span-2">{selectedReservation.stationId}</span>
+                </div>
+                <div className="grid grid-cols-3 border-b border-border pb-2">
+                  <span className="text-muted-foreground font-medium">Energy:</span>
+                  <span className="col-span-2">{selectedReservation.energyAmountKwh} kWh</span>
+                </div>
+                <div className="grid grid-cols-3 border-b border-border pb-2">
+                  <span className="text-muted-foreground font-medium">Date:</span>
+                  <span className="col-span-2">{selectedReservation.reservationDate ? new Date(selectedReservation.reservationDate).toLocaleDateString() : ""}</span>
+                </div>
+                <div className="grid grid-cols-3 border-b border-border pb-2">
+                  <span className="text-muted-foreground font-medium">Time:</span>
+                  <span className="col-span-2">{selectedReservation.startTime} - {selectedReservation.endTime}</span>
+                </div>
+                <div className="grid grid-cols-3 pb-2">
+                  <span className="text-muted-foreground font-medium">Status:</span>
+                  <span className="col-span-2">
+                    <Badge variant="secondary" className={`border-none ${getStatusColor(selectedReservation.status === "CancellationRequested" ? "Cancel Request" : selectedReservation.status)}`}>
+                      {selectedReservation.status === "CancellationRequested" ? "Cancel Request" : selectedReservation.status}
+                    </Badge>
+                  </span>
+                </div>
+              </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setSelectedReservation(null)}
+                  className="px-4 py-2 border border-border rounded-md hover:bg-muted transition-colors font-medium"
+                >
+                  Close
+                </button>
+                
+                {(() => {
+                  const currentUser = JSON.parse(localStorage.getItem("solnex_user") || "{}");
+                  const canApprovePending = currentUser.role === "Backoffice" || currentUser.role === "GridOperator";
+                  const canApproveCancel = currentUser.role === "Backoffice";
+                  
+                  if (canApprovePending && selectedReservation.status === "Pending") {
+                    return (
+                      <>
+                        <button
+                          onClick={() => handleRejectPending(selectedReservation)}
+                          disabled={actionLoading}
+                          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 font-medium"
+                        >
+                          {actionLoading ? "Processing..." : "Reject"}
+                        </button>
+                        <button
+                          onClick={() => handleApprovePending(selectedReservation)}
+                          disabled={actionLoading}
+                          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 font-medium"
+                        >
+                          {actionLoading ? "Processing..." : "Approve Reservation"}
+                        </button>
+                      </>
+                    )
+                  }
+                  
+                  if (canApproveCancel && selectedReservation.status === "CancellationRequested") {
+                    return (
+                      <button
+                        onClick={() => handleApproveCancel(selectedReservation)}
+                        disabled={actionLoading}
+                        className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 font-medium"
+                      >
+                        {actionLoading ? "Processing..." : "Approve Cancellation"}
+                      </button>
+                    )
+                  }
+                  
+                  return null;
+                })()}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

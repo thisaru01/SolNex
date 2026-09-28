@@ -152,10 +152,20 @@ public class ReservationsController : ControllerBase
         {
             if (parsedStatus == SolNex.Api.Models.ReservationStatus.Cancelled)
             {
-                var currentNic = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrWhiteSpace(currentNic) || !string.Equals(currentNic, existingReservation.Nic, StringComparison.OrdinalIgnoreCase))
+                if (existingReservation.Status == "CancellationRequested")
                 {
-                    return Forbid();
+                    if (!User.IsInRole("Backoffice"))
+                    {
+                        return Forbid();
+                    }
+                }
+                else
+                {
+                    var currentNic = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    if (string.IsNullOrWhiteSpace(currentNic) || !string.Equals(currentNic, existingReservation.Nic, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return Forbid();
+                    }
                 }
             }
         }
