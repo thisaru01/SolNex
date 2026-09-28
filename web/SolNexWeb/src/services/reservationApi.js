@@ -32,6 +32,7 @@ export const reservationApi = {
   getReservationHistory: () => request("/api/reservations/history"),
   getPendingReservations: () => request("/api/reservations/pending"),
   getReservationsByNic: (nic) => request(`/api/reservations/user/${encodeURIComponent(nic)}`),
+  searchReservations: () => request("/api/reservations/search"),
   createReservation: (data) =>
     request("/api/reservations", {
       method: "POST",

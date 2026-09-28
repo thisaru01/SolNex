@@ -1,27 +1,50 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { reservationApi } from "../../services/reservationApi"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Clock, CheckCircle2, AlertCircle, Search } from "lucide-react"
 
-// Mock Data for demonstration
-const mockReservations = [
-  { id: "RES-001", prosumer: "John Doe", station: "Kurunegala Hub", date: "2026-10-15", time: "10:00 AM", status: "Pending" },
-  { id: "RES-002", prosumer: "Alice Smith", station: "Colombo Hub", date: "2026-10-15", time: "11:30 AM", status: "Approved" },
-  { id: "RES-003", prosumer: "Bob Johnson", station: "Kandy Hub", date: "2026-10-16", time: "09:00 AM", status: "Cancel Request" },
-  { id: "RES-005", prosumer: "Mike Tyson", station: "Colombo Hub", date: "2026-10-17", time: "16:00 PM", status: "Pending" },
-  { id: "RES-006", prosumer: "Emma Watson", station: "Galle Hub", date: "2026-10-17", time: "08:30 AM", status: "Approved" },
-]
-
 export default function ReservationList() {
+  const [reservations, setReservations] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
 
+  useEffect(() => {
+    const fetchReservations = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const user = JSON.parse(localStorage.getItem("solnex_user") || "null")
+        let data = []
+        
+        if (user?.role === "Backoffice" || user?.role === "GridOperator") {
+           data = await reservationApi.searchReservations()
+        } else if (user?.nic) {
+           data = await reservationApi.getReservationsByNic(user.nic)
+        }
+        
+        const activeReservations = Array.isArray(data) 
+          ? data.filter(r => !["Completed", "Cancelled", "Rejected"].includes(r.status)) 
+          : []
+          
+        setReservations(activeReservations)
+      } catch (err) {
+        setError(err.message || "Failed to load reservations")
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchReservations()
+  }, [])
+
   const stats = {
-    pending: 12,
-    approved: 45,
-    cancelRequests: 3
+    pending: reservations.filter(r => r.status === "Pending").length,
+    approved: reservations.filter(r => r.status === "Approved").length,
+    cancelRequests: reservations.filter(r => r.status === "CancellationRequested").length
   }
 
   const getStatusColor = (status) => {
@@ -34,13 +57,15 @@ export default function ReservationList() {
   }
 
   // Filter Logic
-  const filteredReservations = mockReservations.filter((res) => {
+  const filteredReservations = reservations.filter((res) => {
+    const searchString = searchTerm.toLowerCase()
     const matchesSearch = 
-      res.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      res.prosumer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      res.station.toLowerCase().includes(searchTerm.toLowerCase())
+      (res.reservationId || "").toLowerCase().includes(searchString) || 
+      (res.nic || "").toLowerCase().includes(searchString) ||
+      (res.stationId || "").toLowerCase().includes(searchString)
     
-    const matchesStatus = statusFilter === "All" || res.status === statusFilter
+    const displayStatus = res.status === "CancellationRequested" ? "Cancel Request" : res.status
+    const matchesStatus = statusFilter === "All" || displayStatus === statusFilter
 
     return matchesSearch && matchesStatus
   })
@@ -126,21 +151,36 @@ export default function ReservationList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredReservations.length > 0 ? (
-              filteredReservations.map((res) => (
-                <TableRow key={res.id}>
-                  <TableCell className="font-medium">{res.id}</TableCell>
-                  <TableCell>{res.prosumer}</TableCell>
-                  <TableCell>{res.station}</TableCell>
-                  <TableCell>{res.date}</TableCell>
-                  <TableCell>{res.time}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className={`border-none ${getStatusColor(res.status)}`}>
-                      {res.status}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  Loading reservations...
+                </TableCell>
+              </TableRow>
+            ) : error ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-red-500">
+                  {error}
+                </TableCell>
+              </TableRow>
+            ) : filteredReservations.length > 0 ? (
+              filteredReservations.map((res) => {
+                const displayStatus = res.status === "CancellationRequested" ? "Cancel Request" : res.status
+                return (
+                  <TableRow key={res.id || res.reservationId}>
+                    <TableCell className="font-medium">{res.reservationId}</TableCell>
+                    <TableCell>{res.nic}</TableCell>
+                    <TableCell>{res.stationId}</TableCell>
+                    <TableCell>{res.reservationDate ? new Date(res.reservationDate).toLocaleDateString() : ""}</TableCell>
+                    <TableCell>{res.startTime}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className={`border-none ${getStatusColor(displayStatus)}`}>
+                        {displayStatus}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                )
+              })
             ) : (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
