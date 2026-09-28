@@ -28,14 +28,30 @@ public sealed class UserManagementController : ControllerBase
     [Authorize(Roles = "Backoffice")]
     public async Task<IActionResult> RegisterWebUser(RegisterWebUserRequest request, CancellationToken cancellationToken)
     {
-        var user = await _userService.RegisterWebUserAsync(request, cancellationToken);
-        return Ok(user);
+        try
+        {
+            var user = await _userService.RegisterWebUserAsync(request, cancellationToken);
+            return Ok(user);
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new { message = exception.Message });
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(new { message = exception.Message });
+        }
     }
 
     [HttpGet("pending")]
     [Authorize(Roles = "Backoffice")]
     public Task<IReadOnlyList<UserListItem>> GetPendingUsers(CancellationToken cancellationToken) =>
         _userService.GetPendingUsersAsync(cancellationToken);
+
+    [HttpGet("deactivation-requests")]
+    [Authorize(Roles = "Backoffice")]
+    public Task<IReadOnlyList<UserListItem>> GetDeactivationRequests(CancellationToken cancellationToken) =>
+        _userService.GetDeactivationRequestsAsync(cancellationToken);
 
     [HttpGet("{nic}")]
     public async Task<IActionResult> GetUser(string nic, CancellationToken cancellationToken)
@@ -52,13 +68,20 @@ public sealed class UserManagementController : ControllerBase
     [HttpPut("{nic}")]
     public async Task<IActionResult> UpdateUser(string nic, UpdateUserRequest request, CancellationToken cancellationToken)
     {
-        if (!CanAccessUser(nic))
+        if (!CanEditUser(nic))
         {
             return Forbid();
         }
 
-        var user = await _userService.UpdateUserAsync(nic, request, cancellationToken);
-        return user is null ? NotFound() : Ok(user);
+        try
+        {
+            var user = await _userService.UpdateUserAsync(nic, request, cancellationToken);
+            return user is null ? NotFound() : Ok(user);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(new { message = exception.Message });
+        }
     }
 
     [HttpPut("{nic}/role")]
@@ -76,7 +99,7 @@ public sealed class UserManagementController : ControllerBase
     [HttpPut("{nic}/deactivate")]
     public async Task<IActionResult> Deactivate(string nic, CancellationToken cancellationToken)
     {
-        if (!User.IsInRole("Backoffice") && !string.Equals(User.FindFirstValue(ClaimTypes.NameIdentifier), nic, StringComparison.OrdinalIgnoreCase))
+        if (!User.IsInRole("Backoffice") && !IsCurrentProsumer(nic))
         {
             return Forbid();
         }
@@ -87,13 +110,26 @@ public sealed class UserManagementController : ControllerBase
     [HttpPut("{nic}/request-deactivation")]
     public async Task<IActionResult> RequestDeactivation(string nic, CancellationToken cancellationToken)
     {
-        var currentNic = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrWhiteSpace(currentNic) || !string.Equals(currentNic, nic, StringComparison.OrdinalIgnoreCase))
+        if (!IsCurrentProsumer(nic))
         {
             return Forbid();
         }
 
+        return await SetStatus(nic, AccountStatus.DeactivationRequested, cancellationToken);
+    }
+
+    [HttpPut("{nic}/approve-deactivation")]
+    [Authorize(Roles = "Backoffice")]
+    public async Task<IActionResult> ApproveDeactivation(string nic, CancellationToken cancellationToken)
+    {
         return await SetStatus(nic, AccountStatus.Inactive, cancellationToken);
+    }
+
+    [HttpPut("{nic}/reject-deactivation")]
+    [Authorize(Roles = "Backoffice")]
+    public async Task<IActionResult> RejectDeactivation(string nic, CancellationToken cancellationToken)
+    {
+        return await SetStatus(nic, AccountStatus.Active, cancellationToken);
     }
 
     private async Task<IActionResult> SetStatus(string nic, AccountStatus status, CancellationToken cancellationToken)
@@ -113,4 +149,11 @@ public sealed class UserManagementController : ControllerBase
         return !string.IsNullOrWhiteSpace(currentNic)
             && string.Equals(currentNic, nic, StringComparison.OrdinalIgnoreCase);
     }
+
+    private bool CanEditUser(string nic) =>
+        User.IsInRole("Backoffice") || IsCurrentProsumer(nic);
+
+    private bool IsCurrentProsumer(string nic) =>
+        User.IsInRole("Prosumer")
+        && string.Equals(User.FindFirstValue(ClaimTypes.NameIdentifier), nic, StringComparison.OrdinalIgnoreCase);
 }

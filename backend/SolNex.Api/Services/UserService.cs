@@ -128,6 +128,12 @@ public sealed class UserService : IUserService
         return users.Where(user => user.AccountStatus == AccountStatus.Pending).Select(Map).ToList();
     }
 
+    public async Task<IReadOnlyList<UserListItem>> GetDeactivationRequestsAsync(CancellationToken cancellationToken = default)
+    {
+        var users = await _userRepository.GetAsync(null, cancellationToken);
+        return users.Where(user => user.AccountStatus == AccountStatus.DeactivationRequested).Select(Map).ToList();
+    }
+
     public async Task<UserListItem?> GetUserAsync(string nic, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByNicAsync(nic.Trim(), cancellationToken);
@@ -139,8 +145,14 @@ public sealed class UserService : IUserService
         var user = await _userRepository.GetByNicAsync(nic.Trim(), cancellationToken);
         if (user is null) return null;
 
+        var email = request.Email.Trim().ToLowerInvariant();
+        if (await _userRepository.ExistsByEmailExceptNicAsync(email, user.Nic, cancellationToken))
+        {
+            throw new InvalidOperationException("A user with this email already exists.");
+        }
+
         user.FullName = request.FullName.Trim();
-        user.Email = request.Email.Trim().ToLowerInvariant();
+        user.Email = email;
         user.Phone = request.Phone.Trim();
         user.UpdatedAt = DateTime.UtcNow;
         await _userRepository.UpdateAsync(user, cancellationToken);
