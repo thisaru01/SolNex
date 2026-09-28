@@ -228,9 +228,15 @@ public class ReservationsController : ControllerBase
                 return NotFound(new { message = $"Reservation with ID {id} not found." });
             }
 
-            if (!CanAccessReservation(reservation.Nic))
+            var currentNic = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(currentNic) || !string.Equals(currentNic, reservation.Nic, StringComparison.OrdinalIgnoreCase))
             {
                 return Forbid();
+            }
+
+            if (reservation.Status != "Rejected" && reservation.Status != "Cancelled" && reservation.Status != "Completed")
+            {
+                return BadRequest(new { message = "Only completed, rejected, or cancelled reservations can be deleted." });
             }
 
             await _reservationService.DeleteReservationAsync(id);
