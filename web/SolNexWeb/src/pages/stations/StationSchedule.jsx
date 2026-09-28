@@ -62,6 +62,26 @@ export default function StationSchedule() {
 
   const handlePreSubmit = (e) => {
     e.preventDefault()
+    setError(null)
+
+    for (const day of DAYS_OF_WEEK) {
+      const val = schedule[day]
+      if (val && val !== "Closed") {
+        const parts = val.split(" - ")
+        if (parts.length === 2) {
+          const [start, end] = parts
+          if (!start || !end) {
+            setError(`Please specify both opening and closing times for ${day}.`)
+            return
+          }
+          if (start >= end) {
+            setError(`Start time must be earlier than end time for ${day} (${start} - ${end}).`)
+            return
+          }
+        }
+      }
+    }
+
     setAlertOpen(true)
   }
 
