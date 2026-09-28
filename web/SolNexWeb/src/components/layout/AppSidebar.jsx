@@ -62,7 +62,8 @@ const operatorItems = [
     title: "Reservations", url: "/reservations", icon: <Calendar />,
     subItems: [
       { title: "Reservation List", url: "/reservations" },
-      { title: "Booking Slots", url: "/reservations/slots" }
+      { title: "Booking Slots", url: "/reservations/slots" },
+      { title: "Pending Approvals", url: "/operator/reservations" }
     ]
   },
   { title: "Transactions", url: "/transactions", icon: <QrCode /> },

@@ -15,6 +15,27 @@ import androidx.compose.ui.unit.dp
 import com.example.solnex.auth.LoginActivity
 import com.example.solnex.auth.TokenStore
 import com.example.solnex.ui.theme.SolNexTheme
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
+import androidx.compose.ui.platform.LocalContext
+import com.example.solnex.operator.OperatorActivity
+import com.example.solnex.operator.prosumer.ProsumerApprovedReservationsActivity
+
+private data class UserSession(
+    val nic: String,
+    val fullName: String,
+    val role: String
+)
+
+private data class UserProfile(
+    val nic: String,
+    val fullName: String,
+    val email: String,
+    val phone: String,
+    val role: String,
+    val accountStatus: String
+)
 
 class MainActivity : ComponentActivity() {
     private val tokenStore by lazy { TokenStore(this) }
