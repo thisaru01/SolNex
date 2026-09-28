@@ -6,7 +6,6 @@ import CreateStation from "./pages/stations/CreateStation"
 import StationDetails from "./pages/stations/StationDetails"
 import EditStation from "./pages/stations/EditStation"
 import StationSchedule from "./pages/stations/StationSchedule"
-import StationAvailability from "./pages/stations/StationAvailability"
 import StationMap from "./pages/stations/StationMap"
 import ProtectedRoute from "./components/layout/ProtectedRoute"
 import Login from "./pages/auth/Login"
@@ -49,7 +48,7 @@ function App() {
           <Route path="stations/:id" element={<ProtectedRoute allowedRoles={["Backoffice", "GridOperator"]}><StationDetails /></ProtectedRoute>} />
           <Route path="stations/:id/edit" element={<ProtectedRoute allowedRoles={["Backoffice"]}><EditStation /></ProtectedRoute>} />
           <Route path="stations/:id/schedule" element={<ProtectedRoute allowedRoles={["Backoffice"]}><StationSchedule /></ProtectedRoute>} />
-          <Route path="stations/:id/availability" element={<ProtectedRoute allowedRoles={["GridOperator", "Backoffice"]}><StationAvailability /></ProtectedRoute>} />
+          <Route path="stations/:id/availability" element={<Navigate to="../" relative="path" replace />} />
           <Route path="reservations" element={<ProtectedRoute allowedRoles={["Backoffice", "GridOperator"]}><ReservationList /></ProtectedRoute>} />
           <Route path="reservations/history" element={<ProtectedRoute allowedRoles={["Backoffice", "GridOperator"]}><ReservationHistory /></ProtectedRoute>} />
           <Route path="reservations/slots" element={<ProtectedRoute allowedRoles={["Backoffice", "GridOperator"]}><BookingSlots /></ProtectedRoute>} />

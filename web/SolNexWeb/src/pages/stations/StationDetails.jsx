@@ -41,8 +41,14 @@ export default function StationDetails() {
   const fetchStation = async () => {
     try {
       setLoading(true)
-      const data = await stationApi.getStationById(id)
-      setStation(data)
+      const [stationData, availData] = await Promise.all([
+        stationApi.getStationById(id),
+        stationApi.getStationAvailability(id).catch(() => null)
+      ])
+      if (availData?.availableBatterySlots !== undefined && availData?.availableBatterySlots !== null) {
+        stationData.availableBatterySlots = availData.availableBatterySlots
+      }
+      setStation(stationData)
     } catch (err) {
       setError(err.message || "Failed to load station")
     } finally {
@@ -75,6 +81,11 @@ export default function StationDetails() {
   if (loading) return <div className="p-8"><Skeleton className="h-96 w-full" /></div>
   if (error) return <div className="p-8 text-destructive">{error}</div>
   if (!station) return <div className="p-8 text-muted-foreground">Station not found.</div>
+
+  const totalBatterySlots = station.totalBatterySlots || 0
+  const availableBatterySlots = station.availableBatterySlots ?? 0
+  const availabilityPercent = totalBatterySlots > 0 ? Math.round((availableBatterySlots / totalBatterySlots) * 100) : 0
+  const isOperating = station.status === "Active"
 
   return (
     <div className="space-y-6">
@@ -140,26 +151,64 @@ export default function StationDetails() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="flex flex-col justify-between">
           <CardHeader>
-            <CardTitle className="text-lg">Battery Storage</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Battery Storage</CardTitle>
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200">
+                {availabilityPercent}% Available
+              </Badge>
+            </div>
+            <CardDescription>Live operational and battery availability metrics.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-muted-foreground">Available Slots</span>
-              <span className="font-bold text-xl">{station.availableBatterySlots} <span className="text-muted-foreground text-sm font-normal">/ {station.totalBatterySlots}</span></span>
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-muted-foreground">Available Slots</span>
+                <span className="font-bold text-xl">
+                  {availableBatterySlots} <span className="text-muted-foreground text-sm font-normal">/ {totalBatterySlots}</span>
+                </span>
+              </div>
+              <div className="w-full bg-secondary h-3.5 rounded-full overflow-hidden">
+                <div 
+                  className="bg-blue-500 h-full rounded-full transition-all duration-300" 
+                  style={{ width: `${availabilityPercent}%` }}
+                ></div>
+              </div>
             </div>
-            <div className="w-full bg-secondary h-4 rounded-full overflow-hidden">
-              <div 
-                className="bg-blue-500 h-full transition-all" 
-                style={{ width: `${(station.availableBatterySlots / station.totalBatterySlots) * 100}%` }}
-              ></div>
-            </div>
-            
-            <div className="pt-6">
-              <Button className="w-full" variant="secondary" onClick={() => navigate(`/stations/${id}/availability`)}>
-                View Availability Dashboard
-              </Button>
+
+            <div className="space-y-2.5 pt-1">
+              <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/10">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300">
+                    <BatteryCharging className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Battery Slots</p>
+                    <p className="text-sm font-semibold">{availableBatterySlots} / {totalBatterySlots} Available</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-base font-bold text-blue-600 dark:text-blue-400">
+                    {availabilityPercent}%
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/10">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-full bg-orange-100 dark:bg-orange-900/50 text-orange-600 dark:text-orange-300">
+                    <Clock className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Operating Status</p>
+                    <p className="text-sm font-semibold">{isOperating ? "Open" : "Closed"}</p>
+                  </div>
+                </div>
+                <div className="text-right text-xs text-muted-foreground font-medium">
+                  {station.capacityKw} kW Capacity
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
