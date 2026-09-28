@@ -110,6 +110,12 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToTab = { currentTab = it }
                             )
                         }
+                        BottomNavItem.Map -> {
+                            MapScreen(
+                                modifier = Modifier.padding(innerPadding),
+                                token = tokenStore.token().orEmpty()
+                            )
+                        }
                         BottomNavItem.Reservations -> {
                             ReservationsScreen(
                                 modifier = Modifier.padding(innerPadding)
