@@ -1,14 +1,16 @@
+using System.Security.Claims;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using SolNex.Api.DTOs.Transactions;
-
 using SolNex.Api.Services.Transactions;
 
 namespace SolNex.Api.Controllers.Transactions;
 
 [ApiController]
 [Route("api/reservations")]
+[Authorize(Roles = "Backoffice")]
 public class ReservationApprovalController :
     ControllerBase
 {
@@ -16,32 +18,35 @@ public class ReservationApprovalController :
         IReservationApprovalService
         _approvalService;
 
-    // Initializes the reservation
-    // approval workflow.
     public ReservationApprovalController(
         IReservationApprovalService approvalService)
     {
+        // Store the service used for Backoffice reservation decisions.
         _approvalService =
             approvalService;
     }
 
-    // Grid Operator approves
-    // one pending reservation.
-    [Authorize(
-        Roles = "GridOperator")]
     [HttpPut("{id}/approve")]
     public async Task<IActionResult>
         Approve(
-            string id,
-
-            [FromBody]
-            ApproveReservationDto request)
+            string id)
     {
+        // Read the authenticated Backoffice NIC from the JWT.
+        var approverNic =
+            User.FindFirstValue(
+                ClaimTypes
+                    .NameIdentifier);
+
         if (
-            !ModelState.IsValid)
+            string.IsNullOrWhiteSpace(
+                approverNic))
         {
-            return BadRequest(
-                ModelState);
+            return Unauthorized(
+                new
+                {
+                    message =
+                        "Unable to identify the authenticated Backoffice user."
+                });
         }
 
         try
@@ -50,7 +55,7 @@ public class ReservationApprovalController :
                 await _approvalService
                     .ApproveAsync(
                         id,
-                        request.OperatorNic);
+                        approverNic);
 
             return Ok(
                 result);
@@ -87,10 +92,6 @@ public class ReservationApprovalController :
         }
     }
 
-    // Grid Operator rejects
-    // one pending reservation.
-    [Authorize(
-        Roles = "GridOperator")]
     [HttpPut("{id}/reject")]
     public async Task<IActionResult>
         Reject(
@@ -99,6 +100,24 @@ public class ReservationApprovalController :
             [FromBody]
             RejectReservationDto request)
     {
+        // Read the authenticated Backoffice NIC and validate the request.
+        var approverNic =
+            User.FindFirstValue(
+                ClaimTypes
+                    .NameIdentifier);
+
+        if (
+            string.IsNullOrWhiteSpace(
+                approverNic))
+        {
+            return Unauthorized(
+                new
+                {
+                    message =
+                        "Unable to identify the authenticated Backoffice user."
+                });
+        }
+
         if (
             !ModelState.IsValid)
         {
@@ -112,7 +131,7 @@ public class ReservationApprovalController :
                 await _approvalService
                     .RejectAsync(
                         id,
-                        request.OperatorNic,
+                        approverNic,
                         request.Reason);
 
             return Ok(

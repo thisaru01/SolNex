@@ -2,8 +2,19 @@ using SolNex.Api.DTOs.Transactions;
 
 namespace SolNex.Api.Services.Transactions;
 
-public interface IReservationApprovalService
+public interface
+    IReservationApprovalService
 {
-    Task<ReservationDecisionDto> ApproveAsync(string reservationId, string operatorNic);
-    Task<ReservationDecisionDto> RejectAsync(string reservationId, string operatorNic, string reason);
+    // Approves a pending reservation and creates its transaction.
+    Task<ReservationDecisionDto>
+        ApproveAsync(
+            string reservationId,
+            string approverNic);
+
+    // Rejects a pending reservation with a reason.
+    Task<ReservationDecisionDto>
+        RejectAsync(
+            string reservationId,
+            string approverNic,
+            string reason);
 }
