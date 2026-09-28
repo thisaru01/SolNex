@@ -4,6 +4,7 @@ using SolNex.Api.Repositories.Reservations;
 using Microsoft.AspNetCore.Mvc;
 using SolNex.Api.DTOs;
 using SolNex.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SolNex.Api.Controllers.Reservations;
 
@@ -195,6 +196,7 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpGet("history")]
+    [Authorize(Roles = "Backoffice")]
     // Retrieves the history of all energy reservations.
     public async Task<ActionResult<IEnumerable<ReservationDto>>> GetReservationHistory()
     {
