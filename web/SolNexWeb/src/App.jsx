@@ -63,7 +63,7 @@ function App() {
           {/* <Route path="history" element={<div className="p-4">Operational History Coming Soon</div>} /> */}
         </Route>
       </Routes>
-      <Toaster richColors />
+      <Toaster richColors position="top-right" />
     </BrowserRouter>
   )
 }
