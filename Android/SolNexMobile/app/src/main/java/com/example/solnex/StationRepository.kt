@@ -18,7 +18,7 @@ data class Station(
 
 class StationRepository(
     private val executor: ExecutorService = Executors.newSingleThreadExecutor(),
-    private val apiBaseUrl: String = "http://10.0.2.2:5097"
+    private val apiBaseUrl: String = if (android.os.Build.FINGERPRINT.contains("generic")) "http://10.0.2.2:5097" else "http://192.168.1.52:8080"
 ) {
     // Fetches the list of all available stations from the backend API
     fun getStations(token: String, callback: (List<Station>?, String?) -> Unit) {

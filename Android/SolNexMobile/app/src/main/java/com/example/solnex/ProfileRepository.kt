@@ -33,7 +33,7 @@ sealed class ProfileResult {
 
 class ApiProfileRepository(
     private val executor: ExecutorService = Executors.newSingleThreadExecutor(),
-    private val apiBaseUrl: String = "http://10.0.2.2:5097"
+    private val apiBaseUrl: String = if (android.os.Build.FINGERPRINT.contains("generic")) "http://10.0.2.2:5097" else "http://192.168.1.52:8080"
 ) : ProfileRepository {
     
     // Load prosumer profile from API
