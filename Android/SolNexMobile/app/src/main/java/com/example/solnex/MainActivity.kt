@@ -113,7 +113,8 @@ class MainActivity : ComponentActivity() {
                         BottomNavItem.Map -> {
                             MapScreen(
                                 modifier = Modifier.padding(innerPadding),
-                                token = tokenStore.token().orEmpty()
+                                token = tokenStore.token().orEmpty(),
+                                role = tokenStore.role().orEmpty()
                             )
                         }
                         BottomNavItem.Reservations -> {

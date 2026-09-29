@@ -64,7 +64,8 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 @Composable
 fun MapScreen(
     modifier: Modifier = Modifier,
-    token: String
+    token: String,
+    role: String = ""
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -365,12 +366,14 @@ fun MapScreen(
                                 text = "Capacity: ${station.capacityKw} kW  •  Status: ${station.status}",
                                 style = MaterialTheme.typography.bodyMedium
                             )
-                            Button(
-                                onClick = { showReservationForm = true },
-                                modifier = Modifier.fillMaxWidth(),
-                                enabled = station.status == "Active"
-                            ) {
-                                Text("Submit Reservation")
+                            if (!role.equals("GridOperator", ignoreCase = true)) {
+                                Button(
+                                    onClick = { showReservationForm = true },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    enabled = station.status == "Active"
+                                ) {
+                                    Text("Submit Reservation")
+                                }
                             }
                         }
                     }
