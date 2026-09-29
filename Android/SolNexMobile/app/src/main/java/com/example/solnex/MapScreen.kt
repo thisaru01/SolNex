@@ -30,6 +30,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.foundation.lazy.LazyColumn
@@ -85,8 +87,10 @@ fun MapScreen(
     var showReservationForm by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var showSearchResults by remember { mutableStateOf(false) }
+    var showFavoritesOnly by remember { mutableStateOf(false) }
+    var favoriteIds by remember { mutableStateOf<Set<String>>(emptySet()) }
 
-    val repository = remember { StationRepository() }
+    val repository = remember { StationRepository(context) }
 
     // Initialize osmdroid config ONCE before anything renders
     remember {
@@ -141,6 +145,7 @@ fun MapScreen(
     }
 
     LaunchedEffect(token) {
+        favoriteIds = repository.getFavoriteStationIds()
         repository.getStations(token) { fetchedStations, errMsg ->
             stations = fetchedStations ?: emptyList()
             error = errMsg
@@ -261,12 +266,24 @@ fun MapScreen(
                     }
 
                     // Add station markers with click listeners
-                    stations.filter { !it.status.equals("Deactivated", ignoreCase = true) }.forEach { station ->
+                    val filteredStations = stations.filter { 
+                        !it.status.equals("Deactivated", ignoreCase = true) &&
+                        (!showFavoritesOnly || favoriteIds.contains(it.stationId))
+                    }
+                    filteredStations.forEach { station ->
                         val marker = Marker(mapView)
                         marker.position = GeoPoint(station.latitude, station.longitude)
                         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                         marker.title = station.stationName
                         marker.snippet = "Capacity: ${station.capacityKw} kW • Status: ${station.status}"
+                        
+                        if (favoriteIds.contains(station.stationId)) {
+                            val defaultIcon = ContextCompat.getDrawable(context, org.osmdroid.library.R.drawable.marker_default)?.mutate()
+                            // Use MULTIPLY to preserve the pin's 3D shading, and make it Gold/Amber
+                            defaultIcon?.setColorFilter(android.graphics.Color.parseColor("#FFB300"), android.graphics.PorterDuff.Mode.MULTIPLY)
+                            marker.icon = defaultIcon
+                        }
+
                         marker.setOnMarkerClickListener { _, _ ->
                             selectedStation = station
                             true
@@ -304,6 +321,22 @@ fun MapScreen(
                         unfocusedIndicatorColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 )
+
+                Button(
+                    onClick = { showFavoritesOnly = !showFavoritesOnly },
+                    modifier = Modifier.padding(top = 8.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = if (showFavoritesOnly) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = if (showFavoritesOnly) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                ) {
+                    Icon(
+                        imageVector = if (showFavoritesOnly) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                        contentDescription = "Favorites",
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text("Favorites Only")
+                }
 
                 AnimatedVisibility(
                     visible = showSearchResults && searchQuery.isNotBlank()
@@ -429,10 +462,25 @@ fun MapScreen(
                                 Text(
                                     text = station.stationName,
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.weight(1f)
                                 )
-                                TextButton(onClick = { selectedStation = null }) {
-                                    Text("✕")
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    var isFav by remember(station.stationId) { mutableStateOf(repository.isFavorite(station.stationId)) }
+                                    IconButton(onClick = {
+                                        isFav = !isFav
+                                        repository.toggleFavorite(station.stationId, isFav)
+                                        favoriteIds = repository.getFavoriteStationIds()
+                                    }) {
+                                        Icon(
+                                            imageVector = if (isFav) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                                            contentDescription = "Favorite",
+                                            tint = if (isFav) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    TextButton(onClick = { selectedStation = null }) {
+                                        Text("✕")
+                                    }
                                 }
                             }
                             Text(
@@ -458,14 +506,28 @@ fun MapScreen(
                 }
             }
 
-            if (loading) {
+            if (loading && stations.isEmpty()) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else if (error != null) {
+            } else if (error != null && stations.isEmpty()) {
                 Text(
                     text = error ?: "Unknown error",
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.align(Alignment.Center).padding(16.dp)
                 )
+            } else if (error != null && stations.isNotEmpty()) {
+                Card(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 80.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                ) {
+                    Text(
+                        text = "Offline Mode: Showing cached data",
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
 
         if (showReservationForm && selectedStation != null) {
