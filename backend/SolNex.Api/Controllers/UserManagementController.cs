@@ -7,6 +7,10 @@ using SolNex.Api.Services;
 
 namespace SolNex.Api.Controllers;
 
+/// <summary>
+/// User management controller for handling user and prosumer operations.
+/// Provides endpoints for user registration, retrieval, updates, role management, and account status control.
+/// </summary>
 [ApiController]
 [Route("api/users")]
 [Authorize]
@@ -19,11 +23,13 @@ public sealed class UserManagementController : ControllerBase
         _userService = userService;
     }
 
+    // Get all users with optional search filter (Backoffice only)
     [HttpGet]
     [Authorize(Roles = "Backoffice")]
     public Task<IReadOnlyList<UserListItem>> GetUsers([FromQuery] string? search, CancellationToken cancellationToken) =>
         _userService.GetUsersAsync(search, cancellationToken);
 
+    // Register a new web user (Backoffice only)
     [HttpPost("register")]
     [Authorize(Roles = "Backoffice")]
     public async Task<IActionResult> RegisterWebUser(RegisterWebUserRequest request, CancellationToken cancellationToken)
@@ -43,16 +49,19 @@ public sealed class UserManagementController : ControllerBase
         }
     }
 
+    // Get pending users awaiting activation (Backoffice only)
     [HttpGet("pending")]
     [Authorize(Roles = "Backoffice")]
     public Task<IReadOnlyList<UserListItem>> GetPendingUsers(CancellationToken cancellationToken) =>
         _userService.GetPendingUsersAsync(cancellationToken);
 
+    // Get users with deactivation requests (Backoffice only)
     [HttpGet("deactivation-requests")]
     [Authorize(Roles = "Backoffice")]
     public Task<IReadOnlyList<UserListItem>> GetDeactivationRequests(CancellationToken cancellationToken) =>
         _userService.GetDeactivationRequestsAsync(cancellationToken);
 
+    // Get user by NIC (accessible by Backoffice or own user)
     [HttpGet("{nic}")]
     public async Task<IActionResult> GetUser(string nic, CancellationToken cancellationToken)
     {
@@ -65,6 +74,7 @@ public sealed class UserManagementController : ControllerBase
         return user is null ? NotFound() : Ok(user);
     }
 
+    // Update user information (Backoffice or own prosumer)
     [HttpPut("{nic}")]
     public async Task<IActionResult> UpdateUser(string nic, UpdateUserRequest request, CancellationToken cancellationToken)
     {
@@ -84,6 +94,7 @@ public sealed class UserManagementController : ControllerBase
         }
     }
 
+    // Update user role (Backoffice only)
     [HttpPut("{nic}/role")]
     [Authorize(Roles = "Backoffice")]
     public async Task<IActionResult> UpdateRole(string nic, UpdateUserRoleRequest request, CancellationToken cancellationToken)
@@ -92,10 +103,12 @@ public sealed class UserManagementController : ControllerBase
         return user is null ? BadRequest(new { message = "User or role is invalid." }) : Ok(user);
     }
 
+    // Activate user account (Backoffice only)
     [HttpPut("{nic}/activate")]
     [Authorize(Roles = "Backoffice")]
     public Task<IActionResult> Activate(string nic, CancellationToken cancellationToken) => SetStatus(nic, AccountStatus.Active, cancellationToken);
 
+    // Deactivate user account (Backoffice or own prosumer)
     [HttpPut("{nic}/deactivate")]
     public async Task<IActionResult> Deactivate(string nic, CancellationToken cancellationToken)
     {
@@ -107,6 +120,7 @@ public sealed class UserManagementController : ControllerBase
         return await SetStatus(nic, AccountStatus.Inactive, cancellationToken);
     }
 
+    // Request account deactivation (prosumer only for own account)
     [HttpPut("{nic}/request-deactivation")]
     public async Task<IActionResult> RequestDeactivation(string nic, CancellationToken cancellationToken)
     {
@@ -118,6 +132,7 @@ public sealed class UserManagementController : ControllerBase
         return await SetStatus(nic, AccountStatus.DeactivationRequested, cancellationToken);
     }
 
+    // Approve deactivation request (Backoffice only)
     [HttpPut("{nic}/approve-deactivation")]
     [Authorize(Roles = "Backoffice")]
     public async Task<IActionResult> ApproveDeactivation(string nic, CancellationToken cancellationToken)
@@ -125,6 +140,7 @@ public sealed class UserManagementController : ControllerBase
         return await SetStatus(nic, AccountStatus.Inactive, cancellationToken);
     }
 
+    // Reject deactivation request and reactivate account (Backoffice only)
     [HttpPut("{nic}/reject-deactivation")]
     [Authorize(Roles = "Backoffice")]
     public async Task<IActionResult> RejectDeactivation(string nic, CancellationToken cancellationToken)
@@ -132,12 +148,14 @@ public sealed class UserManagementController : ControllerBase
         return await SetStatus(nic, AccountStatus.Active, cancellationToken);
     }
 
+    // Helper method to set account status
     private async Task<IActionResult> SetStatus(string nic, AccountStatus status, CancellationToken cancellationToken)
     {
         var user = await _userService.SetStatusAsync(nic, status, cancellationToken);
         return user is null ? NotFound() : Ok(user);
     }
 
+    // Check if current user can access the target user
     private bool CanAccessUser(string nic)
     {
         if (User.IsInRole("Backoffice"))
@@ -150,9 +168,11 @@ public sealed class UserManagementController : ControllerBase
             && string.Equals(currentNic, nic, StringComparison.OrdinalIgnoreCase);
     }
 
+    // Check if current user can edit the target user
     private bool CanEditUser(string nic) =>
         User.IsInRole("Backoffice") || IsCurrentProsumer(nic);
 
+    // Check if current user is the prosumer matching the NIC
     private bool IsCurrentProsumer(string nic) =>
         User.IsInRole("Prosumer")
         && string.Equals(User.FindFirstValue(ClaimTypes.NameIdentifier), nic, StringComparison.OrdinalIgnoreCase);

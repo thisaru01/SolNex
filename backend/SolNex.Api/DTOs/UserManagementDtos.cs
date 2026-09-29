@@ -1,3 +1,4 @@
+// User management DTOs
 using System.ComponentModel.DataAnnotations;
 
 namespace SolNex.Api.DTOs;

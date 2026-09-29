@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom"
 import { ArrowLeft, Check, X, UserX } from "lucide-react"
 import { getDeactivationRequests, approveDeactivation, rejectDeactivation, activateUser } from "../../services/userApi"
 
+/**
+ * Deactivation requests page for Backoffice users.
+ * Allows reviewing and approving/rejecting prosumer account deactivation requests.
+ */
 export default function DeactivationRequests() {
   const navigate = useNavigate()
   const [requests, setRequests] = useState([])
@@ -14,6 +18,7 @@ export default function DeactivationRequests() {
     loadRequests()
   }, [])
 
+  // Load deactivation requests from API
   async function loadRequests() {
     setIsLoading(true)
     setError("")
@@ -27,6 +32,7 @@ export default function DeactivationRequests() {
     }
   }
 
+  // Approve deactivation request and deactivate account
   async function handleApprove(nic) {
     setProcessing(nic)
     setError("")
@@ -40,6 +46,7 @@ export default function DeactivationRequests() {
     }
   }
 
+  // Reject deactivation request and reactivate account
   async function handleReject(nic) {
     setProcessing(nic)
     setError("")
