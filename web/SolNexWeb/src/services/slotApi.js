@@ -20,7 +20,14 @@ async function request(path, options = {}) {
   }
 
   if (!response.ok) {
-    const error = new Error(data.message || `API Error: ${response.status} ${response.statusText}`)
+    let errorMessage = data.message
+    if (!errorMessage && data.errors) {
+      errorMessage = Object.values(data.errors).flat().join(", ")
+    }
+    if (!errorMessage && data.title) {
+      errorMessage = data.title
+    }
+    const error = new Error(errorMessage || `API Error: ${response.status} ${response.statusText}`)
     error.status = response.status
     error.data = data
     throw error

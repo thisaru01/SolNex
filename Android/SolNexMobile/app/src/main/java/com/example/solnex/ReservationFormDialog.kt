@@ -79,6 +79,14 @@ fun ReservationFormDialog(
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
                 } else if (error != null) {
                     Text(text = error ?: "", color = MaterialTheme.colorScheme.error)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = { onDismiss() }) {
+                            Text("OK")
+                        }
+                    }
                 } else if (slots.isEmpty()) {
                     Text("No available slots for this station.")
                 } else {
