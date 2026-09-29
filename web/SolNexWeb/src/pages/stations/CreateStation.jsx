@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { stationApi } from "../../services/stationApi"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -29,6 +29,7 @@ const defaultCenter = {
   lng: 80.7718
 }
 
+// Page component for creating a new solar station with map integration for location picking.
 export default function CreateStation() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
@@ -42,11 +43,33 @@ export default function CreateStation() {
     totalBatterySlots: "",
   })
 
+  const [nextStationId, setNextStationId] = useState("Loading...")
+
+    // Fetches the auto-generated station ID on component mount
+// Trigger side effects like fetching initial station data on mount
+  useEffect(() => {
+    const fetchId = async () => {
+      try {
+        const result = await stationApi.getNextStationId();
+        if (result && result.nextId) {
+          setNextStationId(result.nextId);
+        } else {
+          setNextStationId("Auto-generated");
+        }
+      } catch (err) {
+        console.error("Failed to fetch next station ID:", err);
+        setNextStationId("Auto-generated");
+      }
+    };
+    fetchId();
+  }, []);
+
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "", 
   })
 
+  // Update latitude and longitude in form data when user clicks on map
   const handleMapClick = (e) => {
     setFormData(prev => ({
       ...prev,
@@ -55,16 +78,19 @@ export default function CreateStation() {
     }))
   }
 
+  // Handle input changes dynamically by name attribute
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
+  // Prevent default form submission and trigger confirmation dialog instead
   const handlePreSubmit = (e) => {
     e.preventDefault()
     setAlertOpen(true)
   }
 
+  // Executes the actual update/create logic after user confirms action
   const handleSubmit = async () => {
     setAlertOpen(false)
     setLoading(true)
@@ -115,7 +141,7 @@ export default function CreateStation() {
                 <Input 
                   id="stationId" 
                   name="stationId" 
-                  value="Auto-generated upon creation" 
+                  value={nextStationId} 
                   disabled 
                 />
               </div>

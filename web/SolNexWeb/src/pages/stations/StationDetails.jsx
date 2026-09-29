@@ -27,6 +27,7 @@ function getStoredUser() {
   }
 }
 
+// Page component for displaying comprehensive details and status of a specific station.
 export default function StationDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -43,13 +44,17 @@ export default function StationDetails() {
   const fetchStation = async () => {
     try {
       setLoading(true)
+      // Execute multiple API calls in parallel to retrieve station and its availability
       const [stationData, availData] = await Promise.all([
         stationApi.getStationById(id),
         stationApi.getStationAvailability(id).catch(() => null)
       ])
+      
+      // Override station's battery slots with live availability data if it exists
       if (availData?.availableBatterySlots !== undefined && availData?.availableBatterySlots !== null) {
         stationData.availableBatterySlots = availData.availableBatterySlots
       }
+      // Store the final consolidated station data in state
       setStation(stationData)
     } catch (err) {
       setError(err.message || "Failed to load station")
@@ -58,6 +63,7 @@ export default function StationDetails() {
     }
   }
 
+  // Trigger side effects like fetching initial station data on mount
   useEffect(() => {
     fetchStation()
   }, [id])

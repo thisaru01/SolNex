@@ -19,7 +19,8 @@ async function fetchWithConfig(endpoint, options = {}) {
 
   try {
     const response = await fetch(url, config);
-    if (!response.ok) {
+    if (response.status === 401) { localStorage.removeItem('solnex_token'); localStorage.removeItem('solnex_user'); window.location.href = '/login'; return null; }
+  if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       const validationMessage = errorData.errors
         ? Object.values(errorData.errors).flat().join(" ")
@@ -37,6 +38,7 @@ async function fetchWithConfig(endpoint, options = {}) {
 
 export const stationApi = {
   getStations: () => fetchWithConfig('/stations'),
+  getNextStationId: () => fetchWithConfig('/stations/next-id'),
   
   getStationById: (id) => fetchWithConfig(`/stations/${id}`),
   

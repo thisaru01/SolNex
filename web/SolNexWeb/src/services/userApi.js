@@ -17,6 +17,7 @@ async function request(path, options = {}) {
     },
   })
   const data = await response.json().catch(() => ({}))
+  if (response.status === 401) { localStorage.removeItem('solnex_token'); localStorage.removeItem('solnex_user'); window.location.href = '/login'; return null; }
   if (!response.ok) {
     const error = new Error(data.message || "The request could not be completed.")
     error.status = response.status

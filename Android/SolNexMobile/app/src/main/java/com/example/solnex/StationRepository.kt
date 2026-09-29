@@ -20,6 +20,7 @@ class StationRepository(
     private val executor: ExecutorService = Executors.newSingleThreadExecutor(),
     private val apiBaseUrl: String = "http://10.0.2.2:5097"
 ) {
+    // Fetches the list of all available stations from the backend API
     fun getStations(token: String, callback: (List<Station>?, String?) -> Unit) {
         executor.execute {
             try {
