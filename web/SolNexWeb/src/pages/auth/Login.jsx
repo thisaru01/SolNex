@@ -1,6 +1,9 @@
+// React hooks and icons
 import { useState } from "react"
 import { ArrowRight, Eye, EyeOff, LockKeyhole, ShieldCheck, Sun } from "lucide-react"
+// Routing
 import { Link, useLocation, useNavigate } from "react-router-dom"
+// Auth API
 import { login } from "../../services/authApi"
 
 export default function Login() {
@@ -13,6 +16,7 @@ export default function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const notice = location.state?.message
 
+  // Handle login form submission
   async function handleSubmit(event) {
     event.preventDefault()
     setError("")
