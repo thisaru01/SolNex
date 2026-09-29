@@ -239,11 +239,14 @@ public class EnergyReservationService : IEnergyReservationService
 
         if (reservation != null && reservation.Id != null)
         {
-            // Enforce 12 hours' notice for cancellations
-            var timeUntilReservation = reservation.ReservationDate - DateTime.UtcNow;
-            if (timeUntilReservation.TotalHours < 12)
+            // Enforce 12 hours' notice for cancellations, unless already cancelled or rejected
+            if (reservation.Status != ReservationStatus.Cancelled && reservation.Status != ReservationStatus.Rejected)
             {
-                throw new InvalidOperationException("Updates and cancellations require at least 12 hours' notice.");
+                var timeUntilReservation = reservation.ReservationDate - DateTime.UtcNow;
+                if (timeUntilReservation.TotalHours < 12)
+                {
+                    throw new InvalidOperationException("Updates and cancellations require at least 12 hours' notice.");
+                }
             }
 
             if (reservation.Status == ReservationStatus.Approved)

@@ -116,12 +116,18 @@ class ReservationRepository(
                 if (responseCode == HttpURLConnection.HTTP_CREATED || responseCode == HttpURLConnection.HTTP_OK) {
                     callback(true, null)
                 } else {
-                    val errorResponse = try {
-                        connection.errorStream.bufferedReader().use { it.readText() }
+                    val errorMessage = try {
+                        val errorStr = connection.errorStream.bufferedReader().use { it.readText() }
+                        try {
+                            val jsonObj = JSONObject(errorStr)
+                            jsonObj.optString("message", errorStr)
+                        } catch (e: Exception) {
+                            errorStr
+                        }
                     } catch (e: Exception) {
                         "Unknown error"
                     }
-                    callback(false, "Failed to submit: HTTP $responseCode - $errorResponse")
+                    callback(false, errorMessage)
                 }
             } catch (e: Exception) {
                 callback(false, "Network error: ${e.message}")
@@ -182,6 +188,115 @@ class ReservationRepository(
                 }
             } catch (e: Exception) {
                 callback(null, "Network error: ${e.message}")
+            }
+        }
+    }
+
+    // Cancels a pending reservation
+    fun cancelReservation(token: String, id: String, callback: (Boolean, String?) -> Unit) {
+        executor.execute {
+            try {
+                val url = URL("$apiBaseUrl/api/reservations/$id/cancel-request")
+                val connection = url.openConnection() as HttpURLConnection
+                connection.requestMethod = "POST"
+                connection.setRequestProperty("Authorization", "Bearer $token")
+                connection.connectTimeout = 5000
+                connection.readTimeout = 5000
+
+                val responseCode = connection.responseCode
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    callback(true, null)
+                } else {
+                    val errorMessage = try {
+                        val errorStr = connection.errorStream.bufferedReader().use { it.readText() }
+                        try {
+                            val jsonObj = JSONObject(errorStr)
+                            jsonObj.optString("message", errorStr)
+                        } catch (e: Exception) { errorStr }
+                    } catch (e: Exception) { "Unknown error" }
+                    callback(false, errorMessage)
+                }
+            } catch (e: Exception) {
+                callback(false, "Network error: ${e.message}")
+            }
+        }
+    }
+
+    // Deletes a reservation
+    fun deleteReservation(token: String, id: String, callback: (Boolean, String?) -> Unit) {
+        executor.execute {
+            try {
+                val url = URL("$apiBaseUrl/api/reservations/$id")
+                val connection = url.openConnection() as HttpURLConnection
+                connection.requestMethod = "DELETE"
+                connection.setRequestProperty("Authorization", "Bearer $token")
+                connection.connectTimeout = 5000
+                connection.readTimeout = 5000
+
+                val responseCode = connection.responseCode
+                if (responseCode == HttpURLConnection.HTTP_NO_CONTENT || responseCode == HttpURLConnection.HTTP_OK) {
+                    callback(true, null)
+                } else {
+                    val errorMessage = try {
+                        val errorStr = connection.errorStream.bufferedReader().use { it.readText() }
+                        try {
+                            val jsonObj = JSONObject(errorStr)
+                            jsonObj.optString("message", errorStr)
+                        } catch (e: Exception) { errorStr }
+                    } catch (e: Exception) { "Unknown error" }
+                    callback(false, errorMessage)
+                }
+            } catch (e: Exception) {
+                callback(false, "Network error: ${e.message}")
+            }
+        }
+    }
+
+    // Updates a reservation's details
+    fun updateReservationDetails(
+        token: String,
+        id: String,
+        slotId: String,
+        energyAmountKwh: Double,
+        callback: (Boolean, String?) -> Unit
+    ) {
+        executor.execute {
+            try {
+                val url = URL("$apiBaseUrl/api/reservations/$id/details")
+                val connection = url.openConnection() as HttpURLConnection
+                connection.requestMethod = "PUT"
+                connection.setRequestProperty("Authorization", "Bearer $token")
+                connection.setRequestProperty("Content-Type", "application/json")
+                connection.setRequestProperty("Accept", "application/json")
+                connection.doOutput = true
+                connection.connectTimeout = 5000
+                connection.readTimeout = 5000
+
+                val jsonParam = JSONObject().apply {
+                    put("slotId", slotId)
+                    put("energyAmountKwh", energyAmountKwh)
+                }
+
+                connection.outputStream.use { os ->
+                    val input = jsonParam.toString().toByteArray(Charsets.UTF_8)
+                    os.write(input, 0, input.size)
+                }
+
+                val responseCode = connection.responseCode
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    callback(true, null)
+                } else {
+                    val errorMessage = try {
+                        val errorStr = connection.errorStream.bufferedReader().use { it.readText() }
+                        try {
+                            val jsonObj = JSONObject(errorStr)
+                            jsonObj.optString("message", errorStr)
+                        } catch (e: Exception) { errorStr }
+                    } catch (e: Exception) { "Unknown error" }
+                    callback(false, errorMessage)
+                }
+            } catch (e: Exception) {
+                callback(false, "Network error: ${e.message}")
             }
         }
     }

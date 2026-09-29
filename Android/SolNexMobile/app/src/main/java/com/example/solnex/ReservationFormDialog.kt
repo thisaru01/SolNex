@@ -22,6 +22,7 @@ import java.time.format.DateTimeFormatter
 fun ReservationFormDialog(
     stationId: String,
     stationName: String,
+    existingReservation: Reservation? = null,
     onDismiss: () -> Unit,
     onSuccess: () -> Unit
 ) {
@@ -39,7 +40,7 @@ fun ReservationFormDialog(
     // State variables for user inputs (selected day, slot, and energy amount)
     var selectedDay by remember { mutableStateOf<String?>(null) }
     var selectedSlot by remember { mutableStateOf<Slot?>(null) }
-    var energyAmount by remember { mutableStateOf("") }
+    var energyAmount by remember { mutableStateOf(existingReservation?.energyAmountKwh?.toString() ?: "") }
     
     // Tracks the submission state to show loading indicators
     var submitting by remember { mutableStateOf(false) }
@@ -51,6 +52,10 @@ fun ReservationFormDialog(
             if (fetchedSlots != null) {
                 // Filter slots by stationId
                 slots = fetchedSlots.filter { it.stationId == stationId }
+                if (existingReservation != null) {
+                    selectedDay = existingReservation.dayOfWeek
+                    selectedSlot = slots.find { it.slotId == existingReservation.slotId }
+                }
             } else {
                 error = errMsg
             }
@@ -67,7 +72,7 @@ fun ReservationFormDialog(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text("Submit Reservation", style = MaterialTheme.typography.titleLarge)
+                Text(if (existingReservation != null) "Update Reservation" else "Submit Reservation", style = MaterialTheme.typography.titleLarge)
                 Text(stationName, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
 
                 if (loadingSlots) {
@@ -170,23 +175,39 @@ fun ReservationFormDialog(
                                     submitting = true
                                     error = null
                                     
-                                    // Generate the current ISO timestamp for the reservation date
-                                    val dateStr = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
-                                    
-                                    // Send the reservation request to the backend API
-                                    repository.submitReservation(
-                                        token = token,
-                                        nic = nic,
-                                        stationId = stationId,
-                                        slotId = selectedSlot!!.slotId,
-                                        reservationDate = dateStr,
-                                        energyAmountKwh = amount
-                                    ) { success, errMsg ->
-                                        submitting = false
-                                        if (success) {
-                                            onSuccess()
-                                        } else {
-                                            error = errMsg
+                                    if (existingReservation != null) {
+                                        repository.updateReservationDetails(
+                                            token = token,
+                                            id = existingReservation.id,
+                                            slotId = selectedSlot!!.slotId,
+                                            energyAmountKwh = amount
+                                        ) { success, errMsg ->
+                                            submitting = false
+                                            if (success) {
+                                                onSuccess()
+                                            } else {
+                                                error = errMsg
+                                            }
+                                        }
+                                    } else {
+                                        // Generate the current ISO timestamp for the reservation date
+                                        val dateStr = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+                                        
+                                        // Send the reservation request to the backend API
+                                        repository.submitReservation(
+                                            token = token,
+                                            nic = nic,
+                                            stationId = stationId,
+                                            slotId = selectedSlot!!.slotId,
+                                            reservationDate = dateStr,
+                                            energyAmountKwh = amount
+                                        ) { success, errMsg ->
+                                            submitting = false
+                                            if (success) {
+                                                onSuccess()
+                                            } else {
+                                                error = errMsg
+                                            }
                                         }
                                     }
                                 } else {
@@ -198,7 +219,7 @@ fun ReservationFormDialog(
                             if (submitting) {
                                 CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
                             } else {
-                                Text("Submit")
+                                Text(if (existingReservation != null) "Update" else "Submit")
                             }
                         }
                     }
