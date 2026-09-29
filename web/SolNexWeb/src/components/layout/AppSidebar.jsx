@@ -1,5 +1,5 @@
-import { NavLink, useLocation } from "react-router-dom"
-import { BatteryCharging, LayoutDashboard, Calendar, QrCode, Users, UserSquare, History, Sun, Zap, ChevronDown, ChevronUp, UserX } from "lucide-react"
+import { NavLink, useLocation, useNavigate } from "react-router-dom"
+import { BatteryCharging, LayoutDashboard, Calendar, QrCode, Users, UserSquare, History, Sun, Zap, ChevronDown, ChevronUp, UserX, LogOut } from "lucide-react"
 
 import {
   Sidebar,
@@ -14,6 +14,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubItem,
   SidebarMenuSubButton,
+  SidebarFooter,
 } from "@/components/ui/sidebar"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
@@ -68,6 +69,13 @@ export function AppSidebar() {
   const isBackoffice = role === "Backoffice"
   const items = isBackoffice ? backofficeItems : operatorItems
   const location = useLocation()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    localStorage.removeItem("solnex_token")
+    localStorage.removeItem("solnex_user")
+    navigate("/login")
+  }
 
   return (
     <Sidebar>
@@ -144,6 +152,16 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter className="p-4 border-t mt-auto">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={handleLogout} className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50">
+              <LogOut className="h-4 w-4" />
+              <span>Logout</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   )
 }
