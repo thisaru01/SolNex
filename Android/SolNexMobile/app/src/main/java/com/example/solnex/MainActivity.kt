@@ -36,8 +36,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
-import com.example.solnex.operator.OperatorActivity
-import com.example.solnex.operator.prosumer.ProsumerApprovedReservationsActivity
+import com.example.solnex.operator.ui.OperatorModeScreen
+import com.example.solnex.operator.prosumer.ui.ProsumerQrModeScreen
 
 enum class BottomNavItem(val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     Home("Home", Icons.Default.Home),
@@ -120,6 +120,34 @@ class MainActivity : ComponentActivity() {
                             ReservationsScreen(
                                 modifier = Modifier.padding(innerPadding)
                             )
+                        }
+                        BottomNavItem.QR -> {
+                            when {
+                                tokenStore.role().equals("GridOperator", ignoreCase = true) -> {
+                                    OperatorModeScreen(
+                                        modifier = Modifier.padding(innerPadding),
+                                        token = tokenStore.token().orEmpty(),
+                                        operatorNic = tokenStore.nic().orEmpty(),
+                                        onExit = { currentTab = BottomNavItem.Home }
+                                    )
+                                }
+                                tokenStore.role().equals("Prosumer", ignoreCase = true) -> {
+                                    ProsumerQrModeScreen(
+                                        modifier = Modifier.padding(innerPadding),
+                                        token = tokenStore.token().orEmpty()
+                                    )
+                                }
+                                else -> {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(innerPadding),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text("QR is not available for this account.")
+                                    }
+                                }
+                            }
                         }
                         BottomNavItem.Profile -> {
                             DashboardScreen(

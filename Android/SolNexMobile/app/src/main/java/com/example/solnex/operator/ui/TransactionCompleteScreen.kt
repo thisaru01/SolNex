@@ -24,7 +24,7 @@ import com.example.solnex.operator.model.Transaction
 @Composable
 fun TransactionCompleteScreen(
     transaction: Transaction,
-    onBackHome: () -> Unit
+    onScanAnother: () -> Unit
 ) {
 
     Column(
@@ -121,7 +121,7 @@ fun TransactionCompleteScreen(
         }
 
         Button(
-            onClick = onBackHome,
+            onClick = onScanAnother,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
@@ -131,7 +131,7 @@ fun TransactionCompleteScreen(
             shape = RoundedCornerShape(14.dp)
         ) {
             Text(
-                text = "Return to Operator Home",
+                text = "Scan Another Transaction",
                 fontWeight = FontWeight.SemiBold
             )
         }
