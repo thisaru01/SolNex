@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SolNex.Api.DTOs;
 using SolNex.Api.DTOs.Stations;
+using Microsoft.AspNetCore.Authorization;
 using SolNex.Api.Services;
 using SolNex.Api.Services.Stations;
 
@@ -36,6 +37,7 @@ public class StationsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Backoffice")]
     public async Task<ActionResult<StationDto>> CreateStation([FromBody] CreateStationDto createDto)
     {
         try
@@ -51,6 +53,7 @@ public class StationsController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Backoffice")]
     public async Task<IActionResult> UpdateStation(string id, [FromBody] UpdateStationDto updateDto)
     {
         var updatedStation = await _stationService.UpdateStationAsync(id, updateDto);
@@ -62,6 +65,7 @@ public class StationsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Backoffice")]
     public async Task<IActionResult> DeleteStation(string id)
     {
         try
@@ -80,6 +84,7 @@ public class StationsController : ControllerBase
     }
 
     [HttpPut("{id}/deactivate")]
+    [Authorize(Roles = "Backoffice")]
     public async Task<IActionResult> DeactivateStation(string id)
     {
         try
@@ -98,6 +103,7 @@ public class StationsController : ControllerBase
     }
 
     [HttpPut("{id}/activate")]
+    [Authorize(Roles = "Backoffice")]
     public async Task<IActionResult> ActivateStation(string id)
     {
         var activatedStation = await _stationService.ActivateStationAsync(id);
@@ -139,6 +145,7 @@ public class StationsController : ControllerBase
     }
 
     [HttpPut("{id}/schedule")]
+    [Authorize(Roles = "Backoffice")]
     public async Task<IActionResult> UpdateStationSchedule(string id, [FromBody] UpdateScheduleDto scheduleDto)
     {
         var updatedStation = await _stationService.UpdateStationScheduleAsync(id, scheduleDto);
@@ -150,6 +157,7 @@ public class StationsController : ControllerBase
     }
 
     [HttpPut("{id}/battery-slots")]
+    [Authorize(Roles = "Backoffice")]
     public async Task<IActionResult> UpdateBatterySlots(string id, [FromBody] UpdateBatterySlotsDto updateDto)
     {
         try
