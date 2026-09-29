@@ -3,6 +3,10 @@ import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Save } from "lucide-react"
 import { getUserByNic, updateUser } from "../../services/userApi"
 
+/**
+ * Edit prosumer page for Backoffice users.
+ * Allows updating prosumer information using NIC as primary key.
+ */
 export default function EditProsumer() {
   const navigate = useNavigate()
   const { nic } = useParams()
@@ -15,7 +19,7 @@ export default function EditProsumer() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
 
-  // Format phone number with spaces
+  // Format phone number with spaces for display
   function formatPhoneNumber(value) {
     const digits = value.replace(/\D/g, '')
     if (digits.startsWith('94') && digits.length >= 11) {
@@ -28,6 +32,7 @@ export default function EditProsumer() {
   }
 
   useEffect(() => {
+    // Load prosumer data on component mount
     async function loadUser() {
       setIsLoading(true)
       setError("")
@@ -47,6 +52,7 @@ export default function EditProsumer() {
     loadUser()
   }, [nic])
 
+  // Handle form input changes
   function handleChange(event) {
     const { name, value } = event.target
     if (name === 'phone') {
@@ -56,6 +62,7 @@ export default function EditProsumer() {
     }
   }
 
+  // Handle form submission to update prosumer information
   async function handleSubmit(event) {
     event.preventDefault()
     setError("")
