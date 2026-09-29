@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -34,6 +35,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -59,11 +61,13 @@ fun ReservationsScreen(
     val context = LocalContext.current
     val tokenStore = remember { TokenStore(context) }
     val repository = remember { ReservationRepository() }
+    val stationRepo = remember { StationRepository() }
     val token = tokenStore.token().orEmpty()
     val nic = tokenStore.nic().orEmpty()
 
     // State variables for tracking fetched reservations, loading status, and any potential errors
     var reservations by remember { mutableStateOf<List<Reservation>>(emptyList()) }
+    var stationMap by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
     var errorTitle by remember { mutableStateOf<String?>(null) }
@@ -71,6 +75,9 @@ fun ReservationsScreen(
     
     // State variable for the currently active filter chip
     var selectedFilter by remember { mutableStateOf("All") }
+    
+    // State variable for search query
+    var searchQuery by remember { mutableStateOf("") }
     
     // State variable for selected reservation to view details
     var selectedReservation by remember { mutableStateOf<Reservation?>(null) }
@@ -87,16 +94,21 @@ fun ReservationsScreen(
         // Fetch user's reservations from the API when the screen initializes
         if (nic.isNotBlank() && token.isNotBlank()) {
             loading = true
-            repository.getReservationsByNic(token, nic) { fetchedReservations, errMsg ->
-                if (fetchedReservations != null) {
-                    val allowedStatuses = setOf("Pending", "Cancelled", "CancellationRequested", "Approved", "Rejected")
-                    reservations = fetchedReservations.filter { it.status in allowedStatuses }
-                } else {
-                    error = errMsg
-                    errorTitle = "Error"
-                    errorSubtitle = null
+            stationRepo.getStations(token) { fetchedStations, _ ->
+                if (fetchedStations != null) {
+                    stationMap = fetchedStations.associate { it.stationId to it.stationName }
                 }
-                loading = false
+                repository.getReservationsByNic(token, nic) { fetchedReservations, errMsg ->
+                    if (fetchedReservations != null) {
+                        val allowedStatuses = setOf("Pending", "Cancelled", "CancellationRequested", "Approved", "Rejected")
+                        reservations = fetchedReservations.filter { it.status in allowedStatuses }
+                    } else {
+                        error = errMsg
+                        errorTitle = "Error"
+                        errorSubtitle = null
+                    }
+                    loading = false
+                }
             }
         } else {
             loading = false
@@ -125,6 +137,24 @@ fun ReservationsScreen(
             )
         }
 
+        // Search Bar
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            placeholder = { Text("Search reservations...") },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+            trailingIcon = {
+                if (searchQuery.isNotEmpty()) {
+                    IconButton(onClick = { searchQuery = "" }) {
+                        Icon(Icons.Default.Clear, contentDescription = "Clear")
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            shape = RoundedCornerShape(12.dp)
+        )
+
         // Filter chips
         @OptIn(ExperimentalMaterial3Api::class)
         LazyRow(
@@ -132,19 +162,29 @@ fun ReservationsScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             items(filterOptions) { filter ->
+                val count = if (filter == "All") reservations.size else reservations.count { it.status == filter }
                 FilterChip(
                     selected = selectedFilter == filter,
                     onClick = { selectedFilter = filter },
-                    label = { Text(filter) }
+                    label = { Text("$filter ($count)") }
                 )
             }
         }
 
-        // Apply UI-level filtering based on the active selected filter chip
+        // Apply UI-level filtering based on the active selected filter chip and search query
+        val searchFilteredReservations = reservations.filter { res ->
+            val query = searchQuery.lowercase()
+            val stationName = stationMap[res.stationId]?.lowercase() ?: ""
+            query.isEmpty() ||
+                    res.stationId.lowercase().contains(query) ||
+                    res.reservationId.lowercase().contains(query) ||
+                    stationName.contains(query)
+        }
+
         val filteredReservations = if (selectedFilter == "All") {
-            reservations
+            searchFilteredReservations
         } else {
-            reservations.filter { it.status == selectedFilter }
+            searchFilteredReservations.filter { it.status == selectedFilter }
         }
 
         if (loading) {
@@ -203,6 +243,12 @@ fun ReservationsScreen(
                             text = "Station ID: ${res.stationId}",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
+                            color = Color(0xFF253B73)
+                        )
+                        Text(
+                            text = "Station Name: ${stationMap[res.stationId] ?: "Unknown"}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
                             color = Color(0xFF253B73)
                         )
                         Text(
@@ -283,6 +329,7 @@ fun ReservationsScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Station ID: ${res.stationId}", fontWeight = FontWeight.SemiBold)
+                    Text("Station Name: ${stationMap[res.stationId] ?: "Unknown"}")
                     Text("Reservation ID: ${res.reservationId}")
                     Text("Date: ${res.reservationDate}")
                     if (res.dayOfWeek != null || res.startTime != null) {
