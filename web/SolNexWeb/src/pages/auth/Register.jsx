@@ -1,6 +1,9 @@
+// React hooks and icons
 import { useState } from "react"
 import { ArrowRight, Eye, EyeOff, LockKeyhole, ShieldCheck, Sun } from "lucide-react"
+// Routing
 import { Link, useNavigate } from "react-router-dom"
+// Auth API
 import { registerProsumer } from "../../services/authApi"
 
 const initialForm = {
@@ -30,6 +33,7 @@ export default function Register() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
+  // Update form field value
   function updateField(event) {
     const { name, value } = event.target
     if (name === 'phone') {
@@ -39,6 +43,7 @@ export default function Register() {
     }
   }
 
+  // Handle registration form submission
   async function handleSubmit(event) {
     event.preventDefault()
     setError("")

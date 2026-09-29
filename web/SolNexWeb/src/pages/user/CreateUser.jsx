@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom"
 import { ArrowLeft, UserPlus } from "lucide-react"
 import { registerWebUser } from "../../services/userApi"
 
+/**
+ * Create user page for Backoffice users.
+ * Allows creating new Backoffice, Grid Operator, or Prosumer users.
+ */
 export default function CreateUser() {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
@@ -17,7 +21,7 @@ export default function CreateUser() {
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Format phone number with spaces
+  // Format phone number with spaces for display
   function formatPhoneNumber(value) {
     const digits = value.replace(/\D/g, '')
     if (digits.startsWith('94') && digits.length >= 11) {
@@ -29,6 +33,7 @@ export default function CreateUser() {
     return value
   }
 
+  // Handle form input changes
   function handleChange(event) {
     const { name, value } = event.target
     if (name === 'phone') {
@@ -38,6 +43,7 @@ export default function CreateUser() {
     }
   }
 
+  // Handle form submission to create new user
   async function handleSubmit(event) {
     event.preventDefault()
     setError("")

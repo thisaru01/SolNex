@@ -9,6 +9,10 @@ import {
   updateUserRole,
 } from "../../services/userApi"
 
+/**
+ * User management page for Backoffice users.
+ * Allows viewing, searching, filtering, activating/deactivating, and role management of all users.
+ */
 function statusClass(status) {
   return {
     Active: "bg-emerald-100 text-emerald-700",
@@ -26,6 +30,7 @@ export default function Users() {
   const [error, setError] = useState("")
   const [workingNic, setWorkingNic] = useState("")
 
+  // Load users based on current filter and search criteria
   async function loadUsers() {
     setIsLoading(true)
     setError("")
@@ -81,6 +86,7 @@ export default function Users() {
     return () => { isCurrent = false }
   }, [filter])
 
+  // Toggle user account status between active and inactive
   async function changeStatus(user) {
     setWorkingNic(user.nic)
     try {
@@ -96,6 +102,7 @@ export default function Users() {
     }
   }
 
+  // Update user role
   async function changeRole(user, role) {
     setWorkingNic(user.nic)
     try {

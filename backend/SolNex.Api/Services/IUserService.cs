@@ -3,6 +3,9 @@ using SolNex.Api.Models;
 
 namespace SolNex.Api.Services;
 
+/// <summary>
+/// Interface for user and prosumer management service operations.
+/// </summary>
 public interface IUserService
 {
     Task<RegisteredUserResponse> RegisterProsumerAsync(

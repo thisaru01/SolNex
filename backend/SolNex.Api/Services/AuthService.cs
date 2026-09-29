@@ -5,6 +5,10 @@ using SolNex.Api.Repositories;
 
 namespace SolNex.Api.Services;
 
+/// <summary>
+/// Service for user authentication operations.
+/// Handles login, password verification, and JWT token generation.
+/// </summary>
 public sealed class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
@@ -24,6 +28,7 @@ public sealed class AuthService : IAuthService
         _userService = userService;
     }
 
+    // Authenticate user with NIC/email and password, return JWT token if successful
     public async Task<LoginResponse?> LoginAsync(
         LoginRequest request,
         CancellationToken cancellationToken = default)
@@ -50,6 +55,7 @@ public sealed class AuthService : IAuthService
             user.Role.ToString());
     }
 
+    // Register new prosumer account (delegates to UserService)
     public async Task<RegisteredUserResponse> RegisterProsumerAsync(RegisterUserRequest request, CancellationToken cancellationToken = default)
     {
         return await _userService.RegisterProsumerAsync(request, cancellationToken);

@@ -4,6 +4,10 @@ using SolNex.Api.Models;
 
 namespace SolNex.Api.Repositories;
 
+/// <summary>
+/// Repository for user data access operations.
+/// Handles CRUD operations for user entities in MongoDB.
+/// </summary>
 public sealed partial class UserRepository : IUserRepository
 {
     private readonly IMongoCollection<User> _users;
@@ -13,6 +17,7 @@ public sealed partial class UserRepository : IUserRepository
         _users = dbContext.Users;
     }
 
+    // Check if user exists by NIC or email
     public Task<bool> ExistsByNicOrEmailAsync(
         string nic,
         string email,
@@ -25,6 +30,7 @@ public sealed partial class UserRepository : IUserRepository
         return _users.Find(filter).AnyAsync(cancellationToken);
     }
 
+    // Check if email exists for a different user (excluding current NIC)
     public Task<bool> ExistsByEmailExceptNicAsync(
         string email,
         string nic,
@@ -37,11 +43,13 @@ public sealed partial class UserRepository : IUserRepository
         return _users.Find(filter).AnyAsync(cancellationToken);
     }
 
+    // Create a new user
     public Task CreateAsync(User user, CancellationToken cancellationToken = default)
     {
         return _users.InsertOneAsync(user, cancellationToken: cancellationToken);
     }
 
+    // Get users with optional search filter
     public async Task<IReadOnlyList<User>> GetAsync(string? search, CancellationToken cancellationToken = default)
     {
         var filter = string.IsNullOrWhiteSpace(search)
@@ -54,17 +62,20 @@ public sealed partial class UserRepository : IUserRepository
         return await _users.Find(filter).SortByDescending(user => user.CreatedAt).ToListAsync(cancellationToken);
     }
 
+    // Get user by NIC
     public async Task<User?> GetByNicAsync(string nic, CancellationToken cancellationToken = default)
     {
         return await _users.Find(user => user.Nic == nic).FirstOrDefaultAsync(cancellationToken);
     }
 
+    // Update user information
     public async Task<bool> UpdateAsync(User user, CancellationToken cancellationToken = default)
     {
         var result = await _users.ReplaceOneAsync(existing => existing.Nic == user.Nic, user, cancellationToken: cancellationToken);
         return result.ModifiedCount > 0;
     }
 
+    // Find user by NIC or email identifier
     public async Task<User?> FindByIdentifierAsync(string identifier, CancellationToken cancellationToken = default)
     {
         var filter = Builders<User>.Filter.Or(
@@ -74,6 +85,7 @@ public sealed partial class UserRepository : IUserRepository
         return await _users.Find(filter).FirstOrDefaultAsync(cancellationToken);
     }
 
+    // Find user by NIC or email (alias for FindByIdentifierAsync)
     public Task<User?> FindByNicOrEmailAsync(string identifier, CancellationToken cancellationToken = default)
     {
         return FindByIdentifierAsync(identifier, cancellationToken);

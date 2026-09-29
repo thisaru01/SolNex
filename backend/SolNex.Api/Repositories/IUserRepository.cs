@@ -2,6 +2,9 @@ using SolNex.Api.Models;
 
 namespace SolNex.Api.Repositories;
 
+/// <summary>
+/// Interface for user repository data access operations.
+/// </summary>
 public partial interface IUserRepository
 {
     Task<bool> ExistsByNicOrEmailAsync(string nic, string email, CancellationToken cancellationToken = default);

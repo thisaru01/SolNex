@@ -3,6 +3,10 @@ import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, UserCheck, UserRoundX, Calendar, Mail, Phone, Shield } from "lucide-react"
 import { getUserByNic, activateUser, deactivateUser } from "../../services/userApi"
 
+/**
+ * Prosumer details page for Backoffice users.
+ * Displays prosumer information and allows account status management.
+ */
 function statusClass(status) {
   return {
     Active: "bg-emerald-100 text-emerald-700",
@@ -21,6 +25,7 @@ export default function ProsumerDetails() {
   const [isWorking, setIsWorking] = useState(false)
 
   useEffect(() => {
+    // Load prosumer data on component mount
     async function loadUser() {
       setIsLoading(true)
       setError("")
@@ -36,6 +41,7 @@ export default function ProsumerDetails() {
     loadUser()
   }, [nic])
 
+  // Handle account status change (activate/deactivate)
   async function handleStatusChange() {
     if (!user) return
     setIsWorking(true)

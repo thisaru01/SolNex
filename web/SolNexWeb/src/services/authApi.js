@@ -1,5 +1,7 @@
+// API configuration
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5097"
 
+// Register prosumer user
 export async function registerProsumer(request) {
   const response = await fetch(`${API_URL}/api/auth/register`, {
     method: "POST",
@@ -20,6 +22,7 @@ export async function registerProsumer(request) {
   return data
 }
 
+// Login user
 export async function login(request) {
   const response = await fetch(`${API_URL}/api/auth/login`, {
     method: "POST",

@@ -27,12 +27,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+/**
+ * User session data model
+ */
 data class UserSession(
     val nic: String,
     val fullName: String,
     val role: String
 )
 
+/**
+ * Dashboard screen for prosumer profile management.
+ * Allows viewing and editing profile information, and requesting account deactivation.
+ */
 @Composable
 fun DashboardScreen(
     modifier: Modifier = Modifier,
@@ -46,28 +53,7 @@ fun DashboardScreen(
     onSaveProfile: (String, String, String) -> Unit,
     onRequestDeactivation: () -> Unit
 ) {
-    val displayUser = user ?: UserSession("", "User", "Prosumer")
-    var fullName by remember(displayUser.fullName) { mutableStateOf(displayUser.fullName) }
-    var email by remember(profile?.email) { mutableStateOf(profile?.email.orEmpty()) }
-    var phone by remember(profile?.phone) { mutableStateOf(profile?.phone.orEmpty()) }
-    var editMode by remember { mutableStateOf(false) }
-    var fullNameError by remember { mutableStateOf<String?>(null) }
-    var emailError by remember { mutableStateOf<String?>(null) }
-    var phoneError by remember { mutableStateOf<String?>(null) }
-    val profileStatus = profile?.accountStatus ?: "Pending"
-
-    val statusMessage = when (profileStatus) {
-        "DeactivationRequested" -> "Deactivation request pending approval"
-        else -> profileStatus
-    }
-
-    LaunchedEffect(profile) {
-        fullName = profile?.fullName ?: displayUser.fullName
-        email = profile?.email.orEmpty()
-        phone = profile?.phone.orEmpty()
-    }
-
-    // Format phone number with spaces
+    // Format phone number with spaces for display
     fun formatPhoneNumber(input: String): String {
         val digits = input.filter { it.isDigit() }
         return when {
@@ -90,6 +76,28 @@ fun DashboardScreen(
         }
     }
 
+    val displayUser = user ?: UserSession("", "User", "Prosumer")
+    var fullName by remember(displayUser.fullName) { mutableStateOf(displayUser.fullName) }
+    var email by remember(profile?.email) { mutableStateOf(profile?.email.orEmpty()) }
+    var phone by remember(profile?.phone) { mutableStateOf(formatPhoneNumber(profile?.phone.orEmpty())) }
+    var editMode by remember { mutableStateOf(false) }
+    var fullNameError by remember { mutableStateOf<String?>(null) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var phoneError by remember { mutableStateOf<String?>(null) }
+    val profileStatus = profile?.accountStatus ?: "Pending"
+
+    val statusMessage = when (profileStatus) {
+        "DeactivationRequested" -> "Deactivation request pending approval"
+        else -> profileStatus
+    }
+
+    LaunchedEffect(profile) {
+        fullName = profile?.fullName ?: displayUser.fullName
+        email = profile?.email.orEmpty()
+        phone = formatPhoneNumber(profile?.phone.orEmpty())
+    }
+
+    // Validate profile data and save changes
     fun validateAndSave() {
         fullNameError = if (fullName.trim().length < 2) "Enter your full name." else null
         emailError = if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()) "Enter a valid email." else null

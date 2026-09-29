@@ -4,8 +4,13 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace SolNex.Api.Extensions;
 
+/// <summary>
+/// JWT authentication configuration extensions.
+/// Sets up JWT bearer authentication for the API.
+/// </summary>
 public static class JwtAuthenticationExtensions
 {
+    // Configure JWT bearer authentication with signing key and validation parameters
     public static IServiceCollection AddSolNexJwtAuthentication(
         this IServiceCollection services,
         IConfiguration configuration)

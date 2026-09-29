@@ -7,7 +7,12 @@ import java.net.URL
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+/**
+ * Repository for user authentication operations.
+ * Handles user login and token management.
+ */
 interface LoginRepository {
+    // Authenticate user and store token
     fun login(request: LoginRequest, callback: (LoginResult) -> Unit)
 }
 
@@ -16,6 +21,7 @@ class ApiLoginRepository(
     private val executor: ExecutorService = Executors.newSingleThreadExecutor(),
     private val apiBaseUrl: String = "http://10.0.2.2:5097"
 ) : LoginRepository {
+    // Perform login API call and store authentication token
     override fun login(request: LoginRequest, callback: (LoginResult) -> Unit) {
         executor.execute {
             val result = try {
@@ -52,13 +58,19 @@ class ApiLoginRepository(
         }
     }
 
+    // Extract error message from API response
     private fun extractMessage(response: String): String? =
         runCatching { JSONObject(response).optString("message").takeIf { it.isNotBlank() } }.getOrNull()
 }
 
+/**
+ * Token store for managing authentication tokens and user session data.
+ * Persists tokens and user information to SharedPreferences.
+ */
 class TokenStore(context: Context) {
     private val preferences = context.getSharedPreferences("solnex_auth", Context.MODE_PRIVATE)
 
+    // Save authentication token and user information
     fun save(token: String, nic: String, fullName: String, role: String) {
         preferences.edit()
             .putString("token", token)
@@ -68,15 +80,21 @@ class TokenStore(context: Context) {
             .apply()
     }
 
+    // Get stored authentication token
     fun token(): String? = preferences.getString("token", null)
+    // Get stored user NIC
     fun nic(): String? = preferences.getString("nic", null)
+    // Get stored user full name
     fun fullName(): String? = preferences.getString("full_name", null)
+    // Get stored user role
     fun role(): String? = preferences.getString("role", null)
 
+    // Update stored user profile information
     fun updateProfile(fullName: String) {
         preferences.edit().putString("full_name", fullName).apply()
     }
 
+    // Clear all stored authentication data
     fun clear() {
         preferences.edit().clear().apply()
     }

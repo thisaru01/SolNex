@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom"
 import { ArrowLeft, UserPlus } from "lucide-react"
 import { registerWebUser } from "../../services/userApi"
 
+/**
+ * Create prosumer page for Backoffice users.
+ * Allows creating new prosumer accounts with NIC as primary key.
+ */
 export default function CreateProsumer() {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
@@ -16,7 +20,7 @@ export default function CreateProsumer() {
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Format phone number with spaces
+  // Format phone number with spaces for display
   function formatPhoneNumber(value) {
     const digits = value.replace(/\D/g, '')
     if (digits.startsWith('94') && digits.length >= 11) {
@@ -28,6 +32,7 @@ export default function CreateProsumer() {
     return value
   }
 
+  // Handle form input changes
   function handleChange(event) {
     const { name, value } = event.target
     if (name === 'phone') {
@@ -37,6 +42,7 @@ export default function CreateProsumer() {
     }
   }
 
+  // Handle form submission to create new prosumer
   async function handleSubmit(event) {
     event.preventDefault()
     setError("")

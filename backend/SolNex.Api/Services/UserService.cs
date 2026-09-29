@@ -6,6 +6,10 @@ using SolNex.Api.Repositories;
 
 namespace SolNex.Api.Services;
 
+/// <summary>
+/// Service for user and prosumer management operations.
+/// Handles registration, retrieval, updates, role management, and account status control.
+/// </summary>
 public sealed class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
@@ -19,6 +23,7 @@ public sealed class UserService : IUserService
         _passwordHasher = passwordHasher;
     }
 
+    // Register a new prosumer user with pending status
     public async Task<RegisteredUserResponse> RegisterProsumerAsync(
         RegisterUserRequest request,
         CancellationToken cancellationToken = default)
@@ -64,6 +69,7 @@ public sealed class UserService : IUserService
             user.CreatedAt);
     }
 
+    // Register a new web user with specified role (Backoffice, Grid Operator, or Prosumer)
     public async Task<RegisteredUserResponse> RegisterWebUserAsync(
         RegisterWebUserRequest request,
         CancellationToken cancellationToken = default)
@@ -116,30 +122,35 @@ public sealed class UserService : IUserService
             user.CreatedAt);
     }
 
+    // Get all users with optional search filter
     public async Task<IReadOnlyList<UserListItem>> GetUsersAsync(string? search, CancellationToken cancellationToken = default)
     {
         var users = await _userRepository.GetAsync(search, cancellationToken);
         return users.Select(Map).ToList();
     }
 
+    // Get users with pending status awaiting activation
     public async Task<IReadOnlyList<UserListItem>> GetPendingUsersAsync(CancellationToken cancellationToken = default)
     {
         var users = await _userRepository.GetAsync(null, cancellationToken);
         return users.Where(user => user.AccountStatus == AccountStatus.Pending).Select(Map).ToList();
     }
 
+    // Get users with deactivation requests
     public async Task<IReadOnlyList<UserListItem>> GetDeactivationRequestsAsync(CancellationToken cancellationToken = default)
     {
         var users = await _userRepository.GetAsync(null, cancellationToken);
         return users.Where(user => user.AccountStatus == AccountStatus.DeactivationRequested).Select(Map).ToList();
     }
 
+    // Get user by NIC
     public async Task<UserListItem?> GetUserAsync(string nic, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByNicAsync(nic.Trim(), cancellationToken);
         return user is null ? null : Map(user);
     }
 
+    // Update user information
     public async Task<UserListItem?> UpdateUserAsync(string nic, UpdateUserRequest request, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByNicAsync(nic.Trim(), cancellationToken);
@@ -159,6 +170,7 @@ public sealed class UserService : IUserService
         return Map(user);
     }
 
+    // Update user role
     public async Task<UserListItem?> UpdateRoleAsync(string nic, UpdateUserRoleRequest request, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByNicAsync(nic.Trim(), cancellationToken);
@@ -170,6 +182,7 @@ public sealed class UserService : IUserService
         return Map(user);
     }
 
+    // Set user account status
     public async Task<UserListItem?> SetStatusAsync(string nic, AccountStatus status, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByNicAsync(nic.Trim(), cancellationToken);
@@ -181,6 +194,7 @@ public sealed class UserService : IUserService
         return Map(user);
     }
 
+    // Map User entity to UserListItem DTO
     private static UserListItem Map(User user) => new(
         user.Nic,
         user.FullName,

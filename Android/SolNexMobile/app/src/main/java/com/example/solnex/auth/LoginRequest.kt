@@ -1,3 +1,4 @@
+// Auth request models
 package com.example.solnex.auth
 
 data class LoginRequest(

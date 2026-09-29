@@ -10,11 +10,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.solnex.ui.theme.SolNexTheme
 
+/**
+ * Registration activity for new prosumer accounts.
+ * Handles prosumer registration via API and stores pending users locally.
+ */
 class RegisterActivity : ComponentActivity() {
     private val registerRepository: RegisterRepository by lazy { ApiRegisterRepository() }
     private val localUserDatabase: LocalUserDatabase by lazy { LocalUserDatabase(this) }
     private var registrationResult by mutableStateOf<RegisterResult?>(null)
 
+    // Initialize registration screen with Compose UI
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -32,6 +37,7 @@ class RegisterActivity : ComponentActivity() {
         }
     }
 
+    // Submit registration request and handle result
     private fun submitRegistration(request: RegisterRequest) {
         registrationResult = null
         registerRepository.register(request) { result ->
@@ -48,6 +54,7 @@ class RegisterActivity : ComponentActivity() {
         }
     }
 
+    // Clean up database resources
     override fun onDestroy() {
         localUserDatabase.close()
         super.onDestroy()

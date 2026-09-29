@@ -9,6 +9,10 @@ import {
   getUsers,
 } from "../../services/userApi"
 
+/**
+ * Prosumer management page for Backoffice users.
+ * Allows viewing, searching, filtering, creating, editing, and activating/deactivating prosumer accounts.
+ */
 function statusClass(status) {
   return {
     Active: "bg-emerald-100 text-emerald-700",
@@ -27,6 +31,7 @@ export default function Prosumers() {
   const [error, setError] = useState("")
   const [workingNic, setWorkingNic] = useState("")
 
+  // Load prosumers based on current filter and search criteria
   async function loadUsers() {
     setIsLoading(true)
     setError("")
@@ -85,6 +90,7 @@ export default function Prosumers() {
     return () => { isCurrent = false }
   }, [filter])
 
+  // Toggle prosumer account status between active and inactive
   async function changeStatus(user) {
     setWorkingNic(user.nic)
     try {
