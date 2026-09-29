@@ -287,7 +287,32 @@ fun ReservationsScreen(
                         Text("Schedule: ${res.dayOfWeek ?: ""} ${res.startTime ?: ""} - ${res.endTime ?: ""}")
                     }
                     Text("Energy: ${res.energyAmountKwh} kWh")
-                    Text("Status: ${res.status}")
+                    
+                    val statusColor = when (res.status) {
+                        "Approved" -> Color(0xFF10B981) // Green
+                        "Pending" -> Color(0xFFF59E0B) // Orange
+                        "Cancelled" -> Color(0xFFEF4444) // Red
+                        "Rejected" -> Color(0xFFEF4444) // Red
+                        "CancellationRequested" -> Color(0xFF8B5CF6) // Purple
+                        else -> Color(0xFF253B73) // Default dark blue
+                    }
+                    
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Status: ", modifier = Modifier.padding(end = 4.dp))
+                        Box(
+                            modifier = Modifier
+                                .background(statusColor.copy(alpha = 0.15f), RoundedCornerShape(16.dp))
+                                .border(1.dp, statusColor, RoundedCornerShape(16.dp))
+                                .padding(horizontal = 12.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = res.status,
+                                color = statusColor,
+                                fontWeight = FontWeight.Medium,
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
+                    }
                 }
             },
             confirmButton = {
@@ -302,6 +327,8 @@ fun ReservationsScreen(
                         }) {
                             Text("Edit")
                         }
+                    }
+                    if (res.status == "Pending" || res.status == "Approved") {
                         Button(
                             onClick = { 
                                 repository.cancelReservation(token, res.id) { success, errMsg ->
