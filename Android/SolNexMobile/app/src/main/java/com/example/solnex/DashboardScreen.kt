@@ -53,27 +53,6 @@ fun DashboardScreen(
     onSaveProfile: (String, String, String) -> Unit,
     onRequestDeactivation: () -> Unit
 ) {
-    val displayUser = user ?: UserSession("", "User", "Prosumer")
-    var fullName by remember(displayUser.fullName) { mutableStateOf(displayUser.fullName) }
-    var email by remember(profile?.email) { mutableStateOf(profile?.email.orEmpty()) }
-    var phone by remember(profile?.phone) { mutableStateOf(profile?.phone.orEmpty()) }
-    var editMode by remember { mutableStateOf(false) }
-    var fullNameError by remember { mutableStateOf<String?>(null) }
-    var emailError by remember { mutableStateOf<String?>(null) }
-    var phoneError by remember { mutableStateOf<String?>(null) }
-    val profileStatus = profile?.accountStatus ?: "Pending"
-
-    val statusMessage = when (profileStatus) {
-        "DeactivationRequested" -> "Deactivation request pending approval"
-        else -> profileStatus
-    }
-
-    LaunchedEffect(profile) {
-        fullName = profile?.fullName ?: displayUser.fullName
-        email = profile?.email.orEmpty()
-        phone = profile?.phone.orEmpty()
-    }
-
     // Format phone number with spaces for display
     fun formatPhoneNumber(input: String): String {
         val digits = input.filter { it.isDigit() }
@@ -95,6 +74,27 @@ fun DashboardScreen(
             }
             else -> input
         }
+    }
+
+    val displayUser = user ?: UserSession("", "User", "Prosumer")
+    var fullName by remember(displayUser.fullName) { mutableStateOf(displayUser.fullName) }
+    var email by remember(profile?.email) { mutableStateOf(profile?.email.orEmpty()) }
+    var phone by remember(profile?.phone) { mutableStateOf(formatPhoneNumber(profile?.phone.orEmpty())) }
+    var editMode by remember { mutableStateOf(false) }
+    var fullNameError by remember { mutableStateOf<String?>(null) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var phoneError by remember { mutableStateOf<String?>(null) }
+    val profileStatus = profile?.accountStatus ?: "Pending"
+
+    val statusMessage = when (profileStatus) {
+        "DeactivationRequested" -> "Deactivation request pending approval"
+        else -> profileStatus
+    }
+
+    LaunchedEffect(profile) {
+        fullName = profile?.fullName ?: displayUser.fullName
+        email = profile?.email.orEmpty()
+        phone = formatPhoneNumber(profile?.phone.orEmpty())
     }
 
     // Validate profile data and save changes
