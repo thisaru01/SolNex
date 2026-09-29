@@ -656,6 +656,12 @@ export default function BookingSlots() {
                     </option>
                   ))}
                 </select>
+                {stations.find(s => s.stationId === createForm.stationId)?.schedule?.[createForm.dayOfWeek] && (
+                  <span className="text-[11px] text-muted-foreground mt-1.5 block flex items-center gap-1.5">
+                    <Clock className="h-3 w-3" />
+                    Operating hours: {stations.find(s => s.stationId === createForm.stationId)?.schedule?.[createForm.dayOfWeek]}
+                  </span>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
