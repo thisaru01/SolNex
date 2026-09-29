@@ -35,7 +35,6 @@ export default function CreateStation() {
   const [alertOpen, setAlertOpen] = useState(false)
   
   const [formData, setFormData] = useState({
-    stationId: "",
     stationName: "",
     latitude: "",
     longitude: "",
@@ -112,14 +111,12 @@ export default function CreateStation() {
           <form onSubmit={handlePreSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="stationId">Station ID <span className="text-destructive">*</span></Label>
+                <Label htmlFor="stationId">Station ID</Label>
                 <Input 
                   id="stationId" 
                   name="stationId" 
-                  placeholder="e.g. ST001" 
-                  required 
-                  value={formData.stationId} 
-                  onChange={handleChange} 
+                  value="Auto-generated upon creation" 
+                  disabled 
                 />
               </div>
               <div className="space-y-2">

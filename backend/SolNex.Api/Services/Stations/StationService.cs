@@ -34,15 +34,23 @@ public class StationService : IStationService
 
     public async Task<StationDto> CreateStationAsync(CreateStationDto createDto)
     {
-        var existingStation = await _stationRepository.GetStationByStationIdAsync(createDto.StationId);
-        if (existingStation != null)
+        var allStations = await _stationRepository.GetAllStationsAsync();
+        int maxId = 0;
+        foreach (var s in allStations)
         {
-            throw new InvalidOperationException($"Station with StationId '{createDto.StationId}' already exists.");
+            if (s.StationId != null && s.StationId.StartsWith("ST") && int.TryParse(s.StationId.Substring(2), out int num))
+            {
+                if (num > maxId)
+                {
+                    maxId = num;
+                }
+            }
         }
+        string generatedStationId = $"ST{(maxId + 1):D3}";
 
         var station = new SolarStationInfo
         {
-            StationId = createDto.StationId,
+            StationId = generatedStationId,
             StationName = createDto.StationName,
             Latitude = createDto.Latitude,
             Longitude = createDto.Longitude,
