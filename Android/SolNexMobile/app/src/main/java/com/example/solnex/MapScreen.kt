@@ -29,6 +29,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -75,6 +81,8 @@ fun MapScreen(
     var error by remember { mutableStateOf<String?>(null) }
     var selectedStation by remember { mutableStateOf<Station?>(null) }
     var showReservationForm by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    var showSearchResults by remember { mutableStateOf(false) }
 
     val repository = remember { StationRepository() }
 
@@ -271,56 +279,126 @@ fun MapScreen(
                 modifier = Modifier.fillMaxSize()
             )
 
-            // FAB to re-center on location
-            FloatingActionButton(
-                onClick = {
-                    locationOverlayRef.value?.myLocation?.let { location ->
-                        mapViewRef.value?.controller?.animateTo(location)
-                        mapViewRef.value?.controller?.setZoom(14.0)
-                    }
-                },
+            // Search Bar
+            Column(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(16.dp),
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.primary
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .padding(16.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.LocationOn,
-                    contentDescription = "My Location"
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { 
+                        searchQuery = it 
+                        showSearchResults = it.isNotBlank()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Search stations...") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(24.dp),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                        unfocusedIndicatorColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
                 )
+
+                AnimatedVisibility(
+                    visible = showSearchResults && searchQuery.isNotBlank()
+                ) {
+                    val filtered = stations.filter { 
+                        !it.status.equals("Deactivated", ignoreCase = true) && 
+                        it.stationName.contains(searchQuery, ignoreCase = true) 
+                    }
+                    if (filtered.isNotEmpty()) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                        ) {
+                            LazyColumn(
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            ) {
+                                items(filtered) { station ->
+                                    Text(
+                                        text = station.stationName,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                searchQuery = station.stationName
+                                                showSearchResults = false
+                                                selectedStation = station
+                                                mapViewRef.value?.controller?.animateTo(
+                                                    GeoPoint(station.latitude, station.longitude)
+                                                )
+                                                mapViewRef.value?.controller?.setZoom(16.0)
+                                            }
+                                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
-            // Custom Zoom Controls
-            Card(
+            // Controls Column (Zoom & FAB)
+            Column(
                 modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(16.dp),
-                shape = RoundedCornerShape(8.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = if (selectedStation != null) 220.dp else 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.End
             ) {
-                Column(modifier = Modifier.width(48.dp)) {
-                    IconButton(
-                        onClick = { mapViewRef.value?.controller?.zoomIn() }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Zoom In",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
+                // Custom Zoom Controls
+                Card(
+                    shape = RoundedCornerShape(8.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Column(modifier = Modifier.width(48.dp)) {
+                        IconButton(
+                            onClick = { mapViewRef.value?.controller?.zoomIn() }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Zoom In",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        HorizontalDivider()
+                        IconButton(
+                            onClick = { mapViewRef.value?.controller?.zoomOut() }
+                        ) {
+                            Text(
+                                text = "−",
+                                fontSize = 28.sp,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.padding(bottom = 2.dp)
+                            )
+                        }
                     }
-                    HorizontalDivider()
-                    IconButton(
-                        onClick = { mapViewRef.value?.controller?.zoomOut() }
-                    ) {
-                        Text(
-                            text = "−",
-                            fontSize = 28.sp,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(bottom = 2.dp)
-                        )
-                    }
+                }
+                
+                // FAB to re-center on location
+                FloatingActionButton(
+                    onClick = {
+                        locationOverlayRef.value?.myLocation?.let { location ->
+                            mapViewRef.value?.controller?.animateTo(location)
+                            mapViewRef.value?.controller?.setZoom(14.0)
+                        }
+                    },
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.primary
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = "My Location"
+                    )
                 }
             }
 
