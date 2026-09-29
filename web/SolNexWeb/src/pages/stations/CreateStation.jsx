@@ -29,6 +29,7 @@ const defaultCenter = {
   lng: 80.7718
 }
 
+// Page component for creating a new solar station with map integration for location picking.
 export default function CreateStation() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
@@ -44,6 +45,8 @@ export default function CreateStation() {
 
   const [nextStationId, setNextStationId] = useState("Loading...")
 
+    // Fetches the auto-generated station ID on component mount
+// Trigger side effects like fetching initial station data on mount
   useEffect(() => {
     const fetchId = async () => {
       try {
@@ -66,6 +69,7 @@ export default function CreateStation() {
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "", 
   })
 
+  // Update latitude and longitude in form data when user clicks on map
   const handleMapClick = (e) => {
     setFormData(prev => ({
       ...prev,
@@ -74,16 +78,19 @@ export default function CreateStation() {
     }))
   }
 
+  // Handle input changes dynamically by name attribute
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
+  // Prevent default form submission and trigger confirmation dialog instead
   const handlePreSubmit = (e) => {
     e.preventDefault()
     setAlertOpen(true)
   }
 
+  // Executes the actual update/create logic after user confirms action
   const handleSubmit = async () => {
     setAlertOpen(false)
     setLoading(true)

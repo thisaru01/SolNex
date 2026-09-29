@@ -65,6 +65,7 @@ public class StationsController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
+            // Catch domain exceptions like duplicate identifiers
             return Conflict(new { message = ex.Message });
         }
     }
@@ -75,11 +76,15 @@ public class StationsController : ControllerBase
     [Authorize(Roles = "Backoffice")]
     public async Task<IActionResult> UpdateStation(string id, [FromBody] UpdateStationDto updateDto)
     {
+        // Update the station fields using the DTO provided
         var updatedStation = await _stationService.UpdateStationAsync(id, updateDto);
         if (updatedStation == null)
         {
+            // If the station does not exist, return 404
             return NotFound(new { message = $"Station with ID {id} not found." });
         }
+        
+        // Return 200 OK along with the updated station data
         return Ok(new { message = "Station updated successfully.", station = updatedStation });
     }
 

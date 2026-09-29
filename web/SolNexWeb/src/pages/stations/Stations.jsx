@@ -25,6 +25,7 @@ function getStoredUser() {
   }
 }
 
+// Main listing page displaying all solar stations in a data table.
 export default function Stations() {
   const navigate = useNavigate()
   const [stations, setStations] = useState([])
@@ -48,6 +49,7 @@ export default function Stations() {
     }
   }
 
+  // Trigger side effects like fetching initial station data on mount
   useEffect(() => {
     fetchStations()
   }, [])

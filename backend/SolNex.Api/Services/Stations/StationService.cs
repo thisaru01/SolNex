@@ -39,8 +39,11 @@ public class StationService : IStationService
     {
         var allStations = await _stationRepository.GetAllStationsAsync();
         int maxId = 0;
+        
+        // Iterate through existing stations to find the highest ID number
         foreach (var s in allStations)
         {
+            // Only consider IDs that start with 'ST' and have valid numbers appended
             if (s.StationId != null && s.StationId.StartsWith("ST") && int.TryParse(s.StationId.Substring(2), out int num))
             {
                 if (num > maxId)
@@ -49,14 +52,18 @@ public class StationService : IStationService
                 }
             }
         }
+        
+        // Increment the maximum ID and format it to 3 digits
         return $"ST{(maxId + 1):D3}";
     }
 
     // Creates a new solar station with an auto-generated ID.
     public async Task<StationDto> CreateStationAsync(CreateStationDto createDto)
     {
+        // Obtain a unique generated station ID
         string generatedStationId = await GetNextStationIdAsync();
 
+        // Construct the station entity mapped from the DTO
         var station = new SolarStationInfo
         {
             StationId = generatedStationId,
@@ -72,7 +79,10 @@ public class StationService : IStationService
             UpdatedAt = DateTime.UtcNow
         };
 
+        // Persist the newly constructed entity to the database
         await _stationRepository.CreateStationAsync(station);
+        
+        // Convert to DTO before returning
         return MapToDto(station);
     }
 

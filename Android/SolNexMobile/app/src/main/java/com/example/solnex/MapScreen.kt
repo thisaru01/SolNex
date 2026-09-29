@@ -67,6 +67,8 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
+// Displays the interactive Map Screen using osmdroid
+// Allows users to view stations, search, and center on their current location.
 @Composable
 fun MapScreen(
     modifier: Modifier = Modifier,

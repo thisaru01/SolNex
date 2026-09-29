@@ -21,6 +21,7 @@ import { toast } from "sonner"
 
 const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
+// Page component for managing the operating schedule of a specific station.
 export default function StationSchedule() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -35,22 +36,28 @@ export default function StationSchedule() {
     DAYS_OF_WEEK.reduce((acc, day) => ({ ...acc, [day]: "" }), {})
   )
 
+  // Trigger side effects like fetching initial station data on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch both the basic station details and the operational schedule concurrently
         const [stationData, scheduleData] = await Promise.all([
           stationApi.getStationById(id),
           stationApi.getStationSchedule(id)
         ])
         
+        // Save the station name for display purposes in the header
         setStationName(stationData.stationName)
         
+        // If a schedule exists on the server, merge it into our default schedule state
         if (scheduleData) {
           setSchedule(prev => ({ ...prev, ...scheduleData }))
         }
       } catch (err) {
+        // Capture any error messages to show in the UI
         setError(err.message || "Failed to load schedule")
       } finally {
+        // Dismiss loading spinner regardless of success or failure
         setLoading(false)
       }
     }
@@ -60,7 +67,8 @@ export default function StationSchedule() {
   const handleScheduleChange = (day, value) => {
     setSchedule(prev => ({ ...prev, [day]: value }))
   }
-
+  
+  // Prevent default form submission and trigger confirmation dialog instead
   const handlePreSubmit = (e) => {
     e.preventDefault()
     setError(null)
@@ -86,6 +94,7 @@ export default function StationSchedule() {
     setAlertOpen(true)
   }
 
+  // Executes the actual update/create logic after user confirms action
   const handleSubmit = async () => {
     setAlertOpen(false)
     setSaving(true)
