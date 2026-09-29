@@ -107,6 +107,11 @@ fun MapScreen(
         tileDir.mkdirs()
         osmConfig.osmdroidTileCache = tileDir
 
+        // Performance tuning
+        osmConfig.tileFileSystemThreads = 4
+        osmConfig.tileDownloadThreads = 4
+        osmConfig.tileFileSystemCacheMaxBytes = 100L * 1024 * 1024 // 100 MB cache
+        
         true
     }
 
@@ -144,16 +149,7 @@ fun MapScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        if (loading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-        } else if (error != null) {
-            Text(
-                text = error ?: "Unknown error",
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.align(Alignment.Center).padding(16.dp)
-            )
-        } else {
-            // Remember the MapView so we can manage its lifecycle
+        // Remember the MapView so we can manage its lifecycle
             val mapViewRef = remember { mutableStateOf<MapView?>(null) }
             val locationOverlayRef = remember { mutableStateOf<MyLocationNewOverlay?>(null) }
 
@@ -247,8 +243,10 @@ fun MapScreen(
                             canvas.drawCircle(radius, radius, radius - borderPaint.strokeWidth, borderPaint)
                             
                             overlay.setPersonIcon(bitmap)
+                            overlay.setPersonAnchor(0.5f, 0.5f)
                             @Suppress("DEPRECATION")
                             overlay.setDirectionArrow(bitmap, bitmap)
+                            overlay.setDirectionAnchor(0.5f, 0.5f)
 
                             // First time setup: zoom to user's location when fixed
                             overlay.runOnFirstFix {
@@ -459,7 +457,16 @@ fun MapScreen(
                     }
                 }
             }
-        }
+
+            if (loading) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            } else if (error != null) {
+                Text(
+                    text = error ?: "Unknown error",
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.align(Alignment.Center).padding(16.dp)
+                )
+            }
 
         if (showReservationForm && selectedStation != null) {
             ReservationFormDialog(
