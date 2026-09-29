@@ -14,12 +14,22 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.border
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.CircularProgressIndicator
@@ -59,15 +69,25 @@ fun ReservationsScreen(
     
     // State variable for the currently active filter chip
     var selectedFilter by remember { mutableStateOf("All") }
+    
+    // State variable for selected reservation to view details
+    var selectedReservation by remember { mutableStateOf<Reservation?>(null) }
+    
+    // State variable to trigger refresh
+    var refreshTrigger by remember { mutableStateOf(0) }
+    
+    // State for showing the edit dialog
+    var showEditDialog by remember { mutableStateOf<Reservation?>(null) }
 
-    val filterOptions = listOf("All", "Pending", "Approved", "Cancelled", "CancellationRequested")
+    val filterOptions = listOf("All", "Pending", "Approved", "Cancelled", "CancellationRequested", "Rejected")
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(refreshTrigger) {
         // Fetch user's reservations from the API when the screen initializes
         if (nic.isNotBlank() && token.isNotBlank()) {
+            loading = true
             repository.getReservationsByNic(token, nic) { fetchedReservations, errMsg ->
                 if (fetchedReservations != null) {
-                    val allowedStatuses = setOf("Pending", "Cancelled", "CancellationRequested", "Approved")
+                    val allowedStatuses = setOf("Pending", "Cancelled", "CancellationRequested", "Approved", "Rejected")
                     reservations = fetchedReservations.filter { it.status in allowedStatuses }
                 } else {
                     error = errMsg
@@ -204,6 +224,7 @@ fun ReservationsScreen(
                             "Approved" -> Color(0xFF10B981) // Green
                             "Pending" -> Color(0xFFF59E0B) // Orange
                             "Cancelled" -> Color(0xFFEF4444) // Red
+                            "Rejected" -> Color(0xFFEF4444) // Red
                             "CancellationRequested" -> Color(0xFF8B5CF6) // Purple
                             else -> Color(0xFF253B73) // Default dark blue
                         }
@@ -231,12 +252,95 @@ fun ReservationsScreen(
                                 text = "View",
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.labelLarge
+                                style = MaterialTheme.typography.labelLarge,
+                                modifier = Modifier.clickable { selectedReservation = res }.padding(4.dp)
                             )
                         }
                     }
                 }
             }
         }
+    }
+
+    // Dialog for viewing reservation details
+    selectedReservation?.let { res ->
+        AlertDialog(
+            onDismissRequest = { selectedReservation = null },
+            title = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Reservation Details")
+                    IconButton(onClick = { selectedReservation = null }) {
+                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Station ID: ${res.stationId}", fontWeight = FontWeight.SemiBold)
+                    Text("Reservation ID: ${res.reservationId}")
+                    Text("Date: ${res.reservationDate}")
+                    if (res.dayOfWeek != null || res.startTime != null) {
+                        Text("Schedule: ${res.dayOfWeek ?: ""} ${res.startTime ?: ""} - ${res.endTime ?: ""}")
+                    }
+                    Text("Energy: ${res.energyAmountKwh} kWh")
+                    Text("Status: ${res.status}")
+                }
+            },
+            confirmButton = {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (res.status == "Pending") {
+                        Button(onClick = { 
+                            showEditDialog = res
+                            selectedReservation = null
+                        }) {
+                            Text("Edit")
+                        }
+                        Button(
+                            onClick = { 
+                                repository.cancelReservation(token, res.id) { success, errMsg ->
+                                    if (success) refreshTrigger++ else error = errMsg
+                                }
+                                selectedReservation = null
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Text("Cancel")
+                        }
+                    } else if (res.status == "Cancelled" || res.status == "Rejected") {
+                        Button(
+                            onClick = { 
+                                repository.deleteReservation(token, res.id) { success, errMsg ->
+                                    if (success) refreshTrigger++ else error = errMsg
+                                }
+                                selectedReservation = null
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Text("Delete")
+                        }
+                    }
+                }
+            }
+        )
+    }
+    
+    if (showEditDialog != null) {
+        ReservationFormDialog(
+            stationId = showEditDialog!!.stationId,
+            stationName = "Station ${showEditDialog!!.stationId}",
+            existingReservation = showEditDialog,
+            onDismiss = { showEditDialog = null },
+            onSuccess = {
+                showEditDialog = null
+                refreshTrigger++
+            }
+        )
     }
 }
