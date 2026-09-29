@@ -23,6 +23,7 @@ import CreateProsumer from "./pages/prosumer/CreateProsumer"
 import ReservationList from "./pages/reservations/ReservationList"
 import ReservationHistory from "./pages/reservations/ReservationHistory"
 import BookingSlots from "./pages/reservations/BookingSlots"
+import { Toaster } from "@/components/ui/sonner"
 
 function App() {
   return (
@@ -62,6 +63,7 @@ function App() {
           {/* <Route path="history" element={<div className="p-4">Operational History Coming Soon</div>} /> */}
         </Route>
       </Routes>
+      <Toaster richColors />
     </BrowserRouter>
   )
 }

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Separator } from "@/components/ui/separator"
 import { ArrowLeft, Edit, Clock, MapPin, BatteryCharging, Zap, Power, PowerOff, Trash2 } from "lucide-react"
+import { toast } from "sonner"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,27 +65,30 @@ export default function StationDetails() {
   const handleActivate = async () => {
     try {
       await stationApi.activateStation(id)
+      toast.success("Station activated successfully")
       fetchStation()
     } catch (err) {
-      alert("Failed to activate: " + err.message)
+      toast.error(err.message || "Failed to activate station")
     }
   }
 
   const handleDeactivate = async () => {
     try {
       await stationApi.deactivateStation(id)
+      toast.success("Station deactivated successfully")
       fetchStation()
     } catch (err) {
-      alert("Failed to deactivate: " + err.message)
+      toast.error(err.message || "Failed to deactivate station")
     }
   }
 
   const handleDelete = async () => {
     try {
       await stationApi.deleteStation(id)
+      toast.success("Station deleted successfully")
       navigate("/stations")
     } catch (err) {
-      alert("Failed to delete: " + err.message)
+      toast.error(err.message || "Failed to delete station")
     }
   }
 
