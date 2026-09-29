@@ -25,6 +25,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 
+/**
+ * Registration screen for new prosumer accounts.
+ * Allows users to register with NIC as primary key and pending activation status.
+ */
 @Composable
 fun RegisterScreen(
     onSubmit: (RegisterRequest) -> Unit,
@@ -45,7 +49,7 @@ fun RegisterScreen(
     var confirmPasswordError by remember { mutableStateOf<String?>(null) }
     var isSubmitting by remember { mutableStateOf(false) }
 
-    // Format phone number with spaces
+    // Format phone number with spaces for display
     fun formatPhoneNumber(input: String): String {
         val digits = input.filter { it.isDigit() }
         return when {
@@ -74,6 +78,7 @@ fun RegisterScreen(
         }
     }
 
+    // Validate and submit registration form
     fun submit() {
         nicError = if (!nic.trim().matches(Regex("^(\\d{9}[VX]|\\d{12})$"))) "NIC must be 9 digits ending with V/X or 12 digits." else null
         fullNameError = if (fullName.trim().length < 2) "Enter your full name." else null

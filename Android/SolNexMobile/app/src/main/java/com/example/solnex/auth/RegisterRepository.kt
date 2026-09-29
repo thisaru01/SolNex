@@ -6,7 +6,12 @@ import java.net.URL
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+/**
+ * Repository for prosumer registration operations.
+ * Handles new prosumer account registration via API.
+ */
 interface RegisterRepository {
+    // Register new prosumer account
     fun register(request: RegisterRequest, callback: (RegisterResult) -> Unit)
 }
 
@@ -14,6 +19,7 @@ class ApiRegisterRepository(
     private val executor: ExecutorService = Executors.newSingleThreadExecutor(),
     private val apiBaseUrl: String = "http://10.0.2.2:5097"
 ) : RegisterRepository {
+    // Perform registration API call for new prosumer
     override fun register(request: RegisterRequest, callback: (RegisterResult) -> Unit) {
         executor.execute {
             val result = try {
@@ -60,6 +66,7 @@ class ApiRegisterRepository(
         }
     }
 
+    // Extract error message from API response
     private fun extractMessage(response: String): String? {
         return runCatching { JSONObject(response).optString("message").takeIf { it.isNotBlank() } }.getOrNull()
     }
