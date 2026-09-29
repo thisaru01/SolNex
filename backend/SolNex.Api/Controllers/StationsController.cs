@@ -18,6 +18,8 @@ public class StationsController : ControllerBase
         _stationService = stationService;
     }
 
+    // GET: api/stations
+    // Returns a list of all stations in the system.
     [HttpGet]
     public async Task<ActionResult<IEnumerable<StationDto>>> GetAllStations()
     {
@@ -25,6 +27,9 @@ public class StationsController : ControllerBase
         return Ok(stations);
     }
 
+    // GET: api/stations/next-id
+    // Fetches the next available auto-generated station ID for the frontend.
+    // Restricted to Backoffice role.
     [HttpGet("next-id")]
     [Authorize(Roles = "Backoffice")]
     public async Task<ActionResult<object>> GetNextStationId()
@@ -33,6 +38,8 @@ public class StationsController : ControllerBase
         return Ok(new { nextId = nextId });
     }
 
+    // GET: api/stations/{id}
+    // Retrieves a single station by its ID (either internal DB ID or custom ST001 ID).
     [HttpGet("{id}")]
     public async Task<ActionResult<StationDto>> GetStationById(string id)
     {
@@ -44,6 +51,8 @@ public class StationsController : ControllerBase
         return Ok(station);
     }
 
+    // POST: api/stations
+    // Creates a new station. Only accessible by Backoffice.
     [HttpPost]
     [Authorize(Roles = "Backoffice")]
     public async Task<ActionResult<StationDto>> CreateStation([FromBody] CreateStationDto createDto)
@@ -60,6 +69,8 @@ public class StationsController : ControllerBase
         }
     }
 
+    // PUT: api/stations/{id}
+    // Updates the details of a specific station. Restricted to Backoffice role.
     [HttpPut("{id}")]
     [Authorize(Roles = "Backoffice")]
     public async Task<IActionResult> UpdateStation(string id, [FromBody] UpdateStationDto updateDto)
@@ -72,6 +83,8 @@ public class StationsController : ControllerBase
         return Ok(new { message = "Station updated successfully.", station = updatedStation });
     }
 
+    // DELETE: api/stations/{id}
+    // Deletes a station from the system permanently. Restricted to Backoffice role.
     [HttpDelete("{id}")]
     [Authorize(Roles = "Backoffice")]
     public async Task<IActionResult> DeleteStation(string id)
@@ -91,6 +104,8 @@ public class StationsController : ControllerBase
         }
     }
 
+    // PUT: api/stations/{id}/deactivate
+    // Deactivates a station, preventing new reservations. Restricted to Backoffice role.
     [HttpPut("{id}/deactivate")]
     [Authorize(Roles = "Backoffice")]
     public async Task<IActionResult> DeactivateStation(string id)
@@ -110,6 +125,8 @@ public class StationsController : ControllerBase
         }
     }
 
+    // PUT: api/stations/{id}/activate
+    // Activates a previously deactivated station. Restricted to Backoffice role.
     [HttpPut("{id}/activate")]
     [Authorize(Roles = "Backoffice")]
     public async Task<IActionResult> ActivateStation(string id)
@@ -122,6 +139,8 @@ public class StationsController : ControllerBase
         return Ok(new { message = "Station activated successfully.", station = activatedStation });
     }
 
+    // GET: api/stations/nearby?lat=...&lon=...&radius=...
+    // Finds and returns stations located within the specified radius of the coordinates.
     [HttpGet("nearby")]
     public async Task<ActionResult<IEnumerable<StationDto>>> GetNearbyStations([FromQuery] double lat, [FromQuery] double lon, [FromQuery] double radius = 10.0)
     {
@@ -130,6 +149,8 @@ public class StationsController : ControllerBase
         return Ok(stations);
     }
 
+    // GET: api/stations/{id}/availability
+    // Returns the number of available battery slots for a given station.
     [HttpGet("{id}/availability")]
     public async Task<ActionResult> GetStationAvailability(string id)
     {
@@ -141,6 +162,8 @@ public class StationsController : ControllerBase
         return Ok(new { availableBatterySlots = availability });
     }
 
+    // GET: api/stations/{id}/schedule
+    // Returns the operational schedule for a specific station.
     [HttpGet("{id}/schedule")]
     public async Task<ActionResult> GetStationSchedule(string id)
     {
@@ -152,6 +175,8 @@ public class StationsController : ControllerBase
         return Ok(schedule);
     }
 
+    // PUT: api/stations/{id}/schedule
+    // Updates the operational schedule of a station. Restricted to Backoffice role.
     [HttpPut("{id}/schedule")]
     [Authorize(Roles = "Backoffice")]
     public async Task<IActionResult> UpdateStationSchedule(string id, [FromBody] UpdateScheduleDto scheduleDto)
@@ -164,6 +189,8 @@ public class StationsController : ControllerBase
         return Ok(new { message = "Station schedule updated successfully.", station = updatedStation });
     }
 
+    // PUT: api/stations/{id}/battery-slots
+    // Updates the available battery slots for a given station. Restricted to Backoffice role.
     [HttpPut("{id}/battery-slots")]
     [Authorize(Roles = "Backoffice")]
     public async Task<IActionResult> UpdateBatterySlots(string id, [FromBody] UpdateBatterySlotsDto updateDto)

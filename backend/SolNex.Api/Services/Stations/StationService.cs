@@ -18,12 +18,14 @@ public class StationService : IStationService
         _reservationRepository = reservationRepository;
     }
 
+    // Retrieves all solar stations and maps them to DTOs.
     public async Task<IEnumerable<StationDto>> GetAllStationsAsync()
     {
         var stations = await _stationRepository.GetAllStationsAsync();
         return stations.Select(MapToDto);
     }
 
+    // Retrieves a single solar station by ID and maps it to a DTO.
     public async Task<StationDto?> GetStationByIdAsync(string id)
     {
         var station = await _stationRepository.GetStationByIdAsync(id) 
@@ -32,6 +34,7 @@ public class StationService : IStationService
         return station != null ? MapToDto(station) : null;
     }
 
+    // Computes the next available custom station ID by parsing existing IDs.
     public async Task<string> GetNextStationIdAsync()
     {
         var allStations = await _stationRepository.GetAllStationsAsync();
@@ -49,6 +52,7 @@ public class StationService : IStationService
         return $"ST{(maxId + 1):D3}";
     }
 
+    // Creates a new solar station with an auto-generated ID.
     public async Task<StationDto> CreateStationAsync(CreateStationDto createDto)
     {
         string generatedStationId = await GetNextStationIdAsync();
@@ -72,6 +76,7 @@ public class StationService : IStationService
         return MapToDto(station);
     }
 
+    // Updates properties of an existing solar station.
     public async Task<StationDto?> UpdateStationAsync(string id, UpdateStationDto updateDto)
     {
         var station = await _stationRepository.GetStationByIdAsync(id)
@@ -121,6 +126,7 @@ public class StationService : IStationService
         return MapToDto(station);
     }
 
+    // Deactivates a station after ensuring it has no approved reservations.
     public async Task<StationDto?> DeactivateStationAsync(string id)
     {
         var station = await _stationRepository.GetStationByIdAsync(id)
@@ -141,6 +147,7 @@ public class StationService : IStationService
         return MapToDto(station);
     }
 
+    // Activates a deactivated solar station.
     public async Task<StationDto?> ActivateStationAsync(string id)
     {
         var station = await _stationRepository.GetStationByIdAsync(id)
@@ -155,6 +162,7 @@ public class StationService : IStationService
         return MapToDto(station);
     }
 
+    // Permanently deletes a solar station, enforcing that it must be inactive first.
     public async Task<bool> DeleteStationAsync(string id)
     {
         var station = await _stationRepository.GetStationByIdAsync(id)
@@ -171,12 +179,14 @@ public class StationService : IStationService
         return true;
     }
 
+    // Finds and maps solar stations located within a given distance.
     public async Task<IEnumerable<StationDto>> GetNearbyStationsAsync(double latitude, double longitude, double radiusInKm)
     {
         var stations = await _stationRepository.GetNearbyStationsAsync(latitude, longitude, radiusInKm);
         return stations.Select(MapToDto);
     }
 
+    // Retrieves the current available battery slots for a given station.
     public async Task<int?> GetStationAvailabilityAsync(string id)
     {
         var station = await _stationRepository.GetStationByIdAsync(id)
@@ -185,6 +195,7 @@ public class StationService : IStationService
         return station?.AvailableBatterySlots;
     }
 
+    // Retrieves the operating schedule map for a given station.
     public async Task<Dictionary<string, string>?> GetStationScheduleAsync(string id)
     {
         var station = await _stationRepository.GetStationByIdAsync(id)
@@ -193,6 +204,7 @@ public class StationService : IStationService
         return station?.Schedule;
     }
 
+    // Merges new schedule entries into the existing station schedule.
     public async Task<StationDto?> UpdateStationScheduleAsync(string id, UpdateScheduleDto scheduleDto)
     {
         var station = await _stationRepository.GetStationByIdAsync(id)
@@ -214,6 +226,7 @@ public class StationService : IStationService
         return MapToDto(station);
     }
 
+    // Updates the available battery slots, verifying they don't exceed capacity.
     public async Task<StationDto?> UpdateBatterySlotsAsync(string id, UpdateBatterySlotsDto updateDto)
     {
         var station = await _stationRepository.GetStationByIdAsync(id)
@@ -233,6 +246,7 @@ public class StationService : IStationService
         return MapToDto(station);
     }
 
+    // Helper method to map a SolarStationInfo database entity to a StationDto.
     private StationDto MapToDto(SolarStationInfo station)
     {
         return new StationDto
