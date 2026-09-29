@@ -19,6 +19,7 @@ async function request(path, options = {}) {
     data = { message: text }
   }
 
+  if (response.status === 401) { localStorage.removeItem('solnex_token'); localStorage.removeItem('solnex_user'); window.location.href = '/login'; return null; }
   if (!response.ok) {
     const error = new Error(data.message || `API Error: ${response.status} ${response.statusText}`)
     error.status = response.status

@@ -26,6 +26,7 @@ async function request(endpoint, options = {}) {
     }
   }
 
+  if (response.status === 401) { localStorage.removeItem('solnex_token'); localStorage.removeItem('solnex_user'); window.location.href = '/login'; return null; }
   if (!response.ok) {
     throw new Error(data?.message || `Request failed with status ${response.status}.`)
   }
