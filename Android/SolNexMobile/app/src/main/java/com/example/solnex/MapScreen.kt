@@ -56,6 +56,7 @@ fun MapScreen(
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
     var selectedStation by remember { mutableStateOf<Station?>(null) }
+    var showReservationForm by remember { mutableStateOf(false) }
 
     val repository = remember { StationRepository() }
 
@@ -211,7 +212,7 @@ fun MapScreen(
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Button(
-                                onClick = { /* TODO: Implement reservation submission */ },
+                                onClick = { showReservationForm = true },
                                 modifier = Modifier.fillMaxWidth(),
                                 enabled = station.status == "Active"
                             ) {
@@ -221,6 +222,19 @@ fun MapScreen(
                     }
                 }
             }
+        }
+
+        if (showReservationForm && selectedStation != null) {
+            ReservationFormDialog(
+                stationId = selectedStation!!.stationId,
+                stationName = selectedStation!!.stationName,
+                onDismiss = { showReservationForm = false },
+                onSuccess = {
+                    showReservationForm = false
+                    selectedStation = null
+                    // Optional: show a success message or snackbar
+                }
+            )
         }
     }
 }
