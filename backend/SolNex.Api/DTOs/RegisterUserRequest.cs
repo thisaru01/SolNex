@@ -1,3 +1,4 @@
+// User registration DTOs
 using System.ComponentModel.DataAnnotations;
 
 namespace SolNex.Api.DTOs;
