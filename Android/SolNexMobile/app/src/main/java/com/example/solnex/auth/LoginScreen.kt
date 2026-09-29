@@ -23,6 +23,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 
+/**
+ * Login screen for prosumer authentication.
+ * Allows users to sign in using NIC or email and password.
+ */
 @Composable
 fun LoginScreen(
     result: LoginResult?,
@@ -38,6 +42,7 @@ fun LoginScreen(
         if (result != null) isSubmitting = false
     }
 
+    // Validate and submit login form
     fun submit() {
         val trimmedIdentifier = identifier.trim()
         validationError = when {
