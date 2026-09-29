@@ -13,14 +13,22 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -33,16 +41,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.XYTileSource
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.util.MapTileIndex
 import org.osmdroid.views.MapView
+import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
 @Composable
 fun MapScreen(
@@ -82,6 +99,31 @@ fun MapScreen(
         true
     }
 
+    var locationPermissionGranted by remember { 
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        locationPermissionGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                                    permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+    }
+
+    LaunchedEffect(Unit) {
+        if (!locationPermissionGranted) {
+            permissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
+
     LaunchedEffect(token) {
         repository.getStations(token) { fetchedStations, errMsg ->
             stations = fetchedStations ?: emptyList()
@@ -102,13 +144,20 @@ fun MapScreen(
         } else {
             // Remember the MapView so we can manage its lifecycle
             val mapViewRef = remember { mutableStateOf<MapView?>(null) }
+            val locationOverlayRef = remember { mutableStateOf<MyLocationNewOverlay?>(null) }
 
             // Handle lifecycle
             DisposableEffect(lifecycleOwner) {
                 val observer = LifecycleEventObserver { _, event ->
                     when (event) {
-                        Lifecycle.Event.ON_RESUME -> mapViewRef.value?.onResume()
-                        Lifecycle.Event.ON_PAUSE -> mapViewRef.value?.onPause()
+                        Lifecycle.Event.ON_RESUME -> {
+                            mapViewRef.value?.onResume()
+                            locationOverlayRef.value?.enableMyLocation()
+                        }
+                        Lifecycle.Event.ON_PAUSE -> {
+                            mapViewRef.value?.onPause()
+                            locationOverlayRef.value?.disableMyLocation()
+                        }
                         else -> {}
                     }
                 }
@@ -135,20 +184,75 @@ fun MapScreen(
                             val zoom = MapTileIndex.getZoom(pMapTileIndex)
                             val x = MapTileIndex.getX(pMapTileIndex)
                             val y = MapTileIndex.getY(pMapTileIndex)
-                            return baseUrl + "$zoom/$x/$y.png"
+                            return "${baseUrl}$zoom/$x/$y.png"
                         }
                     }
                     mapView.setTileSource(tileSource)
 
                     mapView.setMultiTouchControls(true)
+                    mapView.zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
                     mapView.setUseDataConnection(true)
 
-                    // Center on Sri Lanka
+                    // Initial Center on Sri Lanka
                     mapView.controller.setZoom(7.5)
                     mapView.controller.setCenter(GeoPoint(7.8731, 80.7718))
 
+                    mapViewRef.value = mapView
+                    mapView.onResume()
+                    
+                    mapView
+                },
+                update = { mapView ->
+                    mapView.overlays.clear()
+
+                    // Handle Location Overlay
+                    if (locationPermissionGranted) {
+                        var overlay = locationOverlayRef.value
+                        if (overlay == null) {
+                            val provider = GpsMyLocationProvider(mapView.context)
+                            provider.addLocationSource(android.location.LocationManager.GPS_PROVIDER)
+                            provider.addLocationSource(android.location.LocationManager.NETWORK_PROVIDER)
+                            
+                            overlay = MyLocationNewOverlay(provider, mapView)
+                            overlay.enableMyLocation()
+                            
+                            // Custom Blue Dot Icon
+                            val iconSize = (16 * mapView.context.resources.displayMetrics.density).toInt()
+                            val bitmap = androidx.core.graphics.createBitmap(iconSize, iconSize, android.graphics.Bitmap.Config.ARGB_8888)
+                            val canvas = android.graphics.Canvas(bitmap)
+                            val paint = android.graphics.Paint().apply {
+                                isAntiAlias = true
+                                color = android.graphics.Color.parseColor("#4285F4") // Google Maps Blue
+                                style = android.graphics.Paint.Style.FILL
+                            }
+                            val borderPaint = android.graphics.Paint().apply {
+                                isAntiAlias = true
+                                color = android.graphics.Color.WHITE
+                                style = android.graphics.Paint.Style.STROKE
+                                strokeWidth = 2 * mapView.context.resources.displayMetrics.density
+                            }
+                            val radius = iconSize / 2f
+                            canvas.drawCircle(radius, radius, radius - borderPaint.strokeWidth, paint)
+                            canvas.drawCircle(radius, radius, radius - borderPaint.strokeWidth, borderPaint)
+                            
+                            overlay.setPersonIcon(bitmap)
+                            @Suppress("DEPRECATION")
+                            overlay.setDirectionArrow(bitmap, bitmap)
+
+                            // First time setup: zoom to user's location when fixed
+                            overlay.runOnFirstFix {
+                                mapView.post {
+                                    mapView.controller.setZoom(14.0)
+                                    mapView.controller.animateTo(overlay.myLocation)
+                                }
+                            }
+                            locationOverlayRef.value = overlay
+                        }
+                        mapView.overlays.add(overlay)
+                    }
+
                     // Add station markers with click listeners
-                    stations.forEach { station ->
+                    stations.filter { !it.status.equals("Deactivated", ignoreCase = true) }.forEach { station ->
                         val marker = Marker(mapView)
                         marker.position = GeoPoint(station.latitude, station.longitude)
                         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
@@ -161,13 +265,63 @@ fun MapScreen(
                         mapView.overlays.add(marker)
                     }
 
-                    mapViewRef.value = mapView
-                    mapView.onResume()
-                    
-                    mapView
+                    mapView.invalidate()
                 },
                 modifier = Modifier.fillMaxSize()
             )
+
+            // FAB to re-center on location
+            FloatingActionButton(
+                onClick = {
+                    locationOverlayRef.value?.myLocation?.let { location ->
+                        mapViewRef.value?.controller?.animateTo(location)
+                        mapViewRef.value?.controller?.setZoom(14.0)
+                    }
+                },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp),
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary
+            ) {
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = "My Location"
+                )
+            }
+
+            // Custom Zoom Controls
+            Card(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(16.dp),
+                shape = RoundedCornerShape(8.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(modifier = Modifier.width(48.dp)) {
+                    IconButton(
+                        onClick = { mapViewRef.value?.controller?.zoomIn() }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Zoom In",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    HorizontalDivider()
+                    IconButton(
+                        onClick = { mapViewRef.value?.controller?.zoomOut() }
+                    ) {
+                        Text(
+                            text = "−",
+                            fontSize = 28.sp,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(bottom = 2.dp)
+                        )
+                    }
+                }
+            }
 
             // Bottom card for selected station
             AnimatedVisibility(

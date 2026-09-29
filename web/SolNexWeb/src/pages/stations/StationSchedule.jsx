@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { toast } from "sonner"
 
 const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
@@ -71,11 +72,11 @@ export default function StationSchedule() {
         if (parts.length === 2) {
           const [start, end] = parts
           if (!start || !end) {
-            setError(`Please specify both opening and closing times for ${day}.`)
+            toast.error(`Please specify both opening and closing times for ${day}.`)
             return
           }
           if (start >= end) {
-            setError(`Start time must be earlier than end time for ${day} (${start} - ${end}).`)
+            toast.error(`Start time must be earlier than end time for ${day} (${start} - ${end}).`)
             return
           }
         }
@@ -92,9 +93,10 @@ export default function StationSchedule() {
     
     try {
       await stationApi.updateStationSchedule(id, schedule)
+      toast.success("Schedule updated successfully")
       navigate(`/stations/${id}`)
     } catch (err) {
-      setError(err.message || "Failed to update schedule")
+      toast.error(err.message || "Failed to update schedule")
     } finally {
       setSaving(false)
     }
@@ -120,8 +122,6 @@ export default function StationSchedule() {
           <CardDescription>Toggle days and select exact opening and closing times.</CardDescription>
         </CardHeader>
         <CardContent>
-          {error && <div className="p-3 mb-4 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>}
-          
           <form onSubmit={handlePreSubmit} className="space-y-0">
             <div className="max-w-xl mx-auto">
               {DAYS_OF_WEEK.map((day) => {

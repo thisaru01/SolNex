@@ -18,6 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { toast } from "sonner"
 
 const containerStyle = {
   width: '100%',
@@ -31,11 +32,9 @@ const defaultCenter = {
 export default function CreateStation() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
   const [alertOpen, setAlertOpen] = useState(false)
   
   const [formData, setFormData] = useState({
-    stationId: "",
     stationName: "",
     latitude: "",
     longitude: "",
@@ -69,7 +68,6 @@ export default function CreateStation() {
   const handleSubmit = async () => {
     setAlertOpen(false)
     setLoading(true)
-    setError(null)
     
     try {
       // Convert numeric fields
@@ -82,9 +80,10 @@ export default function CreateStation() {
       }
       
       const newStation = await stationApi.createStation(payload)
+      toast.success("Station created successfully")
       navigate(`/stations/${newStation.id || newStation.stationId}`)
     } catch (err) {
-      setError(err.message || "Failed to create station")
+      toast.error(err.message || "Failed to create station")
     } finally {
       setLoading(false)
     }
@@ -108,19 +107,16 @@ export default function CreateStation() {
           <CardDescription>Fill out the basic information for the new station.</CardDescription>
         </CardHeader>
         <CardContent>
-          {error && <div className="p-3 mb-4 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>}
           
           <form onSubmit={handlePreSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="stationId">Station ID <span className="text-destructive">*</span></Label>
+                <Label htmlFor="stationId">Station ID</Label>
                 <Input 
                   id="stationId" 
                   name="stationId" 
-                  placeholder="e.g. ST001" 
-                  required 
-                  value={formData.stationId} 
-                  onChange={handleChange} 
+                  value="Auto-generated upon creation" 
+                  disabled 
                 />
               </div>
               <div className="space-y-2">

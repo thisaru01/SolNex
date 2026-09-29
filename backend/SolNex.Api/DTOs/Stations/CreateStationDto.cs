@@ -5,10 +5,7 @@ namespace SolNex.Api.DTOs.Stations;
 
 public class CreateStationDto
 {
-    [Required]
-    [RegularExpression(@"^ST\d{3}$", ErrorMessage = "StationId must start with 'ST' followed by 3 digits (e.g. ST001)")]
-    [MaxLength(10)]
-    public string StationId { get; set; } = null!;
+
 
     [Required]
     [StringLength(100, MinimumLength = 3)]

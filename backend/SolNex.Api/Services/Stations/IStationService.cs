@@ -16,4 +16,5 @@ public interface IStationService
     Task<Dictionary<string, string>?> GetStationScheduleAsync(string id);
     Task<StationDto?> UpdateStationScheduleAsync(string id, UpdateScheduleDto scheduleDto);
     Task<StationDto?> UpdateBatterySlotsAsync(string id, UpdateBatterySlotsDto updateDto);
+    Task<bool> DeleteStationAsync(string id);
 }

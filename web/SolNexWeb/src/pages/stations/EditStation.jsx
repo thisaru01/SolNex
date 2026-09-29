@@ -18,6 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { toast } from "sonner"
 
 const containerStyle = {
   width: '100%',
@@ -93,7 +94,6 @@ export default function EditStation() {
   const handleSubmit = async () => {
     setAlertOpen(false)
     setSaving(true)
-    setError(null)
     
     try {
       const payload = {
@@ -106,9 +106,10 @@ export default function EditStation() {
       }
       
       await stationApi.updateStation(id, payload)
+      toast.success("Station updated successfully")
       navigate(`/stations/${id}`)
     } catch (err) {
-      setError(err.message || "Failed to update station")
+      toast.error(err.message || "Failed to update station")
     } finally {
       setSaving(false)
     }
@@ -135,7 +136,6 @@ export default function EditStation() {
           <CardDescription>Modify the properties below and save your changes.</CardDescription>
         </CardHeader>
         <CardContent>
-          {error && <div className="p-3 mb-4 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>}
           
           <form onSubmit={handlePreSubmit} className="space-y-4">
             <div className="space-y-2">
