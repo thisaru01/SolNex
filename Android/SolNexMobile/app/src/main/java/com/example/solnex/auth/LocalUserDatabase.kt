@@ -5,7 +5,12 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
+/**
+ * Local database for storing pending prosumer registration information.
+ * Used to track users who have registered but are awaiting activation.
+ */
 class LocalUserDatabase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+    // Create database table for storing pending users
     override fun onCreate(database: SQLiteDatabase) {
         database.execSQL(
             """
@@ -18,11 +23,13 @@ class LocalUserDatabase(context: Context) : SQLiteOpenHelper(context, DATABASE_N
         )
     }
 
+    // Upgrade database schema
     override fun onUpgrade(database: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         database.execSQL("DROP TABLE IF EXISTS $TABLE_USERS")
         onCreate(database)
     }
 
+    // Save pending user registration locally
     fun savePendingUser(nic: String) {
         val values = ContentValues().apply {
             put(COLUMN_NIC, nic)

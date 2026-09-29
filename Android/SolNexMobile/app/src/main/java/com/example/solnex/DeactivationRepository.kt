@@ -5,7 +5,12 @@ import java.net.URL
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+/**
+ * Repository for prosumer account deactivation operations.
+ * Handles requesting account deactivation via API.
+ */
 interface DeactivationRepository {
+    // Request account deactivation for prosumer
     fun requestDeactivation(nic: String, token: String, callback: (DeactivationResult) -> Unit)
 }
 
@@ -19,6 +24,7 @@ class ApiDeactivationRepository(
     private val apiBaseUrl: String = "http://10.0.2.2:5097"
 ) : DeactivationRepository {
     
+    // Send deactivation request to API
     override fun requestDeactivation(nic: String, token: String, callback: (DeactivationResult) -> Unit) {
         executor.execute {
             val result = try {
@@ -48,6 +54,7 @@ class ApiDeactivationRepository(
         }
     }
 
+    // Extract error message from API response
     private fun extractMessage(response: String): String? {
         return runCatching { org.json.JSONObject(response).optString("message").takeIf { it.isNotBlank() } }.getOrNull()
     }

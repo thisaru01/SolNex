@@ -6,8 +6,14 @@ import java.net.URL
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+/**
+ * Repository for prosumer profile management operations.
+ * Handles loading and updating prosumer profile information via API.
+ */
 interface ProfileRepository {
+    // Load prosumer profile by NIC
     fun loadProfile(nic: String, token: String, callback: (ProfileResult) -> Unit)
+    // Save/update prosumer profile information
     fun saveProfile(nic: String, token: String, fullName: String, email: String, phone: String, callback: (ProfileResult) -> Unit)
 }
 
@@ -30,6 +36,7 @@ class ApiProfileRepository(
     private val apiBaseUrl: String = "http://10.0.2.2:5097"
 ) : ProfileRepository {
     
+    // Load prosumer profile from API
     override fun loadProfile(nic: String, token: String, callback: (ProfileResult) -> Unit) {
         executor.execute {
             val result = try {
@@ -68,6 +75,7 @@ class ApiProfileRepository(
         }
     }
 
+    // Save prosumer profile to API
     override fun saveProfile(nic: String, token: String, fullName: String, email: String, phone: String, callback: (ProfileResult) -> Unit) {
         executor.execute {
             val result = try {
@@ -115,6 +123,7 @@ class ApiProfileRepository(
         }
     }
 
+    // Extract error message from API response
     private fun extractMessage(response: String): String? {
         return runCatching { JSONObject(response).optString("message").takeIf { it.isNotBlank() } }.getOrNull()
     }

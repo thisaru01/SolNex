@@ -27,12 +27,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+/**
+ * User session data model
+ */
 data class UserSession(
     val nic: String,
     val fullName: String,
     val role: String
 )
 
+/**
+ * Dashboard screen for prosumer profile management.
+ * Allows viewing and editing profile information, and requesting account deactivation.
+ */
 @Composable
 fun DashboardScreen(
     modifier: Modifier = Modifier,
@@ -67,7 +74,7 @@ fun DashboardScreen(
         phone = profile?.phone.orEmpty()
     }
 
-    // Format phone number with spaces
+    // Format phone number with spaces for display
     fun formatPhoneNumber(input: String): String {
         val digits = input.filter { it.isDigit() }
         return when {
@@ -90,6 +97,7 @@ fun DashboardScreen(
         }
     }
 
+    // Validate profile data and save changes
     fun validateAndSave() {
         fullNameError = if (fullName.trim().length < 2) "Enter your full name." else null
         emailError = if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()) "Enter a valid email." else null
