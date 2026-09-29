@@ -4,6 +4,10 @@ using SolNex.Api.Services;
 
 namespace SolNex.Api.Controllers;
 
+/// <summary>
+/// Authentication controller for user login and registration.
+/// Handles prosumer authentication and account creation.
+/// </summary>
 [ApiController]
 [Route("api/auth")]
 public sealed class AuthController : ControllerBase
@@ -15,6 +19,7 @@ public sealed class AuthController : ControllerBase
         _authService = authService;
     }
 
+    // Authenticate user and return JWT token
     [HttpPost("login")]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -26,6 +31,7 @@ public sealed class AuthController : ControllerBase
             : Ok(response);
     }
 
+    // Register new prosumer account
     [HttpPost("register")]
     [ProducesResponseType(typeof(RegisteredUserResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
