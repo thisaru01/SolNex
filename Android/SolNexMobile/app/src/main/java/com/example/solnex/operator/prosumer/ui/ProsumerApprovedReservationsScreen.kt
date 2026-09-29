@@ -31,8 +31,7 @@ fun ProsumerApprovedReservationsScreen(
     loading: Boolean,
     error: String?,
     onRefresh: () -> Unit,
-    onOpenTransaction: (Transaction) -> Unit,
-    onBack: () -> Unit
+    onOpenTransaction: (Transaction) -> Unit
 ) {
 
     Column(
@@ -237,13 +236,6 @@ fun ProsumerApprovedReservationsScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Refresh Reservations")
-        }
-
-        OutlinedButton(
-            onClick = onBack,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Back to Dashboard")
         }
     }
 }

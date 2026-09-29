@@ -1,3 +1,11 @@
+/*
+ * File: TransactionDto.cs
+ * Component: Transaction DTOs
+ * Description:
+ * Represents transaction details returned by the API, including energy,
+ * reservation, status, verification, and completion information.
+ */
+
 namespace SolNex.Api.DTOs.Transactions;
 
 public class TransactionDto

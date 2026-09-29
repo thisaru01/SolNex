@@ -1,3 +1,10 @@
+/*
+ * File: TransactionRepository.cs
+ * Component: Transaction Repositories
+ * Description:
+ * Implements MongoDB persistence operations for energy transactions.
+ */
+
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -13,11 +20,10 @@ public class TransactionRepository :
         IMongoCollection<EnergyTransaction>
         _transactions;
 
-    // Initializes the transaction collection
-    // and required unique indexes.
     public TransactionRepository(
         MongoDbContext dbContext)
     {
+        // Initializes the transaction collection and required unique indexes.
         _transactions =
             dbContext.EnergyTransactions;
 
@@ -76,13 +82,12 @@ public class TransactionRepository :
                 indexes);
     }
 
-    // Gets a transaction using either
-    // MongoDB ID or public Transaction ID.
     public async Task<
         EnergyTransaction?>
         GetByIdOrTransactionIdAsync(
             string id)
     {
+        // Gets a transaction using either MongoDB ID or public Transaction ID.
         if (
             ObjectId.TryParse(
                 id,
@@ -113,13 +118,12 @@ public class TransactionRepository :
             .FirstOrDefaultAsync();
     }
 
-    // Finds the transaction whose secure
-    // token was scanned from the QR code.
     public async Task<
         EnergyTransaction?>
         GetByQrTokenAsync(
             string qrToken)
     {
+        // Finds the transaction whose secure token was scanned from the QR code.
         return await _transactions
             .Find(
                 transaction =>
@@ -128,13 +132,12 @@ public class TransactionRepository :
             .FirstOrDefaultAsync();
     }
 
-    // Finds the transaction generated
-    // for one approved reservation.
     public async Task<
         EnergyTransaction?>
         GetByReservationIdAsync(
             string reservationId)
     {
+        // Finds the transaction generated for one approved reservation.
         return await _transactions
             .Find(
                 transaction =>
@@ -144,12 +147,11 @@ public class TransactionRepository :
             .FirstOrDefaultAsync();
     }
 
-    // Returns transactions that are
-    // awaiting verification/completion.
     public async Task<
         IEnumerable<EnergyTransaction>>
         GetPendingAsync()
     {
+        // Returns transactions that are awaiting verification or completion.
         var filter =
             Builders<
                 EnergyTransaction>
@@ -172,11 +174,11 @@ public class TransactionRepository :
             .ToListAsync();
     }
 
-    // Returns completed transfers.
     public async Task<
         IEnumerable<EnergyTransaction>>
         GetCompletedAsync()
     {
+        // Returns completed energy transfers.
         return await _transactions
             .Find(
                 transaction =>
@@ -188,13 +190,12 @@ public class TransactionRepository :
             .ToListAsync();
     }
 
-    // Returns active approved transactions
-    // belonging to one Prosumer.
     public async Task<
         IEnumerable<EnergyTransaction>>
         GetActiveByProsumerNicAsync(
             string nic)
     {
+        // Returns active approved transactions belonging to one Prosumer.
         var statusFilter =
             Builders<
                 EnergyTransaction>
@@ -236,19 +237,19 @@ public class TransactionRepository :
             .ToListAsync();
     }
 
-    // Creates a new transaction.
     public async Task CreateAsync(
         EnergyTransaction transaction)
     {
+        // Persists a new transaction record.
         await _transactions
             .InsertOneAsync(
                 transaction);
     }
 
-    // Saves transaction changes.
     public async Task UpdateAsync(
         EnergyTransaction transaction)
     {
+        // Replaces the persisted transaction with its updated state.
         if (
             string.IsNullOrWhiteSpace(
                 transaction.Id))

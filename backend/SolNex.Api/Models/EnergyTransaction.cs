@@ -1,3 +1,10 @@
+/*
+ * File: EnergyTransaction.cs
+ * Component: Transaction Models
+ * Description:
+ * Defines the persisted energy transaction record and its lifecycle statuses.
+ */
+
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
