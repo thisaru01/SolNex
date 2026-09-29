@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { stationApi } from "../../services/stationApi"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -41,6 +41,25 @@ export default function CreateStation() {
     capacityKw: "",
     totalBatterySlots: "",
   })
+
+  const [nextStationId, setNextStationId] = useState("Loading...")
+
+  useEffect(() => {
+    const fetchId = async () => {
+      try {
+        const result = await stationApi.getNextStationId();
+        if (result && result.nextId) {
+          setNextStationId(result.nextId);
+        } else {
+          setNextStationId("Auto-generated");
+        }
+      } catch (err) {
+        console.error("Failed to fetch next station ID:", err);
+        setNextStationId("Auto-generated");
+      }
+    };
+    fetchId();
+  }, []);
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -115,7 +134,7 @@ export default function CreateStation() {
                 <Input 
                   id="stationId" 
                   name="stationId" 
-                  value="Auto-generated upon creation" 
+                  value={nextStationId} 
                   disabled 
                 />
               </div>

@@ -17,4 +17,5 @@ public interface IStationService
     Task<StationDto?> UpdateStationScheduleAsync(string id, UpdateScheduleDto scheduleDto);
     Task<StationDto?> UpdateBatterySlotsAsync(string id, UpdateBatterySlotsDto updateDto);
     Task<bool> DeleteStationAsync(string id);
+    Task<string> GetNextStationIdAsync();
 }

@@ -32,7 +32,7 @@ public class StationService : IStationService
         return station != null ? MapToDto(station) : null;
     }
 
-    public async Task<StationDto> CreateStationAsync(CreateStationDto createDto)
+    public async Task<string> GetNextStationIdAsync()
     {
         var allStations = await _stationRepository.GetAllStationsAsync();
         int maxId = 0;
@@ -46,7 +46,12 @@ public class StationService : IStationService
                 }
             }
         }
-        string generatedStationId = $"ST{(maxId + 1):D3}";
+        return $"ST{(maxId + 1):D3}";
+    }
+
+    public async Task<StationDto> CreateStationAsync(CreateStationDto createDto)
+    {
+        string generatedStationId = await GetNextStationIdAsync();
 
         var station = new SolarStationInfo
         {

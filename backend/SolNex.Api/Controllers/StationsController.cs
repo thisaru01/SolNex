@@ -25,6 +25,14 @@ public class StationsController : ControllerBase
         return Ok(stations);
     }
 
+    [HttpGet("next-id")]
+    [Authorize(Roles = "Backoffice")]
+    public async Task<ActionResult<object>> GetNextStationId()
+    {
+        var nextId = await _stationService.GetNextStationIdAsync();
+        return Ok(new { nextId = nextId });
+    }
+
     [HttpGet("{id}")]
     public async Task<ActionResult<StationDto>> GetStationById(string id)
     {
