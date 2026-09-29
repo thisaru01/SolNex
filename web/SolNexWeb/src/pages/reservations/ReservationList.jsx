@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { reservationApi } from "../../services/reservationApi"
 import { getUsers } from "../../services/userApi"
+import { stationApi } from "../../services/stationApi"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
@@ -15,6 +16,7 @@ export default function ReservationList() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
   const [users, setUsers] = useState({})
+  const [stations, setStations] = useState({})
   const [selectedReservation, setSelectedReservation] = useState(null)
   const [actionLoading, setActionLoading] = useState(false)
   const [actionError, setActionError] = useState(null)
@@ -48,6 +50,17 @@ export default function ReservationList() {
           setUsers(userMap)
         } catch (err) {
           console.error("Failed to fetch users for owner names", err)
+        }
+        
+        try {
+          const stationList = await stationApi.getStations()
+          const stationMap = {}
+          if (Array.isArray(stationList)) {
+            stationList.forEach(s => { stationMap[s.stationId] = s.stationName || "Unknown" })
+          }
+          setStations(stationMap)
+        } catch (err) {
+          console.error("Failed to fetch stations", err)
         }
       } catch (err) {
         setError(err.message || "Failed to load reservations")
@@ -283,6 +296,14 @@ export default function ReservationList() {
                 <div className="grid grid-cols-3 border-b border-border pb-2">
                   <span className="text-muted-foreground font-medium">Station ID:</span>
                   <span className="col-span-2">{selectedReservation.stationId}</span>
+                </div>
+                <div className="grid grid-cols-3 border-b border-border pb-2">
+                  <span className="text-muted-foreground font-medium">Station Name:</span>
+                  <span className="col-span-2">{stations[selectedReservation.stationId] || "Unknown"}</span>
+                </div>
+                <div className="grid grid-cols-3 border-b border-border pb-2">
+                  <span className="text-muted-foreground font-medium">Slot ID:</span>
+                  <span className="col-span-2">{selectedReservation.slotId}</span>
                 </div>
                 <div className="grid grid-cols-3 border-b border-border pb-2">
                   <span className="text-muted-foreground font-medium">Energy:</span>
