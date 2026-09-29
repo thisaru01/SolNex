@@ -66,6 +66,8 @@ fun ReservationsScreen(
     var reservations by remember { mutableStateOf<List<Reservation>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
+    var errorTitle by remember { mutableStateOf<String?>(null) }
+    var errorSubtitle by remember { mutableStateOf<String?>(null) }
     
     // State variable for the currently active filter chip
     var selectedFilter by remember { mutableStateOf("All") }
@@ -91,6 +93,8 @@ fun ReservationsScreen(
                     reservations = fetchedReservations.filter { it.status in allowedStatuses }
                 } else {
                     error = errMsg
+                    errorTitle = "Error"
+                    errorSubtitle = null
                 }
                 loading = false
             }
@@ -145,8 +149,6 @@ fun ReservationsScreen(
 
         if (loading) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 32.dp))
-        } else if (error != null) {
-            Text(text = error ?: "", color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 16.dp))
         } else if (filteredReservations.isEmpty()) {
             // Placeholder content card
             Card(
@@ -332,7 +334,13 @@ fun ReservationsScreen(
                         Button(
                             onClick = { 
                                 repository.cancelReservation(token, res.id) { success, errMsg ->
-                                    if (success) refreshTrigger++ else error = errMsg
+                                    if (success) {
+                                        refreshTrigger++ 
+                                    } else {
+                                        error = errMsg
+                                        errorTitle = "Cancel Reservation"
+                                        errorSubtitle = "Station ${res.stationId}"
+                                    }
                                 }
                                 selectedReservation = null
                             },
@@ -344,7 +352,13 @@ fun ReservationsScreen(
                         Button(
                             onClick = { 
                                 repository.deleteReservation(token, res.id) { success, errMsg ->
-                                    if (success) refreshTrigger++ else error = errMsg
+                                    if (success) {
+                                        refreshTrigger++ 
+                                    } else {
+                                        error = errMsg
+                                        errorTitle = "Delete Reservation"
+                                        errorSubtitle = "Station ${res.stationId}"
+                                    }
                                 }
                                 selectedReservation = null
                             },
@@ -369,5 +383,31 @@ fun ReservationsScreen(
                 refreshTrigger++
             }
         )
+    }
+
+    if (error != null) {
+        androidx.compose.ui.window.Dialog(onDismissRequest = { error = null }) {
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    errorTitle?.let { Text(it, style = MaterialTheme.typography.titleLarge) }
+                    errorSubtitle?.let { Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary) }
+                    Text(text = error ?: "", color = MaterialTheme.colorScheme.error)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = { error = null }) {
+                            Text("OK")
+                        }
+                    }
+                }
+            }
+        }
     }
 }
