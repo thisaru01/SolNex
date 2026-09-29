@@ -10,4 +10,5 @@ public interface IStationRepository
     Task CreateStationAsync(SolarStationInfo station);
     Task UpdateStationAsync(string id, SolarStationInfo station);
     Task<IEnumerable<SolarStationInfo>> GetNearbyStationsAsync(double latitude, double longitude, double radiusInKm);
+    Task DeleteStationAsync(string id);
 }

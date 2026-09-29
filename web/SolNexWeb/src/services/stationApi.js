@@ -69,4 +69,8 @@ export const stationApi = {
   deactivateStation: (id) => fetchWithConfig(`/stations/${id}/deactivate`, {
     method: 'PUT',
   }),
+  
+  deleteStation: (id) => fetchWithConfig(`/stations/${id}`, {
+    method: 'DELETE',
+  }),
 };

@@ -3,16 +3,19 @@ using SolNex.Api.DTOs.Stations;
 using SolNex.Api.Models;
 using SolNex.Api.Repositories;
 using SolNex.Api.Repositories.Stations;
+using SolNex.Api.Repositories.Reservations;
 
 namespace SolNex.Api.Services.Stations;
 
 public class StationService : IStationService
 {
     private readonly IStationRepository _stationRepository;
+    private readonly IEnergyReservationRepository _reservationRepository;
 
-    public StationService(IStationRepository stationRepository)
+    public StationService(IStationRepository stationRepository, IEnergyReservationRepository reservationRepository)
     {
         _stationRepository = stationRepository;
+        _reservationRepository = reservationRepository;
     }
 
     public async Task<IEnumerable<StationDto>> GetAllStationsAsync()
@@ -112,6 +115,12 @@ public class StationService : IStationService
 
         if (station == null) return null;
 
+        var approvedReservations = await _reservationRepository.SearchReservationsAsync(station.StationId, ReservationStatus.Approved.ToString());
+        if (approvedReservations.Any())
+        {
+            throw new InvalidOperationException("Cannot deactivate a station that has approved reservations.");
+        }
+
         station.Status = StationStatus.Inactive;
         station.UpdatedAt = DateTime.UtcNow;
 
@@ -131,6 +140,22 @@ public class StationService : IStationService
 
         await _stationRepository.UpdateStationAsync(station.Id!, station);
         return MapToDto(station);
+    }
+
+    public async Task<bool> DeleteStationAsync(string id)
+    {
+        var station = await _stationRepository.GetStationByIdAsync(id)
+                   ?? await _stationRepository.GetStationByStationIdAsync(id);
+
+        if (station == null) return false;
+
+        if (station.Status != StationStatus.Inactive)
+        {
+            throw new InvalidOperationException("Only deactivated stations can be deleted.");
+        }
+
+        await _stationRepository.DeleteStationAsync(station.Id!);
+        return true;
     }
 
     public async Task<IEnumerable<StationDto>> GetNearbyStationsAsync(double latitude, double longitude, double radiusInKm)

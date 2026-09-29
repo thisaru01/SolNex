@@ -61,15 +61,40 @@ public class StationsController : ControllerBase
         return Ok(new { message = "Station updated successfully.", station = updatedStation });
     }
 
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteStation(string id)
+    {
+        try
+        {
+            var deleted = await _stationService.DeleteStationAsync(id);
+            if (!deleted)
+            {
+                return NotFound(new { message = $"Station with ID {id} not found." });
+            }
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpPut("{id}/deactivate")]
     public async Task<IActionResult> DeactivateStation(string id)
     {
-        var deactivatedStation = await _stationService.DeactivateStationAsync(id);
-        if (deactivatedStation == null)
+        try
         {
-            return NotFound(new { message = $"Station with ID {id} not found." });
+            var deactivatedStation = await _stationService.DeactivateStationAsync(id);
+            if (deactivatedStation == null)
+            {
+                return NotFound(new { message = $"Station with ID {id} not found." });
+            }
+            return Ok(new { message = "Station deactivated successfully.", station = deactivatedStation });
         }
-        return Ok(new { message = "Station deactivated successfully.", station = deactivatedStation });
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPut("{id}/activate")]

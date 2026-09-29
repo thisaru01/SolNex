@@ -43,6 +43,11 @@ public class StationRepository : IStationRepository
         await _stations.ReplaceOneAsync(s => s.Id == id, station);
     }
 
+    public async Task DeleteStationAsync(string id)
+    {
+        await _stations.DeleteOneAsync(s => s.Id == id);
+    }
+
     public async Task<IEnumerable<SolarStationInfo>> GetNearbyStationsAsync(double latitude, double longitude, double radiusInKm)
     {
         // For a basic implementation without geospatial indexes, we fetch all and calculate distance

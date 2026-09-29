@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Separator } from "@/components/ui/separator"
-import { ArrowLeft, Edit, Clock, MapPin, BatteryCharging, Zap, Power, PowerOff } from "lucide-react"
+import { ArrowLeft, Edit, Clock, MapPin, BatteryCharging, Zap, Power, PowerOff, Trash2 } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,6 +34,7 @@ export default function StationDetails() {
   const [error, setError] = useState(null)
   const [deactivateAlertOpen, setDeactivateAlertOpen] = useState(false)
   const [activateAlertOpen, setActivateAlertOpen] = useState(false)
+  const [deleteAlertOpen, setDeleteAlertOpen] = useState(false)
   
   const currentUser = getStoredUser()
   const isBackoffice = currentUser?.role === "Backoffice"
@@ -78,6 +79,15 @@ export default function StationDetails() {
     }
   }
 
+  const handleDelete = async () => {
+    try {
+      await stationApi.deleteStation(id)
+      navigate("/stations")
+    } catch (err) {
+      alert("Failed to delete: " + err.message)
+    }
+  }
+
   if (loading) return <div className="p-8"><Skeleton className="h-96 w-full" /></div>
   if (error) return <div className="p-8 text-destructive">{error}</div>
   if (!station) return <div className="p-8 text-muted-foreground">Station not found.</div>
@@ -115,9 +125,14 @@ export default function StationDetails() {
                   <PowerOff className="h-4 w-4 mr-2" /> Deactivate
                 </Button>
               ) : (
-                <Button variant="default" className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700" onClick={() => setActivateAlertOpen(true)}>
-                  <Power className="h-4 w-4 mr-2" /> Activate
-                </Button>
+                <>
+                  <Button variant="default" className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700" onClick={() => setActivateAlertOpen(true)}>
+                    <Power className="h-4 w-4 mr-2" /> Activate
+                  </Button>
+                  <Button variant="destructive" className="flex-1 sm:flex-none" onClick={() => setDeleteAlertOpen(true)}>
+                    <Trash2 className="h-4 w-4 mr-2" /> Delete
+                  </Button>
+                </>
               )}
             </>
           )}
@@ -265,6 +280,21 @@ export default function StationDetails() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={() => { setActivateAlertOpen(false); handleActivate(); }} className="bg-emerald-600 hover:bg-emerald-700 text-white">Activate</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteAlertOpen} onOpenChange={setDeleteAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Station?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently delete {station.stationName}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setDeleteAlertOpen(false); handleDelete(); }} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
