@@ -1,3 +1,10 @@
+/*
+ * File: TransactionService.cs
+ * Component: Transaction Services
+ * Description:
+ * Implements transaction retrieval, verification, and completion workflows.
+ */
+
 using SolNex.Api.DTOs.Transactions;
 using SolNex.Api.Models;
 
@@ -16,11 +23,11 @@ public class TransactionService :
         IReservationApprovalRepository
         _reservationRepository;
 
-    // Initializes the transaction workflow.
     public TransactionService(
         ITransactionRepository transactionRepository,
         IReservationApprovalRepository reservationRepository)
     {
+        // Stores the repositories used by transaction workflows.
         _transactionRepository =
             transactionRepository;
 
@@ -28,12 +35,11 @@ public class TransactionService :
             reservationRepository;
     }
 
-    // Returns pending and verified
-    // active transactions.
     public async Task<
         IEnumerable<TransactionDto>>
         GetPendingAsync()
     {
+        // Returns pending and verified active transactions.
         var transactions =
             await _transactionRepository
                 .GetPendingAsync();
@@ -43,11 +49,11 @@ public class TransactionService :
                 MapToDto);
     }
 
-    // Returns completed transactions.
     public async Task<
         IEnumerable<TransactionDto>>
         GetCompletedAsync()
     {
+        // Returns completed transactions.
         var transactions =
             await _transactionRepository
                 .GetCompletedAsync();
@@ -57,12 +63,12 @@ public class TransactionService :
                 MapToDto);
     }
 
-    // Gets one transaction.
     public async Task<
         TransactionDto?>
         GetByIdAsync(
             string id)
     {
+        // Retrieves a transaction by its database or public identifier.
         var transaction =
             await _transactionRepository
                 .GetByIdOrTransactionIdAsync(
@@ -75,14 +81,13 @@ public class TransactionService :
                 transaction);
     }
 
-    // Verifies a transaction using
-    // the secure scanned QR token.
     public async Task<
         TransactionDto>
         VerifyAsync(
             string qrToken,
             string operatorNic)
     {
+        // Verifies a transaction using the scanned secure QR token.
         ValidateOperatorNic(
             operatorNic);
 
@@ -154,14 +159,13 @@ public class TransactionService :
             transaction);
     }
 
-    // Gets one transaction belonging
-    // to the logged-in Prosumer.
     public async Task<
         TransactionDto?>
         GetByReservationIdAsync(
             string reservationId,
             string prosumerNic)
     {
+        // Retrieves a reservation transaction after verifying Prosumer ownership.
         if (
             string.IsNullOrWhiteSpace(
                 reservationId))
@@ -204,14 +208,12 @@ public class TransactionService :
             transaction);
     }
 
-    // Returns all active approved
-    // transactions belonging to the
-    // logged-in Prosumer.
     public async Task<
         IEnumerable<TransactionDto>>
         GetActiveForProsumerAsync(
             string prosumerNic)
     {
+        // Returns active approved transactions belonging to the Prosumer.
         if (
             string.IsNullOrWhiteSpace(
                 prosumerNic))
@@ -230,14 +232,13 @@ public class TransactionService :
                 MapToDto);
     }
 
-    // Completes a verified transaction
-    // and its linked reservation.
     public async Task<
         TransactionDto>
         CompleteAsync(
             string id,
             string operatorNic)
     {
+        // Completes a verified transaction and updates its linked reservation.
         ValidateOperatorNic(
             operatorNic);
 
@@ -314,10 +315,10 @@ public class TransactionService :
             transaction);
     }
 
-    // Validates operator identifier.
     private static void ValidateOperatorNic(
         string operatorNic)
     {
+        // Ensures the operator identifier is present.
         if (
             string.IsNullOrWhiteSpace(
                 operatorNic))
@@ -327,10 +328,10 @@ public class TransactionService :
         }
     }
 
-    // Maps database model to API DTO.
     private static TransactionDto MapToDto(
         EnergyTransaction transaction)
     {
+        // Maps the persisted transaction model to its API DTO.
         return new TransactionDto
         {
             Id =

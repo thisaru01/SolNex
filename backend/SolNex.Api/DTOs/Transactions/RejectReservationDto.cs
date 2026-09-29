@@ -1,3 +1,10 @@
+/*
+ * File: RejectReservationDto.cs
+ * Component: Transaction DTOs
+ * Description:
+ * Carries the reason required to reject a reservation.
+ */
+
 using System.ComponentModel.DataAnnotations;
 
 namespace SolNex.Api.DTOs.Transactions;

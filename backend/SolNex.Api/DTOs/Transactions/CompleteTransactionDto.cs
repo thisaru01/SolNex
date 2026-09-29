@@ -1,3 +1,10 @@
+/*
+ * File: CompleteTransactionDto.cs
+ * Component: Transaction DTOs
+ * Description:
+ * Carries the operator identifier required to complete a transaction.
+ */
+
 using System.ComponentModel.DataAnnotations;
 
 namespace SolNex.Api.DTOs.Transactions;

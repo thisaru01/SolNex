@@ -1,3 +1,10 @@
+/*
+ * File: VerifyTransactionDto.cs
+ * Component: Transaction DTOs
+ * Description:
+ * Carries the QR token and operator identifier for transaction verification.
+ */
+
 using System.ComponentModel.DataAnnotations;
 
 namespace SolNex.Api.DTOs.Transactions;

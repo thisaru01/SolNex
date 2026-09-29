@@ -1,3 +1,10 @@
+/*
+ * File: IReservationApprovalService.cs
+ * Component: Transaction Services
+ * Description:
+ * Declares operations for approving and rejecting reservations.
+ */
+
 using SolNex.Api.DTOs.Transactions;
 
 namespace SolNex.Api.Services.Transactions;

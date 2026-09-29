@@ -1,3 +1,10 @@
+/*
+ * File: ReservationApprovalService.cs
+ * Component: Transaction Services
+ * Description:
+ * Implements reservation approval, rejection, and transaction creation workflows.
+ */
+
 using System.Security.Cryptography;
 
 using SolNex.Api.DTOs.Reservations;

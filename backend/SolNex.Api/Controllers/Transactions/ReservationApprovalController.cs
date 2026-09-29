@@ -1,3 +1,10 @@
+/*
+ * File: ReservationApprovalController.cs
+ * Component: Reservation Approval
+ * Description:
+ * Handles Backoffice approval and rejection of energy reservations.
+ */
+
 using System.Security.Claims;
 
 using Microsoft.AspNetCore.Authorization;

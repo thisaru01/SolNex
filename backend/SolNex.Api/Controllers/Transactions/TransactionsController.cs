@@ -1,6 +1,5 @@
 /*
  * File: TransactionsController.cs
- * Project: SolNex Smart Solar Microgrid Trading System
  * Component: Operator, Approval & Energy Transaction
  * Description:
  * Handles transaction viewing for Backoffice and Grid Operators,
