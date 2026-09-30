@@ -30,6 +30,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.foundation.lazy.LazyColumn
@@ -42,6 +44,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -85,8 +88,10 @@ fun MapScreen(
     var showReservationForm by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var showSearchResults by remember { mutableStateOf(false) }
+    var showFavoritesOnly by remember { mutableStateOf(false) }
+    var favoriteIds by remember { mutableStateOf<Set<String>>(emptySet()) }
 
-    val repository = remember { StationRepository() }
+    val repository = remember { StationRepository(context) }
 
     // Initialize osmdroid config ONCE before anything renders
     remember {
@@ -107,6 +112,11 @@ fun MapScreen(
         tileDir.mkdirs()
         osmConfig.osmdroidTileCache = tileDir
 
+        // Performance tuning
+        osmConfig.tileFileSystemThreads = 4
+        osmConfig.tileDownloadThreads = 4
+        osmConfig.tileFileSystemCacheMaxBytes = 100L * 1024 * 1024 // 100 MB cache
+        
         true
     }
 
@@ -136,6 +146,7 @@ fun MapScreen(
     }
 
     LaunchedEffect(token) {
+        favoriteIds = repository.getFavoriteStationIds()
         repository.getStations(token) { fetchedStations, errMsg ->
             stations = fetchedStations ?: emptyList()
             error = errMsg
@@ -143,17 +154,24 @@ fun MapScreen(
         }
     }
 
+    // When offline with cached data, retry every 15 s so the banner dismisses as soon as connection returns
+    LaunchedEffect(error, stations.size) {
+        if (error != null && stations.isNotEmpty()) {
+            while (true) {
+                delay(15_000L)
+                repository.getStations(token) { fetchedStations, errMsg ->
+                    if (errMsg == null && fetchedStations != null) {
+                        stations = fetchedStations
+                        error = null   // clears the banner
+                    }
+                }
+                if (error == null) break
+            }
+        }
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
-        if (loading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-        } else if (error != null) {
-            Text(
-                text = error ?: "Unknown error",
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.align(Alignment.Center).padding(16.dp)
-            )
-        } else {
-            // Remember the MapView so we can manage its lifecycle
+        // Remember the MapView so we can manage its lifecycle
             val mapViewRef = remember { mutableStateOf<MapView?>(null) }
             val locationOverlayRef = remember { mutableStateOf<MyLocationNewOverlay?>(null) }
 
@@ -247,8 +265,10 @@ fun MapScreen(
                             canvas.drawCircle(radius, radius, radius - borderPaint.strokeWidth, borderPaint)
                             
                             overlay.setPersonIcon(bitmap)
+                            overlay.setPersonAnchor(0.5f, 0.5f)
                             @Suppress("DEPRECATION")
                             overlay.setDirectionArrow(bitmap, bitmap)
+                            overlay.setDirectionAnchor(0.5f, 0.5f)
 
                             // First time setup: zoom to user's location when fixed
                             overlay.runOnFirstFix {
@@ -263,12 +283,24 @@ fun MapScreen(
                     }
 
                     // Add station markers with click listeners
-                    stations.filter { !it.status.equals("Deactivated", ignoreCase = true) }.forEach { station ->
+                    val filteredStations = stations.filter { 
+                        !it.status.equals("Deactivated", ignoreCase = true) &&
+                        (!showFavoritesOnly || favoriteIds.contains(it.stationId))
+                    }
+                    filteredStations.forEach { station ->
                         val marker = Marker(mapView)
                         marker.position = GeoPoint(station.latitude, station.longitude)
                         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                         marker.title = station.stationName
                         marker.snippet = "Capacity: ${station.capacityKw} kW • Status: ${station.status}"
+                        
+                        if (favoriteIds.contains(station.stationId)) {
+                            val defaultIcon = ContextCompat.getDrawable(context, org.osmdroid.library.R.drawable.marker_default)?.mutate()
+                            // Use MULTIPLY to preserve the pin's 3D shading, and make it Gold/Amber
+                            defaultIcon?.setColorFilter(android.graphics.Color.parseColor("#FFB300"), android.graphics.PorterDuff.Mode.MULTIPLY)
+                            marker.icon = defaultIcon
+                        }
+
                         marker.setOnMarkerClickListener { _, _ ->
                             selectedStation = station
                             true
@@ -295,17 +327,87 @@ fun MapScreen(
                         showSearchResults = it.isNotBlank()
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Search stations...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+                    placeholder = {
+                        Text(
+                            "Search stations...",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    },
                     singleLine = true,
                     shape = RoundedCornerShape(24.dp),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = MaterialTheme.colorScheme.surface,
                         unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                         focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                        unfocusedIndicatorColor = MaterialTheme.colorScheme.surfaceVariant
+                        unfocusedIndicatorColor = MaterialTheme.colorScheme.outline,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        cursorColor = MaterialTheme.colorScheme.primary
                     )
                 )
+
+                Button(
+                    onClick = { showFavoritesOnly = !showFavoritesOnly },
+                    modifier = Modifier.padding(top = 8.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = if (showFavoritesOnly)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.surface,
+                        contentColor = if (showFavoritesOnly)
+                            MaterialTheme.colorScheme.onPrimary
+                        else
+                            MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Icon(
+                        imageVector = if (showFavoritesOnly) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                        contentDescription = "Favorites",
+                        modifier = Modifier.padding(end = 6.dp)
+                    )
+                    Text("Favorites Only")
+                }
+
+                // Offline banner — inline below Favorites so it never overlaps
+                AnimatedVisibility(
+                    visible = error != null && stations.isNotEmpty(),
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "📡",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                text = "Offline - showing cached data. Retrying…",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                    }
+                }
 
                 AnimatedVisibility(
                     visible = showSearchResults && searchQuery.isNotBlank()
@@ -320,7 +422,10 @@ fun MapScreen(
                                 .fillMaxWidth()
                                 .padding(top = 8.dp),
                             shape = RoundedCornerShape(16.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            )
                         ) {
                             LazyColumn(
                                 modifier = Modifier.padding(vertical = 8.dp)
@@ -328,6 +433,8 @@ fun MapScreen(
                                 items(filtered) { station ->
                                     Text(
                                         text = station.stationName,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        style = MaterialTheme.typography.bodyMedium,
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .clickable {
@@ -431,10 +538,25 @@ fun MapScreen(
                                 Text(
                                     text = station.stationName,
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.weight(1f)
                                 )
-                                TextButton(onClick = { selectedStation = null }) {
-                                    Text("✕")
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    var isFav by remember(station.stationId) { mutableStateOf(repository.isFavorite(station.stationId)) }
+                                    IconButton(onClick = {
+                                        isFav = !isFav
+                                        repository.toggleFavorite(station.stationId, isFav)
+                                        favoriteIds = repository.getFavoriteStationIds()
+                                    }) {
+                                        Icon(
+                                            imageVector = if (isFav) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                                            contentDescription = "Favorite",
+                                            tint = if (isFav) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    TextButton(onClick = { selectedStation = null }) {
+                                        Text("✕")
+                                    }
                                 }
                             }
                             Text(
@@ -459,7 +581,16 @@ fun MapScreen(
                     }
                 }
             }
-        }
+
+            if (loading && stations.isEmpty()) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            } else if (error != null && stations.isEmpty()) {
+                Text(
+                    text = error ?: "Unknown error",
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.align(Alignment.Center).padding(16.dp)
+                )
+            }
 
         if (showReservationForm && selectedStation != null) {
             ReservationFormDialog(

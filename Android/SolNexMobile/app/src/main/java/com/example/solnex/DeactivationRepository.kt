@@ -21,7 +21,7 @@ sealed class DeactivationResult {
 
 class ApiDeactivationRepository(
     private val executor: ExecutorService = Executors.newSingleThreadExecutor(),
-    private val apiBaseUrl: String = "http://10.0.2.2:5097"
+    private val apiBaseUrl: String = com.example.solnex.operator.data.ApiConfig.BASE_URL
 ) : DeactivationRepository {
     
     // Send deactivation request to API

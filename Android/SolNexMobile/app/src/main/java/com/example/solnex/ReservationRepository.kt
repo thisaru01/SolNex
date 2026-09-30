@@ -34,7 +34,7 @@ data class Reservation(
 
 class ReservationRepository(
     private val executor: ExecutorService = Executors.newSingleThreadExecutor(),
-    private val apiBaseUrl: String = "http://10.0.2.2:5097"
+    private val apiBaseUrl: String = com.example.solnex.operator.data.ApiConfig.BASE_URL
 ) {
     // Fetches all available slots from the backend API
     fun getAvailableSlots(token: String, callback: (List<Slot>?, String?) -> Unit) {
