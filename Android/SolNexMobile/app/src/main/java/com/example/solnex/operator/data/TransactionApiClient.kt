@@ -161,7 +161,7 @@ class TransactionApiClient(
 
         val url =
             URL(
-                "${ApiConfig.BASE_URL}$endpoint"
+                "${ApiConfig.BASE_URL}/api$endpoint"
             )
 
         val connection =
