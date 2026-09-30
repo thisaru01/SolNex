@@ -111,6 +111,9 @@ fun ReservationsScreen(
                         
                         if (selectedReservation != null) {
                             selectedReservation = reservations.find { it.id == selectedReservation!!.id }
+                        } else if (MainActivity.pendingReservationIdToOpen != null) {
+                            selectedReservation = reservations.find { it.id == MainActivity.pendingReservationIdToOpen }
+                            MainActivity.pendingReservationIdToOpen = null
                         }
                     } else {
                         error = errMsg

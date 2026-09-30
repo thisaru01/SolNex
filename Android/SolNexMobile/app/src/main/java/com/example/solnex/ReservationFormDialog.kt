@@ -70,7 +70,7 @@ fun ReservationFormDialog(
             Card(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color.White,
+                    containerColor = Color(0xFFF8F9FA),
                     contentColor = Color(0xFF1F2937)
                 ),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -217,12 +217,13 @@ fun ReservationFormDialog(
                                                 slotId = selectedSlot!!.slotId,
                                                 reservationDate = dateStr,
                                                 energyAmountKwh = amount
-                                            ) { success, errMsg ->
+                                            ) { success, msg ->
                                                 submitting = false
                                                 if (success) {
+                                                    MainActivity.pendingReservationIdToOpen = msg
                                                     showSuccessPopup = true
                                                 } else {
-                                                    error = errMsg
+                                                    error = msg
                                                 }
                                             }
                                         }
@@ -249,7 +250,7 @@ fun ReservationFormDialog(
         AlertDialog(
             onDismissRequest = { 
                 showSuccessPopup = false
-                onSuccess(null) 
+                onSuccess(BottomNavItem.Reservations) 
             },
             containerColor = Color.White,
             titleContentColor = Color(0xFF1F2937),
@@ -263,7 +264,7 @@ fun ReservationFormDialog(
             confirmButton = {
                 TextButton(onClick = { 
                     showSuccessPopup = false
-                    onSuccess(null) 
+                    onSuccess(BottomNavItem.Reservations) 
                 }) {
                     Text("OK", color = MaterialTheme.colorScheme.primary, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                 }

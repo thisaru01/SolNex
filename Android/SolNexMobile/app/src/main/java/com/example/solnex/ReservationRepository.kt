@@ -114,7 +114,13 @@ class ReservationRepository(
 
                 val responseCode = connection.responseCode
                 if (responseCode == HttpURLConnection.HTTP_CREATED || responseCode == HttpURLConnection.HTTP_OK) {
-                    callback(true, null)
+                    val responseStr = connection.inputStream.bufferedReader().use { it.readText() }
+                    val createdId = try {
+                        JSONObject(responseStr).optString("id", null)
+                    } catch (e: Exception) {
+                        null
+                    }
+                    callback(true, createdId)
                 } else {
                     val errorMessage = try {
                         val errorStr = connection.errorStream.bufferedReader().use { it.readText() }
