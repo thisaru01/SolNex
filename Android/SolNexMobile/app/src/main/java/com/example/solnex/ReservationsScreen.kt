@@ -56,12 +56,13 @@ import com.example.solnex.auth.TokenStore
 
 @Composable
 fun ReservationsScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onNavigateToTab: (BottomNavItem) -> Unit = {}
 ) {
     val context = LocalContext.current
     val tokenStore = remember { TokenStore(context) }
     val repository = remember { ReservationRepository() }
-    val stationRepo = remember { StationRepository() }
+    val stationRepo = remember { StationRepository(context) }
     val token = tokenStore.token().orEmpty()
     val nic = tokenStore.nic().orEmpty()
 
@@ -425,9 +426,12 @@ fun ReservationsScreen(
             stationName = "Station ${showEditDialog!!.stationId}",
             existingReservation = showEditDialog,
             onDismiss = { showEditDialog = null },
-            onSuccess = {
+            onSuccess = { navTarget ->
                 showEditDialog = null
                 refreshTrigger++
+                if (navTarget != null) {
+                    onNavigateToTab(navTarget)
+                }
             }
         )
     }

@@ -24,7 +24,7 @@ fun ReservationFormDialog(
     stationName: String,
     existingReservation: Reservation? = null,
     onDismiss: () -> Unit,
-    onSuccess: () -> Unit
+    onSuccess: (BottomNavItem?) -> Unit
 ) {
     val context = LocalContext.current
     val tokenStore = remember { TokenStore(context) }
@@ -44,6 +44,7 @@ fun ReservationFormDialog(
     
     // Tracks the submission state to show loading indicators
     var submitting by remember { mutableStateOf(false) }
+    var showSuccessPopup by remember { mutableStateOf(false) }
 
     // Fetch available slots for the selected station when the dialog opens
     LaunchedEffect(stationId) {
@@ -83,7 +84,7 @@ fun ReservationFormDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End
                     ) {
-                        TextButton(onClick = { onDismiss() }) {
+                        TextButton(onClick = { error = null }) {
                             Text("OK")
                         }
                     }
@@ -192,7 +193,7 @@ fun ReservationFormDialog(
                                         ) { success, errMsg ->
                                             submitting = false
                                             if (success) {
-                                                onSuccess()
+                                                showSuccessPopup = true
                                             } else {
                                                 error = errMsg
                                             }
@@ -212,7 +213,7 @@ fun ReservationFormDialog(
                                         ) { success, errMsg ->
                                             submitting = false
                                             if (success) {
-                                                onSuccess()
+                                                showSuccessPopup = true
                                             } else {
                                                 error = errMsg
                                             }
@@ -234,5 +235,39 @@ fun ReservationFormDialog(
                 }
             }
         }
+    }
+
+    if (showSuccessPopup) {
+        AlertDialog(
+            onDismissRequest = { 
+                showSuccessPopup = false
+                onSuccess(null) 
+            },
+            title = { Text("Reservation Successful") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Station: $stationName", fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+                    Text("Day: ${selectedDay ?: ""}")
+                    Text("Time: ${selectedSlot?.startTime ?: ""} - ${selectedSlot?.endTime ?: ""}")
+                    Text("Energy: $energyAmount kWh")
+                }
+            },
+            confirmButton = {
+                Button(onClick = { 
+                    showSuccessPopup = false
+                    onSuccess(BottomNavItem.Reservations) 
+                }) {
+                    Text("View Reservations")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = {
+                    showSuccessPopup = false
+                    onSuccess(BottomNavItem.Home)
+                }) {
+                    Text("Go to home")
+                }
+            }
+        )
     }
 }

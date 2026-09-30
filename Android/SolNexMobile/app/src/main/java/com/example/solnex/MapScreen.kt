@@ -76,7 +76,8 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 fun MapScreen(
     modifier: Modifier = Modifier,
     token: String,
-    role: String = ""
+    role: String = "",
+    onNavigateToTab: (BottomNavItem) -> Unit = {}
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -597,10 +598,12 @@ fun MapScreen(
                 stationId = selectedStation!!.stationId,
                 stationName = selectedStation!!.stationName,
                 onDismiss = { showReservationForm = false },
-                onSuccess = {
+                onSuccess = { navTarget ->
                     showReservationForm = false
                     selectedStation = null
-                    // Optional: show a success message or snackbar
+                    if (navTarget != null) {
+                        onNavigateToTab(navTarget)
+                    }
                 }
             )
         }
