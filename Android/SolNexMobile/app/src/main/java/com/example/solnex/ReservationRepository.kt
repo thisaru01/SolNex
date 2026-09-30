@@ -34,7 +34,7 @@ data class Reservation(
 
 class ReservationRepository(
     private val executor: ExecutorService = Executors.newSingleThreadExecutor(),
-    private val apiBaseUrl: String = if (android.os.Build.FINGERPRINT.contains("generic")) "http://10.0.2.2:5097" else "http://192.168.1.52:8080"
+    private val apiBaseUrl: String = com.example.solnex.operator.data.ApiConfig.BASE_URL
 ) {
     // Fetches all available slots from the backend API
     fun getAvailableSlots(token: String, callback: (List<Slot>?, String?) -> Unit) {
