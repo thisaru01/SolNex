@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.window.Dialog
 import com.example.solnex.auth.TokenStore
 import java.time.Instant
@@ -64,171 +65,178 @@ fun ReservationFormDialog(
         }
     }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            shape = MaterialTheme.shapes.medium
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+    if (!showSuccessPopup) {
+        Dialog(onDismissRequest = onDismiss) {
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White,
+                    contentColor = Color(0xFF1F2937)
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                shape = MaterialTheme.shapes.medium
             ) {
-                Text(if (existingReservation != null) "Update Reservation" else "Submit Reservation", style = MaterialTheme.typography.titleLarge)
-                Text(stationName, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(if (existingReservation != null) "Update Reservation" else "Submit Reservation", style = MaterialTheme.typography.titleLarge)
+                    Text(stationName, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
 
-                if (loadingSlots) {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-                } else if (error != null) {
-                    Text(text = error ?: "", color = MaterialTheme.colorScheme.error)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        TextButton(onClick = { error = null }) {
-                            Text("OK")
+                    if (loadingSlots) {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                    } else if (error != null) {
+                        Text(text = error ?: "", color = MaterialTheme.colorScheme.error)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            TextButton(onClick = { error = null }) {
+                                Text("OK")
+                            }
                         }
-                    }
-                } else if (slots.isEmpty()) {
-                    Text("No available slots for this station.")
-                } else {
-                    // Day dropdown
-                    val availableDays = remember(slots) { slots.mapNotNull { it.dayOfWeek?.takeIf { d -> d.isNotBlank() } }.distinct() }
-                    var dayExpanded by remember { mutableStateOf(false) }
+                    } else if (slots.isEmpty()) {
+                        Text("No available slots for this station.")
+                    } else {
+                        // Day dropdown
+                        val availableDays = remember(slots) { slots.mapNotNull { it.dayOfWeek?.takeIf { d -> d.isNotBlank() } }.distinct() }
+                        var dayExpanded by remember { mutableStateOf(false) }
 
-                    ExposedDropdownMenuBox(
-                        expanded = dayExpanded,
-                        onExpandedChange = { dayExpanded = !dayExpanded }
-                    ) {
-                        OutlinedTextField(
-                            value = selectedDay ?: "Select Day",
-                            onValueChange = {},
-                            readOnly = true,
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dayExpanded) },
-                            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
-                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
-                        )
-                        ExposedDropdownMenu(
+                        ExposedDropdownMenuBox(
                             expanded = dayExpanded,
-                            onDismissRequest = { dayExpanded = false }
+                            onExpandedChange = { dayExpanded = !dayExpanded }
                         ) {
-                            availableDays.forEach { day ->
-                                DropdownMenuItem(
-                                    text = { Text(day) },
-                                    onClick = {
-                                        selectedDay = day
-                                        selectedSlot = null // reset slot when day changes
-                                        dayExpanded = false
-                                    }
-                                )
+                            OutlinedTextField(
+                                value = selectedDay ?: "Select Day",
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dayExpanded) },
+                                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = dayExpanded,
+                                onDismissRequest = { dayExpanded = false }
+                            ) {
+                                availableDays.forEach { day ->
+                                    DropdownMenuItem(
+                                        text = { Text(day) },
+                                        onClick = {
+                                            selectedDay = day
+                                            selectedSlot = null // reset slot when day changes
+                                            dayExpanded = false
+                                        }
+                                    )
+                                }
                             }
                         }
-                    }
 
-                    // Slots dropdown
-                    val availableSlotsForDay = remember(slots, selectedDay) {
-                        slots.filter { it.dayOfWeek == selectedDay }
-                    }
-                    var expanded by remember { mutableStateOf(false) }
-                    
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { if (selectedDay != null) expanded = !expanded }
-                    ) {
-                        OutlinedTextField(
-                            value = selectedSlot?.let { "${it.startTime} - ${it.endTime}" } ?: "Select Slot",
-                            onValueChange = {},
-                            readOnly = true,
-                            enabled = selectedDay != null,
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
-                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
-                        )
-                        ExposedDropdownMenu(
+                        // Slots dropdown
+                        val availableSlotsForDay = remember(slots, selectedDay) {
+                            slots.filter { it.dayOfWeek == selectedDay }
+                        }
+                        var expanded by remember { mutableStateOf(false) }
+                        
+                        ExposedDropdownMenuBox(
                             expanded = expanded,
-                            onDismissRequest = { expanded = false }
+                            onExpandedChange = { if (selectedDay != null) expanded = !expanded }
                         ) {
-                            availableSlotsForDay.forEach { slot ->
-                                DropdownMenuItem(
-                                    text = { Text("${slot.startTime} - ${slot.endTime}") },
-                                    onClick = {
-                                        selectedSlot = slot
-                                        expanded = false
-                                    }
-                                )
+                            OutlinedTextField(
+                                value = selectedSlot?.let { "${it.startTime} - ${it.endTime}" } ?: "Select Slot",
+                                onValueChange = {},
+                                readOnly = true,
+                                enabled = selectedDay != null,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false }
+                            ) {
+                                availableSlotsForDay.forEach { slot ->
+                                    DropdownMenuItem(
+                                        text = { Text("${slot.startTime} - ${slot.endTime}") },
+                                        onClick = {
+                                            selectedSlot = slot
+                                            expanded = false
+                                        }
+                                    )
+                                }
                             }
                         }
-                    }
 
-                    OutlinedTextField(
-                        value = energyAmount,
-                        onValueChange = { energyAmount = it },
-                        label = { Text("Energy Amount (kWh)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                        OutlinedTextField(
+                            value = energyAmount,
+                            onValueChange = { energyAmount = it },
+                            label = { Text("Energy Amount (kWh)") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            modifier = Modifier.fillMaxWidth()
+                        )
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        TextButton(onClick = onDismiss, enabled = !submitting) {
-                            Text("Cancel")
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = {
-                                val amount = energyAmount.toDoubleOrNull()
-                                // Validate the input before attempting submission
-                                if (selectedSlot != null && amount != null && amount > 0) {
-                                    submitting = true
-                                    error = null
-                                    
-                                    if (existingReservation != null) {
-                                        repository.updateReservationDetails(
-                                            token = token,
-                                            id = existingReservation.id,
-                                            slotId = selectedSlot!!.slotId,
-                                            energyAmountKwh = amount
-                                        ) { success, errMsg ->
-                                            submitting = false
-                                            if (success) {
-                                                showSuccessPopup = true
-                                            } else {
-                                                error = errMsg
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TextButton(onClick = onDismiss, enabled = !submitting) {
+                                Text("Cancel")
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = {
+                                    val amount = energyAmount.toDoubleOrNull()
+                                    // Validate the input before attempting submission
+                                    if (selectedSlot != null && amount != null && amount > 0) {
+                                        submitting = true
+                                        error = null
+                                        
+                                        if (existingReservation != null) {
+                                            repository.updateReservationDetails(
+                                                token = token,
+                                                id = existingReservation.id,
+                                                slotId = selectedSlot!!.slotId,
+                                                energyAmountKwh = amount
+                                            ) { success, errMsg ->
+                                                submitting = false
+                                                if (success) {
+                                                    showSuccessPopup = true
+                                                } else {
+                                                    error = errMsg
+                                                }
+                                            }
+                                        } else {
+                                            // Generate the current ISO timestamp for the reservation date
+                                            val dateStr = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+                                            
+                                            // Send the reservation request to the backend API
+                                            repository.submitReservation(
+                                                token = token,
+                                                nic = nic,
+                                                stationId = stationId,
+                                                slotId = selectedSlot!!.slotId,
+                                                reservationDate = dateStr,
+                                                energyAmountKwh = amount
+                                            ) { success, errMsg ->
+                                                submitting = false
+                                                if (success) {
+                                                    showSuccessPopup = true
+                                                } else {
+                                                    error = errMsg
+                                                }
                                             }
                                         }
                                     } else {
-                                        // Generate the current ISO timestamp for the reservation date
-                                        val dateStr = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
-                                        
-                                        // Send the reservation request to the backend API
-                                        repository.submitReservation(
-                                            token = token,
-                                            nic = nic,
-                                            stationId = stationId,
-                                            slotId = selectedSlot!!.slotId,
-                                            reservationDate = dateStr,
-                                            energyAmountKwh = amount
-                                        ) { success, errMsg ->
-                                            submitting = false
-                                            if (success) {
-                                                showSuccessPopup = true
-                                            } else {
-                                                error = errMsg
-                                            }
-                                        }
+                                        error = "Please select a slot and enter a valid energy amount."
                                     }
+                                },
+                                enabled = selectedSlot != null && energyAmount.isNotBlank() && !submitting
+                            ) {
+                                if (submitting) {
+                                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
                                 } else {
-                                    error = "Please select a slot and enter a valid energy amount."
+                                    Text(if (existingReservation != null) "Update" else "Submit")
                                 }
-                            },
-                            enabled = selectedSlot != null && energyAmount.isNotBlank() && !submitting
-                        ) {
-                            if (submitting) {
-                                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
-                            } else {
-                                Text(if (existingReservation != null) "Update" else "Submit")
                             }
                         }
                     }
@@ -243,29 +251,21 @@ fun ReservationFormDialog(
                 showSuccessPopup = false
                 onSuccess(null) 
             },
-            title = { Text("Reservation Successful") },
+            containerColor = Color.White,
+            titleContentColor = Color(0xFF1F2937),
+            textContentColor = Color(0xFF1F2937),
+            title = { 
+                Text(if (existingReservation != null) "Update Successful" else "Reservation Successful") 
+            },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Station: $stationName", fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
-                    Text("Day: ${selectedDay ?: ""}")
-                    Text("Time: ${selectedSlot?.startTime ?: ""} - ${selectedSlot?.endTime ?: ""}")
-                    Text("Energy: $energyAmount kWh")
-                }
+                Text(if (existingReservation != null) "Your reservation has been successfully updated." else "Your reservation has been successfully submitted.")
             },
             confirmButton = {
-                Button(onClick = { 
+                TextButton(onClick = { 
                     showSuccessPopup = false
-                    onSuccess(BottomNavItem.Reservations) 
+                    onSuccess(null) 
                 }) {
-                    Text("View Reservations")
-                }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = {
-                    showSuccessPopup = false
-                    onSuccess(BottomNavItem.Home)
-                }) {
-                    Text("Go to home")
+                    Text("OK", color = MaterialTheme.colorScheme.primary, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                 }
             }
         )
