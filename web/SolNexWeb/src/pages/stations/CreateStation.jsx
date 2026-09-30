@@ -106,8 +106,13 @@ export default function CreateStation() {
       }
       
       const newStation = await stationApi.createStation(payload)
-      toast.success("Station created successfully")
-      navigate(`/stations/${newStation.id || newStation.stationId}`)
+      toast.success(`Station ${newStation?.stationId ?? ""} created successfully`)
+      const destinationId = newStation?.stationId || newStation?.id
+      if (destinationId) {
+        navigate(`/stations/${destinationId}`)
+      } else {
+        navigate("/stations")
+      }
     } catch (err) {
       toast.error(err.message || "Failed to create station")
     } finally {
