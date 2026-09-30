@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -84,6 +85,8 @@ fun DashboardScreen(
     var fullNameError by remember { mutableStateOf<String?>(null) }
     var emailError by remember { mutableStateOf<String?>(null) }
     var phoneError by remember { mutableStateOf<String?>(null) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
+    var showDeactivationDialog by remember { mutableStateOf(false) }
     val profileStatus = profile?.accountStatus ?: "Pending"
 
     val statusMessage = when (profileStatus) {
@@ -130,7 +133,7 @@ fun DashboardScreen(
                 Text("SolNex", style = MaterialTheme.typography.titleMedium)
                 Text("${displayUser.role} dashboard", style = MaterialTheme.typography.headlineSmall)
             }
-            TextButton(onClick = onLogout) {
+            TextButton(onClick = { showLogoutDialog = true }) {
                 Text("Log out")
             }
         }
@@ -218,7 +221,7 @@ fun DashboardScreen(
 
                     if (profileStatus != "DeactivationRequested") {
                         Button(
-                            onClick = onRequestDeactivation,
+                            onClick = { showDeactivationDialog = true },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text("Request account deactivation")
@@ -251,5 +254,49 @@ fun DashboardScreen(
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+    }
+
+    // Logout confirmation dialog
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Confirm logout") },
+            text = { Text("Are you sure you want to log out?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showLogoutDialog = false
+                    onLogout()
+                }) {
+                    Text("Log out")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Account deactivation confirmation dialog
+    if (showDeactivationDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeactivationDialog = false },
+            title = { Text("Confirm account deactivation") },
+            text = { Text("Are you sure you want to request account deactivation? This action requires Backoffice approval and cannot be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeactivationDialog = false
+                    onRequestDeactivation()
+                }) {
+                    Text("Request deactivation")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeactivationDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }

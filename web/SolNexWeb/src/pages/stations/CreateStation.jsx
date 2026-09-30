@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { stationApi } from "../../services/stationApi"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -18,6 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { toast } from "sonner"
 
 const containerStyle = {
   width: '100%',
@@ -28,14 +29,13 @@ const defaultCenter = {
   lng: 80.7718
 }
 
+// Page component for creating a new solar station with map integration for location picking.
 export default function CreateStation() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
   const [alertOpen, setAlertOpen] = useState(false)
   
   const [formData, setFormData] = useState({
-    stationId: "",
     stationName: "",
     latitude: "",
     longitude: "",
@@ -43,11 +43,33 @@ export default function CreateStation() {
     totalBatterySlots: "",
   })
 
+  const [nextStationId, setNextStationId] = useState("Loading...")
+
+    // Fetches the auto-generated station ID on component mount
+// Trigger side effects like fetching initial station data on mount
+  useEffect(() => {
+    const fetchId = async () => {
+      try {
+        const result = await stationApi.getNextStationId();
+        if (result && result.nextId) {
+          setNextStationId(result.nextId);
+        } else {
+          setNextStationId("Auto-generated");
+        }
+      } catch (err) {
+        console.error("Failed to fetch next station ID:", err);
+        setNextStationId("Auto-generated");
+      }
+    };
+    fetchId();
+  }, []);
+
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "", 
   })
 
+  // Update latitude and longitude in form data when user clicks on map
   const handleMapClick = (e) => {
     setFormData(prev => ({
       ...prev,
@@ -56,20 +78,22 @@ export default function CreateStation() {
     }))
   }
 
+  // Handle input changes dynamically by name attribute
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
+  // Prevent default form submission and trigger confirmation dialog instead
   const handlePreSubmit = (e) => {
     e.preventDefault()
     setAlertOpen(true)
   }
 
+  // Executes the actual update/create logic after user confirms action
   const handleSubmit = async () => {
     setAlertOpen(false)
     setLoading(true)
-    setError(null)
     
     try {
       // Convert numeric fields
@@ -82,9 +106,15 @@ export default function CreateStation() {
       }
       
       const newStation = await stationApi.createStation(payload)
-      navigate(`/stations/${newStation.id || newStation.stationId}`)
+      toast.success(`Station ${newStation?.stationId ?? ""} created successfully`)
+      const destinationId = newStation?.stationId || newStation?.id
+      if (destinationId) {
+        navigate(`/stations/${destinationId}`)
+      } else {
+        navigate("/stations")
+      }
     } catch (err) {
-      setError(err.message || "Failed to create station")
+      toast.error(err.message || "Failed to create station")
     } finally {
       setLoading(false)
     }
@@ -108,19 +138,16 @@ export default function CreateStation() {
           <CardDescription>Fill out the basic information for the new station.</CardDescription>
         </CardHeader>
         <CardContent>
-          {error && <div className="p-3 mb-4 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>}
           
           <form onSubmit={handlePreSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="stationId">Station ID <span className="text-destructive">*</span></Label>
+                <Label htmlFor="stationId">Station ID</Label>
                 <Input 
                   id="stationId" 
                   name="stationId" 
-                  placeholder="e.g. ST001" 
-                  required 
-                  value={formData.stationId} 
-                  onChange={handleChange} 
+                  value={nextStationId} 
+                  disabled 
                 />
               </div>
               <div className="space-y-2">

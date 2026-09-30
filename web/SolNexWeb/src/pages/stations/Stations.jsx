@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { BatteryCharging, Search, RefreshCw, Power, PowerOff } from "lucide-react"
+import { toast } from "sonner"
 
 function getStoredUser() {
   try {
@@ -24,6 +25,7 @@ function getStoredUser() {
   }
 }
 
+// Main listing page displaying all solar stations in a data table.
 export default function Stations() {
   const navigate = useNavigate()
   const [stations, setStations] = useState([])
@@ -47,6 +49,7 @@ export default function Stations() {
     }
   }
 
+  // Trigger side effects like fetching initial station data on mount
   useEffect(() => {
     fetchStations()
   }, [])
@@ -54,18 +57,20 @@ export default function Stations() {
   const handleActivate = async (id) => {
     try {
       await stationApi.activateStation(id)
+      toast.success("Station activated successfully")
       fetchStations()
     } catch (err) {
-      alert("Failed to activate: " + err.message)
+      toast.error(err.message || "Failed to activate station")
     }
   }
 
   const handleDeactivate = async (id) => {
     try {
       await stationApi.deactivateStation(id)
+      toast.success("Station deactivated successfully")
       fetchStations()
     } catch (err) {
-      alert("Failed to deactivate: " + err.message)
+      toast.error(err.message || "Failed to deactivate station")
     }
   }
 

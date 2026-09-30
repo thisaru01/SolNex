@@ -14,11 +14,13 @@ public class StationRepository : IStationRepository
         _stations = dbContext.SolarStations;
     }
 
+    // Retrieves all solar stations from the MongoDB collection.
     public async Task<IEnumerable<SolarStationInfo>> GetAllStationsAsync()
     {
         return await _stations.Find(_ => true).ToListAsync();
     }
 
+    // Retrieves a single solar station by its MongoDB ObjectId string.
     public async Task<SolarStationInfo?> GetStationByIdAsync(string id)
     {
         if (!ObjectId.TryParse(id, out _))
@@ -28,26 +30,34 @@ public class StationRepository : IStationRepository
         return await _stations.Find(s => s.Id == id).FirstOrDefaultAsync();
     }
 
+    // Retrieves a single solar station by its custom business StationId (e.g. ST001).
     public async Task<SolarStationInfo?> GetStationByStationIdAsync(string stationId)
     {
         return await _stations.Find(s => s.StationId == stationId).FirstOrDefaultAsync();
     }
 
+    // Inserts a new solar station entity into the database.
     public async Task CreateStationAsync(SolarStationInfo station)
     {
         await _stations.InsertOneAsync(station);
     }
 
+    // Updates an existing solar station completely based on the provided entity model.
     public async Task UpdateStationAsync(string id, SolarStationInfo station)
     {
         await _stations.ReplaceOneAsync(s => s.Id == id, station);
     }
 
+    // Deletes a solar station from the database matching the specific ObjectId.
+    public async Task DeleteStationAsync(string id)
+    {
+        await _stations.DeleteOneAsync(s => s.Id == id);
+    }
+
+    // Retrieves a list of active solar stations located within a given radius using Haversine formula calculation.
     public async Task<IEnumerable<SolarStationInfo>> GetNearbyStationsAsync(double latitude, double longitude, double radiusInKm)
     {
-        // For a basic implementation without geospatial indexes, we fetch all and calculate distance
-        // A better approach would be to use 2dsphere indexes and $near queries, 
-        // but this depends on how the DB is configured. We use a simple in-memory calculation here.
+
         var stations = await _stations.Find(s => s.Status == StationStatus.Active).ToListAsync();
         
         var nearbyStations = stations.Where(s => 

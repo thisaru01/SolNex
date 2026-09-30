@@ -17,7 +17,7 @@ interface RegisterRepository {
 
 class ApiRegisterRepository(
     private val executor: ExecutorService = Executors.newSingleThreadExecutor(),
-    private val apiBaseUrl: String = "http://10.0.2.2:5097"
+    private val apiBaseUrl: String = com.example.solnex.operator.data.ApiConfig.BASE_URL
 ) : RegisterRepository {
     // Perform registration API call for new prosumer
     override fun register(request: RegisterRequest, callback: (RegisterResult) -> Unit) {

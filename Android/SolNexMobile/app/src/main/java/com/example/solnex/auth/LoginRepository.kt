@@ -19,7 +19,7 @@ interface LoginRepository {
 class ApiLoginRepository(
     private val tokenStore: TokenStore,
     private val executor: ExecutorService = Executors.newSingleThreadExecutor(),
-    private val apiBaseUrl: String = "http://10.0.2.2:5097"
+    private val apiBaseUrl: String = com.example.solnex.operator.data.ApiConfig.BASE_URL
 ) : LoginRepository {
     // Perform login API call and store authentication token
     override fun login(request: LoginRequest, callback: (LoginResult) -> Unit) {

@@ -18,6 +18,7 @@ const defaultCenter = {
   lng: 80.7718
 }
 
+// Component for displaying all stations interactively on a map view.
 export default function StationMap() {
   const navigate = useNavigate()
   const [stations, setStations] = useState([])
@@ -28,6 +29,7 @@ export default function StationMap() {
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "", 
   })
 
+  // Trigger side effects like fetching initial station data on mount
   useEffect(() => {
     const fetchStations = async () => {
       try {

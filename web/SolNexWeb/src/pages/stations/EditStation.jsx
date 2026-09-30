@@ -18,6 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { toast } from "sonner"
 
 const containerStyle = {
   width: '100%',
@@ -28,6 +29,7 @@ const defaultCenter = {
   lng: 80.7718
 }
 
+// Page component for editing an existing solar station details.
 export default function EditStation() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -51,6 +53,7 @@ export default function EditStation() {
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "", 
   })
 
+  // Update latitude and longitude in form data when user clicks on map
   const handleMapClick = (e) => {
     setFormData(prev => ({
       ...prev,
@@ -59,10 +62,14 @@ export default function EditStation() {
     }))
   }
 
+  // Trigger side effects like fetching initial station data on mount
   useEffect(() => {
     const fetchStation = async () => {
       try {
+        // Call backend API to fetch the current station info using URL param ID
         const data = await stationApi.getStationById(id)
+        
+        // Populate the form state with the fetched station data to allow editing
         setFormData({
           stationName: data.stationName,
           latitude: data.latitude,
@@ -72,28 +79,32 @@ export default function EditStation() {
           availableBatterySlots: data.availableBatterySlots,
         })
       } catch (err) {
+        // Set error message to display in UI if API call fails
         setError(err.message || "Failed to load station")
       } finally {
+        // Clear loading state so the form or error is displayed
         setLoading(false)
       }
     }
     fetchStation()
   }, [id])
 
+  // Handle input changes dynamically by name attribute
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
+  // Prevent default form submission and trigger confirmation dialog instead
   const handlePreSubmit = (e) => {
     e.preventDefault()
     setAlertOpen(true)
   }
 
+  // Executes the actual update/create logic after user confirms action
   const handleSubmit = async () => {
     setAlertOpen(false)
     setSaving(true)
-    setError(null)
     
     try {
       const payload = {
@@ -106,9 +117,10 @@ export default function EditStation() {
       }
       
       await stationApi.updateStation(id, payload)
+      toast.success("Station updated successfully")
       navigate(`/stations/${id}`)
     } catch (err) {
-      setError(err.message || "Failed to update station")
+      toast.error(err.message || "Failed to update station")
     } finally {
       setSaving(false)
     }
@@ -135,7 +147,6 @@ export default function EditStation() {
           <CardDescription>Modify the properties below and save your changes.</CardDescription>
         </CardHeader>
         <CardContent>
-          {error && <div className="p-3 mb-4 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>}
           
           <form onSubmit={handlePreSubmit} className="space-y-4">
             <div className="space-y-2">

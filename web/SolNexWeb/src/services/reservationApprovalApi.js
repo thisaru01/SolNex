@@ -60,6 +60,7 @@ async function request(
     }
   }
 
+  if (response.status === 401) { localStorage.removeItem('solnex_token'); localStorage.removeItem('solnex_user'); window.location.href = '/login'; return null; }
   if (!response.ok) {
 
     const validationMessage =
