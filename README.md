@@ -503,6 +503,10 @@ SQLite should be used for appropriate local persistence such as:
 - Login/reference information
 - Required local user information
 - Reference data
+- Operator transaction history for local viewing when offline
+- Prosumer transaction details for local viewing when offline
+
+Transaction verification and completion remain server-authoritative and require the Web API; QR tokens are not stored in SQLite and must be fetched online.
 
 However, MongoDB must remain server-side.
 The Android client must not connect directly to MongoDB.

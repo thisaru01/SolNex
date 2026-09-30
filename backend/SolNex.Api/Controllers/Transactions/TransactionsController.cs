@@ -47,10 +47,22 @@ public class TransactionsController :
     public async Task<IActionResult>
         GetPending()
     {
+        var operatorNic =
+            GetOperatorNicForScope();
+
+        if (
+            User.IsInRole("GridOperator") &&
+            string.IsNullOrWhiteSpace(
+                operatorNic))
+        {
+            return Unauthorized();
+        }
+
         // Retrieve all pending transaction records.
         var transactions =
             await _transactionService
-                .GetPendingAsync();
+                .GetPendingAsync(
+                    operatorNic);
 
         return Ok(
             transactions);
@@ -66,10 +78,48 @@ public class TransactionsController :
     public async Task<IActionResult>
         GetCompleted()
     {
-        // Retrieve completed transaction records.
+        var operatorNic =
+            GetOperatorNicForScope();
+
+        if (
+            User.IsInRole("GridOperator") &&
+            string.IsNullOrWhiteSpace(
+                operatorNic))
+        {
+            return Unauthorized();
+        }
+
+        // Retrieve all Backoffice records or this operator's records.
         var transactions =
             await _transactionService
-                .GetCompletedAsync();
+                .GetCompletedAsync(
+                    operatorNic);
+
+        return Ok(
+            transactions);
+    }
+
+    [Authorize(
+        Roles = "Backoffice,GridOperator")]
+    [HttpGet("history")]
+    public async Task<IActionResult>
+        GetOperationalHistory()
+    {
+        var operatorNic =
+            GetOperatorNicForScope();
+
+        if (
+            User.IsInRole("GridOperator") &&
+            string.IsNullOrWhiteSpace(
+                operatorNic))
+        {
+            return Unauthorized();
+        }
+
+        var transactions =
+            await _transactionService
+                .GetOperationalHistoryAsync(
+                    operatorNic);
 
         return Ok(
             transactions);
@@ -226,8 +276,71 @@ public class TransactionsController :
                 });
         }
 
+        if (
+            User.IsInRole("GridOperator") &&
+            (
+                transaction.Status !=
+                    "Pending" &&
+                (
+                    (
+                        transaction.Status !=
+                            "Verified" &&
+                        transaction.Status !=
+                            "Completed"
+                    ) ||
+                    !string.Equals(
+                        transaction.OperatorNic,
+                        GetOperatorNicForScope(),
+                        StringComparison.OrdinalIgnoreCase)
+                )
+            )
+        )
+        {
+            return NotFound(
+                new
+                {
+                    message =
+                        $"Transaction with ID {id} was not found."
+                });
+        }
+
         return Ok(
             transaction);
+    }
+
+    [Authorize(
+        Roles = "GridOperator")]
+    [HttpGet("operator/scanned")]
+    public async Task<IActionResult>
+        GetScannedForOperator()
+    {
+        var operatorNic =
+            User.FindFirstValue(
+                ClaimTypes
+                    .NameIdentifier);
+
+        if (
+            string.IsNullOrWhiteSpace(
+                operatorNic))
+        {
+            return Unauthorized();
+        }
+
+        var transactions =
+            await _transactionService
+                .GetScannedByOperatorAsync(
+                    operatorNic);
+
+        return Ok(
+            transactions);
+    }
+
+    private string? GetOperatorNicForScope()
+    {
+        return User.IsInRole("Backoffice")
+            ? null
+            : User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
     }
 
     /*
@@ -253,11 +366,22 @@ public class TransactionsController :
 
         try
         {
+            var operatorNic =
+                User.FindFirstValue(
+                    ClaimTypes.NameIdentifier);
+
+            if (
+                string.IsNullOrWhiteSpace(
+                    operatorNic))
+            {
+                return Unauthorized();
+            }
+
             var transaction =
                 await _transactionService
                     .VerifyAsync(
                         request.QrToken,
-                        request.OperatorNic);
+                        operatorNic);
 
             return Ok(
                 transaction);
@@ -317,11 +441,22 @@ public class TransactionsController :
 
         try
         {
+            var operatorNic =
+                User.FindFirstValue(
+                    ClaimTypes.NameIdentifier);
+
+            if (
+                string.IsNullOrWhiteSpace(
+                    operatorNic))
+            {
+                return Unauthorized();
+            }
+
             var transaction =
                 await _transactionService
                     .CompleteAsync(
                         id,
-                        request.OperatorNic);
+                        operatorNic);
 
             return Ok(
                 transaction);

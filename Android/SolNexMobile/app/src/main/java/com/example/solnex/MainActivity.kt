@@ -148,7 +148,8 @@ class MainActivity : ComponentActivity() {
                                 tokenStore.role().equals("Prosumer", ignoreCase = true) -> {
                                     ProsumerQrModeScreen(
                                         modifier = Modifier.padding(innerPadding),
-                                        token = tokenStore.token().orEmpty()
+                                        token = tokenStore.token().orEmpty(),
+                                        prosumerNic = tokenStore.nic().orEmpty()
                                     )
                                 }
                                 else -> {

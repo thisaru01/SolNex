@@ -37,5 +37,6 @@ async function request(endpoint, options = {}) {
 export const transactionApi = {
   getPending: () => request("/transactions/pending"),
   getCompleted: () => request("/transactions/completed"),
+  getHistory: () => request("/transactions/history"),
   getById: (id) => request(`/transactions/${encodeURIComponent(id)}`),
 }

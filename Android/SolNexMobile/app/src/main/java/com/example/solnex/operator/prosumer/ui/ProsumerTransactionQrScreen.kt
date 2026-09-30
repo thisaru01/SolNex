@@ -36,6 +36,7 @@ import com.google.zxing.qrcode.QRCodeWriter
 @Composable
 fun ProsumerTransactionQrScreen(
     transaction: Transaction,
+    error: String? = null,
     onBack: () -> Unit
 ) {
 
@@ -90,6 +91,21 @@ fun ProsumerTransactionQrScreen(
             )
         }
 
+        if (!error.isNullOrBlank()) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.errorContainer
+            ) {
+                Text(
+                    text = error,
+                    modifier = Modifier.padding(14.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
+            }
+        }
+
         if (
             qrBitmap != null &&
             !transaction.status.equals(
@@ -129,6 +145,7 @@ fun ProsumerTransactionQrScreen(
                         )
                     )
                 }
+
             }
 
             Text(
@@ -144,6 +161,27 @@ fun ProsumerTransactionQrScreen(
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+
+        if (
+            qrBitmap == null &&
+            !transaction.status.equals(
+                "Completed",
+                ignoreCase = true
+            )
+        ) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.errorContainer
+            ) {
+                Text(
+                    text = "This reservation is available from local storage, but its secure QR must be loaded from the server. Reconnect to the internet and refresh to display the QR.",
+                    modifier = Modifier.padding(14.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
+            }
         }
 
         ElevatedCard(

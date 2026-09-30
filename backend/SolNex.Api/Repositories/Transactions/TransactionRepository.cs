@@ -149,22 +149,67 @@ public class TransactionRepository :
 
     public async Task<
         IEnumerable<EnergyTransaction>>
-        GetPendingAsync()
+        GetPendingAsync(
+            string? operatorNic = null)
     {
         // Returns transactions that are awaiting verification or completion.
-        var filter =
+        var pendingFilter =
             Builders<
                 EnergyTransaction>
                 .Filter
-                .In(
+                .Eq(
                     transaction =>
                         transaction.Status,
+                    TransactionStatus.Pending);
 
-                    new[]
-                    {
-                        TransactionStatus.Pending,
-                        TransactionStatus.Verified
-                    });
+        var filter =
+            pendingFilter;
+
+        if (!string.IsNullOrWhiteSpace(operatorNic))
+        {
+            var ownVerifiedFilter =
+                Builders<
+                    EnergyTransaction>
+                    .Filter
+                    .And(
+                        Builders<
+                            EnergyTransaction>
+                            .Filter
+                            .Eq(
+                                transaction =>
+                                    transaction.Status,
+                                TransactionStatus.Verified),
+                        Builders<
+                            EnergyTransaction>
+                            .Filter
+                            .Eq(
+                                transaction =>
+                                    transaction.OperatorNic,
+                                operatorNic));
+
+            filter =
+                Builders<
+                    EnergyTransaction>
+                    .Filter
+                    .Or(
+                        pendingFilter,
+                        ownVerifiedFilter);
+        }
+        else
+        {
+            filter =
+                Builders<
+                    EnergyTransaction>
+                    .Filter
+                    .In(
+                        transaction =>
+                            transaction.Status,
+                        new[]
+                        {
+                            TransactionStatus.Pending,
+                            TransactionStatus.Verified
+                        });
+        }
 
         return await _transactions
             .Find(filter)
@@ -178,15 +223,93 @@ public class TransactionRepository :
         IEnumerable<EnergyTransaction>>
         GetCompletedAsync()
     {
+        return await GetCompletedAsync(
+            null);
+    }
+
+    public async Task<
+        IEnumerable<EnergyTransaction>>
+        GetCompletedAsync(
+            string? operatorNic)
+    {
         // Returns completed energy transfers.
+        var filter =
+            Builders<
+                EnergyTransaction>
+                .Filter
+                .Eq(
+                    transaction =>
+                        transaction.Status,
+                    TransactionStatus.Completed);
+
+        if (!string.IsNullOrWhiteSpace(operatorNic))
+        {
+            filter &=
+                Builders<
+                    EnergyTransaction>
+                    .Filter
+                    .Eq(
+                        transaction =>
+                            transaction.OperatorNic,
+                        operatorNic);
+        }
+
         return await _transactions
-            .Find(
-                transaction =>
-                    transaction.Status ==
-                    TransactionStatus.Completed)
+            .Find(filter)
             .SortByDescending(
                 transaction =>
                     transaction.CompletedAt)
+            .ToListAsync();
+    }
+
+    public async Task<
+        IEnumerable<EnergyTransaction>>
+        GetOperationalHistoryAsync(
+            string? operatorNic)
+    {
+        var filter =
+            Builders<
+                EnergyTransaction>
+                .Filter
+                .In(
+                    transaction =>
+                        transaction.Status,
+                    new[]
+                    {
+                        TransactionStatus.Verified,
+                        TransactionStatus.Completed
+                    });
+
+        if (!string.IsNullOrWhiteSpace(operatorNic))
+        {
+            filter &=
+                Builders<
+                    EnergyTransaction>
+                    .Filter
+                    .Eq(
+                        transaction =>
+                            transaction.OperatorNic,
+                        operatorNic);
+        }
+
+        return await _transactions
+            .Find(filter)
+            .ToListAsync();
+    }
+
+    public async Task<
+        IEnumerable<EnergyTransaction>>
+        GetScannedByOperatorAsync(
+            string operatorNic)
+    {
+        return await _transactions
+            .Find(
+                transaction =>
+                    transaction.OperatorNic ==
+                    operatorNic)
+            .SortByDescending(
+                transaction =>
+                    transaction.VerifiedAt)
             .ToListAsync();
     }
 

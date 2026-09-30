@@ -149,6 +149,42 @@ class TransactionApiClient(
         }
     }
 
+    fun getScannedTransactions():
+        Result<List<Transaction>> {
+
+        return runCatching {
+
+            val response =
+                executeRequest(
+                    method = "GET",
+                    endpoint =
+                        "/transactions/operator/scanned"
+                )
+
+            val array =
+                JSONArray(
+                    response
+                )
+
+            buildList {
+
+                for (
+                    index in
+                    0 until array.length()
+                ) {
+
+                    add(
+                        parseTransaction(
+                            array.getJSONObject(
+                                index
+                            )
+                        )
+                    )
+                }
+            }
+        }
+    }
+
     /*
      * Executes REST requests to the
      * central SolNex API.

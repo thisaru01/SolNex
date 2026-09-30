@@ -13,11 +13,22 @@ public interface ITransactionService
 {
     // Retrieves transactions awaiting verification or completion.
     Task<IEnumerable<TransactionDto>>
-        GetPendingAsync();
+        GetPendingAsync(
+            string? operatorNic = null);
 
     // Retrieves completed transactions.
     Task<IEnumerable<TransactionDto>>
-        GetCompletedAsync();
+        GetCompletedAsync(
+            string? operatorNic = null);
+
+    // Retrieves verified and completed operational records.
+    Task<IEnumerable<TransactionDto>>
+        GetOperationalHistoryAsync(
+            string? operatorNic = null);
+
+    Task<IEnumerable<TransactionDto>>
+        GetScannedByOperatorAsync(
+            string operatorNic);
 
     // Retrieves a transaction by its database or public identifier.
     Task<TransactionDto?>
