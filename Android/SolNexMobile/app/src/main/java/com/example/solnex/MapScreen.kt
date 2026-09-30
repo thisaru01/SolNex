@@ -44,6 +44,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -150,6 +151,22 @@ fun MapScreen(
             stations = fetchedStations ?: emptyList()
             error = errMsg
             loading = false
+        }
+    }
+
+    // When offline with cached data, retry every 15 s so the banner dismisses as soon as connection returns
+    LaunchedEffect(error, stations.size) {
+        if (error != null && stations.isNotEmpty()) {
+            while (true) {
+                delay(15_000L)
+                repository.getStations(token) { fetchedStations, errMsg ->
+                    if (errMsg == null && fetchedStations != null) {
+                        stations = fetchedStations
+                        error = null   // clears the banner
+                    }
+                }
+                if (error == null) break
+            }
         }
     }
 
@@ -310,32 +327,86 @@ fun MapScreen(
                         showSearchResults = it.isNotBlank()
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Search stations...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+                    placeholder = {
+                        Text(
+                            "Search stations...",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    },
                     singleLine = true,
                     shape = RoundedCornerShape(24.dp),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = MaterialTheme.colorScheme.surface,
                         unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                         focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                        unfocusedIndicatorColor = MaterialTheme.colorScheme.surfaceVariant
+                        unfocusedIndicatorColor = MaterialTheme.colorScheme.outline,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        cursorColor = MaterialTheme.colorScheme.primary
                     )
                 )
 
                 Button(
                     onClick = { showFavoritesOnly = !showFavoritesOnly },
                     modifier = Modifier.padding(top = 8.dp),
+                    shape = RoundedCornerShape(20.dp),
                     colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                        containerColor = if (showFavoritesOnly) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = if (showFavoritesOnly) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                        containerColor = if (showFavoritesOnly)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.surface,
+                        contentColor = if (showFavoritesOnly)
+                            MaterialTheme.colorScheme.onPrimary
+                        else
+                            MaterialTheme.colorScheme.primary
                     )
                 ) {
                     Icon(
                         imageVector = if (showFavoritesOnly) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                         contentDescription = "Favorites",
-                        modifier = Modifier.padding(end = 8.dp)
+                        modifier = Modifier.padding(end = 6.dp)
                     )
                     Text("Favorites Only")
+                }
+
+                // Offline banner — inline below Favorites so it never overlaps
+                AnimatedVisibility(
+                    visible = error != null && stations.isNotEmpty(),
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "📡",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                text = "Offline - showing cached data. Retrying…",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                    }
                 }
 
                 AnimatedVisibility(
@@ -351,7 +422,10 @@ fun MapScreen(
                                 .fillMaxWidth()
                                 .padding(top = 8.dp),
                             shape = RoundedCornerShape(16.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            )
                         ) {
                             LazyColumn(
                                 modifier = Modifier.padding(vertical = 8.dp)
@@ -359,6 +433,8 @@ fun MapScreen(
                                 items(filtered) { station ->
                                     Text(
                                         text = station.stationName,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        style = MaterialTheme.typography.bodyMedium,
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .clickable {
@@ -514,20 +590,6 @@ fun MapScreen(
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.align(Alignment.Center).padding(16.dp)
                 )
-            } else if (error != null && stations.isNotEmpty()) {
-                Card(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = 80.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
-                ) {
-                    Text(
-                        text = "Offline Mode: Showing cached data",
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
             }
 
         if (showReservationForm && selectedStation != null) {

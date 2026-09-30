@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.example.solnex.auth.LoginActivity
 import com.example.solnex.auth.TokenStore
 import com.example.solnex.ui.theme.SolNexTheme
+import com.example.solnex.ui.theme.SolNexNavIndicator
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -29,7 +30,9 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.remember
@@ -81,7 +84,10 @@ class MainActivity : ComponentActivity() {
             SolNexTheme {
                 Scaffold(
                     bottomBar = {
-                        NavigationBar {
+                        NavigationBar(
+                            containerColor = MaterialTheme.colorScheme.background,
+                            contentColor = MaterialTheme.colorScheme.primary
+                        ) {
                             BottomNavItem.values().forEach { item ->
                                 NavigationBarItem(
                                     icon = { Icon(item.icon, contentDescription = item.title) },
@@ -95,7 +101,14 @@ class MainActivity : ComponentActivity() {
                                         )
                                     },
                                     selected = currentTab == item,
-                                    onClick = { currentTab = item }
+                                    onClick = { currentTab = item },
+                                    colors = NavigationBarItemDefaults.colors(
+                                        selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                                        indicatorColor = SolNexNavIndicator,
+                                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 )
                             }
                         }
