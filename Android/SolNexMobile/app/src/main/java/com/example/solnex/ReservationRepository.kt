@@ -33,9 +33,11 @@ data class Reservation(
 )
 
 class ReservationRepository(
+    private val context: android.content.Context,
     private val executor: ExecutorService = Executors.newSingleThreadExecutor(),
     private val apiBaseUrl: String = com.example.solnex.operator.data.ApiConfig.BASE_URL
 ) {
+    private val dbHelper = ReservationDatabaseHelper(context)
     // Fetches all available slots from the backend API
     fun getAvailableSlots(token: String, callback: (List<Slot>?, String?) -> Unit) {
         executor.execute {
@@ -144,6 +146,12 @@ class ReservationRepository(
     // Fetches all reservations for a specific user (prosumer) by their NIC
     fun getReservationsByNic(token: String, nic: String, callback: (List<Reservation>?, String?) -> Unit) {
         executor.execute {
+            // 1. First, load from SQLite and return to UI quickly
+            val cachedReservations = getCachedReservations(nic)
+            if (cachedReservations.isNotEmpty()) {
+                callback(cachedReservations, null)
+            }
+
             try {
                 val url = URL("$apiBaseUrl/api/reservations/user/$nic")
                 val connection = url.openConnection() as HttpURLConnection
@@ -188,13 +196,79 @@ class ReservationRepository(
                             )
                         )
                     }
+                    // Cache them
+                    cacheReservations(nic, reservations)
                     callback(reservations, null)
                 } else {
-                    callback(null, "Failed to load reservations: HTTP $responseCode")
+                    if (cachedReservations.isEmpty()) {
+                        callback(null, "Failed to load reservations: HTTP $responseCode")
+                    } else {
+                        callback(cachedReservations, "Failed to load reservations: HTTP $responseCode")
+                    }
                 }
             } catch (e: Exception) {
-                callback(null, "Network error: ${e.message}")
+                if (cachedReservations.isEmpty()) {
+                    callback(null, "Network error: ${e.message}")
+                } else {
+                    callback(cachedReservations, "Network error: ${e.message}")
+                }
             }
+        }
+    }
+
+    private fun getCachedReservations(nic: String): List<Reservation> {
+        val reservations = mutableListOf<Reservation>()
+        val db = dbHelper.readableDatabase
+        val cursor = db.query("reservations", null, "nic = ?", arrayOf(nic), null, null, null)
+        cursor.use {
+            while (it.moveToNext()) {
+                val id = it.getString(it.getColumnIndexOrThrow("id"))
+                val reservationId = it.getString(it.getColumnIndexOrThrow("reservationId"))
+                val stationId = it.getString(it.getColumnIndexOrThrow("stationId"))
+                val slotId = it.getString(it.getColumnIndexOrThrow("slotId"))
+                val reservationDate = it.getString(it.getColumnIndexOrThrow("reservationDate"))
+                val energyAmountKwh = it.getDouble(it.getColumnIndexOrThrow("energyAmountKwh"))
+                val status = it.getString(it.getColumnIndexOrThrow("status"))
+                val startTime = it.getString(it.getColumnIndexOrThrow("startTime"))
+                val endTime = it.getString(it.getColumnIndexOrThrow("endTime"))
+                val dayOfWeek = it.getString(it.getColumnIndexOrThrow("dayOfWeek"))
+                reservations.add(
+                    Reservation(
+                        id, reservationId, stationId, slotId, reservationDate, energyAmountKwh, status,
+                        startTime.takeIf { it.isNotBlank() }, endTime.takeIf { it.isNotBlank() }, dayOfWeek.takeIf { it.isNotBlank() }
+                    )
+                )
+            }
+        }
+        return reservations
+    }
+
+    private fun cacheReservations(nic: String, reservations: List<Reservation>) {
+        val db = dbHelper.writableDatabase
+        db.beginTransaction()
+        try {
+            db.delete("reservations", "nic = ?", arrayOf(nic)) // Clear old data
+            val stmt = db.compileStatement(
+                "INSERT INTO reservations (id, reservationId, stationId, slotId, reservationDate, energyAmountKwh, status, startTime, endTime, dayOfWeek, nic) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            )
+            for (r in reservations) {
+                stmt.bindString(1, r.id)
+                stmt.bindString(2, r.reservationId)
+                stmt.bindString(3, r.stationId)
+                stmt.bindString(4, r.slotId)
+                stmt.bindString(5, r.reservationDate)
+                stmt.bindDouble(6, r.energyAmountKwh)
+                stmt.bindString(7, r.status)
+                stmt.bindString(8, r.startTime ?: "")
+                stmt.bindString(9, r.endTime ?: "")
+                stmt.bindString(10, r.dayOfWeek ?: "")
+                stmt.bindString(11, nic)
+                stmt.executeInsert()
+                stmt.clearBindings()
+            }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
         }
     }
 

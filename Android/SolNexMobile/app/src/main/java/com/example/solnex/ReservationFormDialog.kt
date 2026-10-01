@@ -29,7 +29,7 @@ fun ReservationFormDialog(
 ) {
     val context = LocalContext.current
     val tokenStore = remember { TokenStore(context) }
-    val repository = remember { ReservationRepository() }
+    val repository = remember { ReservationRepository(context) }
     val token = tokenStore.token().orEmpty()
     val nic = tokenStore.nic().orEmpty()
 
@@ -207,7 +207,10 @@ fun ReservationFormDialog(
                                             }
                                         } else {
                                             // Generate the current ISO timestamp for the reservation date
-                                            val dateStr = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+                                            val sdf = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US).apply {
+                                                timeZone = java.util.TimeZone.getTimeZone("UTC")
+                                            }
+                                            val dateStr = sdf.format(java.util.Date())
                                             
                                             // Send the reservation request to the backend API
                                             repository.submitReservation(

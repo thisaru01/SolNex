@@ -62,7 +62,7 @@ fun ReservationsScreen(
 ) {
     val context = LocalContext.current
     val tokenStore = remember { TokenStore(context) }
-    val repository = remember { ReservationRepository() }
+    val repository = remember { ReservationRepository(context) }
     val stationRepo = remember { StationRepository(context) }
     val token = tokenStore.token().orEmpty()
     val nic = tokenStore.nic().orEmpty()
@@ -105,21 +105,18 @@ fun ReservationsScreen(
                     stationMap = fetchedStations.associate { it.stationId to it.stationName }
                 }
                 repository.getReservationsByNic(token, nic) { fetchedReservations, errMsg ->
-                    if (fetchedReservations != null) {
-                        val allowedStatuses = setOf("Pending", "Cancelled", "CancellationRequested", "Approved", "Rejected", "Completed")
-                        reservations = fetchedReservations.filter { it.status in allowedStatuses }
-                        
-                        if (selectedReservation != null) {
-                            selectedReservation = reservations.find { it.id == selectedReservation!!.id }
-                        } else if (MainActivity.pendingReservationIdToOpen != null) {
-                            selectedReservation = reservations.find { it.id == MainActivity.pendingReservationIdToOpen }
-                            MainActivity.pendingReservationIdToOpen = null
-                        }
-                    } else {
-                        error = errMsg
-                        errorTitle = "Error"
-                        errorSubtitle = null
+                    val finalReservations = fetchedReservations ?: emptyList()
+                    val allowedStatuses = setOf("Pending", "Cancelled", "CancellationRequested", "Approved", "Rejected", "Completed")
+                    reservations = finalReservations.filter { it.status in allowedStatuses }
+                    
+                    if (selectedReservation != null) {
+                        selectedReservation = reservations.find { it.id == selectedReservation!!.id }
+                    } else if (MainActivity.pendingReservationIdToOpen != null) {
+                        selectedReservation = reservations.find { it.id == MainActivity.pendingReservationIdToOpen }
+                        MainActivity.pendingReservationIdToOpen = null
                     }
+                    // Deliberately ignoring errMsg here to prevent the disruptive popup. 
+                    // It will seamlessly fall back to cached data or show the empty state.
                     loading = false
                 }
             }
