@@ -41,6 +41,11 @@
             android:exported="false"
             android:label="Login"
             android:theme="@style/Theme.SolNex" />
+        <activity
+            android:name=".auth.ResetPasswordActivity"
+            android:exported="false"
+            android:label="Reset password"
+            android:theme="@style/Theme.SolNex" />
     </application>
 
 </manifest>
