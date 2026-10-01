@@ -233,7 +233,7 @@ fun ReservationsScreen(
                         // Row 5: Date
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                             Text("Date", style = MaterialTheme.typography.titleMedium, color = Color(0xFF4B5563), fontWeight = FontWeight.Medium)
-                            Text(res.reservationDate, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color(0xFF1F2937))
+                            Text(res.reservationDate.substringBefore("T"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color(0xFF1F2937))
                         }
 
                         if (res.dayOfWeek != null || res.startTime != null) {
