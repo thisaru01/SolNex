@@ -40,4 +40,15 @@ public sealed class AuthController : ControllerBase
         var response = await _authService.RegisterProsumerAsync(request, cancellationToken);
         return Ok(response);
     }
+
+    [HttpPost("reset-password")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ResetPassword(ResetPasswordRequest request, CancellationToken cancellationToken)
+    {
+        var reset = await _authService.ResetPasswordAsync(request, cancellationToken);
+        return reset
+            ? Ok(new { message = "Password reset successfully. You can now sign in." })
+            : BadRequest(new { message = "The identifier and registered email do not match." });
+    }
 }

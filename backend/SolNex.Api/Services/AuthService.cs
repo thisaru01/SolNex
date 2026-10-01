@@ -55,6 +55,21 @@ public sealed class AuthService : IAuthService
             user.Role.ToString());
     }
 
+    public async Task<bool> ResetPasswordAsync(
+        ResetPasswordRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.FindByIdentifierAsync(request.Identifier.Trim(), cancellationToken);
+        if (user is null || !string.Equals(user.Email, request.Email.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        user.PasswordHash = _passwordHasher.HashPassword(user, request.NewPassword);
+        user.UpdatedAt = DateTime.UtcNow;
+        return await _userRepository.UpdateAsync(user, cancellationToken);
+    }
+
     // Register new prosumer account (delegates to UserService)
     public async Task<RegisteredUserResponse> RegisterProsumerAsync(RegisterUserRequest request, CancellationToken cancellationToken = default)
     {

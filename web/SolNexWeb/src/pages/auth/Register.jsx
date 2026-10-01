@@ -5,6 +5,7 @@ import { ArrowRight, Eye, EyeOff, LockKeyhole, ShieldCheck, Sun } from "lucide-r
 import { Link, useNavigate } from "react-router-dom"
 // Auth API
 import { registerProsumer } from "../../services/authApi"
+import { toast } from "sonner"
 
 const initialForm = {
   nic: "",
@@ -79,6 +80,7 @@ export default function Register() {
 
     try {
       await registerProsumer({ ...form, phone: phoneDigits })
+      toast.success("Registration submitted successfully")
       navigate("/login", {
         replace: true,
         state: {
@@ -87,6 +89,7 @@ export default function Register() {
       })
     } catch (submissionError) {
       setError(submissionError.message)
+      toast.error(submissionError.message)
     } finally {
       setIsSubmitting(false)
     }
