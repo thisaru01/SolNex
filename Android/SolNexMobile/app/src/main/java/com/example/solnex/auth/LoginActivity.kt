@@ -29,6 +29,9 @@ class LoginActivity : ComponentActivity() {
                     onRegister = {
                         startActivity(Intent(this, RegisterActivity::class.java))
                         finish()
+                    },
+                    onForgotPassword = {
+                        startActivity(Intent(this, ResetPasswordActivity::class.java))
                     }
                 )
             }
