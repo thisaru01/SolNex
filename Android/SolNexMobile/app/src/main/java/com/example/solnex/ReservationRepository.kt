@@ -29,7 +29,8 @@ data class Reservation(
     val status: String,
     val startTime: String?,
     val endTime: String?,
-    val dayOfWeek: String?
+    val dayOfWeek: String?,
+    val isCancellationRejected: Boolean = false
 )
 
 class ReservationRepository(
@@ -180,6 +181,7 @@ class ReservationRepository(
                         val startTime = obj.optString("startTime", "")
                         val endTime = obj.optString("endTime", "")
                         val dayOfWeek = obj.optString("dayOfWeek", "")
+                        val isCancellationRejected = obj.optBoolean("isCancellationRejected", false)
                         
                         reservations.add(
                             Reservation(
@@ -192,7 +194,8 @@ class ReservationRepository(
                                 status = status,
                                 startTime = startTime.takeIf { it.isNotBlank() },
                                 endTime = endTime.takeIf { it.isNotBlank() },
-                                dayOfWeek = dayOfWeek.takeIf { it.isNotBlank() }
+                                dayOfWeek = dayOfWeek.takeIf { it.isNotBlank() },
+                                isCancellationRejected = isCancellationRejected
                             )
                         )
                     }
@@ -232,10 +235,11 @@ class ReservationRepository(
                 val startTime = it.getString(it.getColumnIndexOrThrow("startTime"))
                 val endTime = it.getString(it.getColumnIndexOrThrow("endTime"))
                 val dayOfWeek = it.getString(it.getColumnIndexOrThrow("dayOfWeek"))
+                val isCancellationRejected = it.getInt(it.getColumnIndexOrThrow("isCancellationRejected")) == 1
                 reservations.add(
                     Reservation(
                         id, reservationId, stationId, slotId, reservationDate, energyAmountKwh, status,
-                        startTime.takeIf { it.isNotBlank() }, endTime.takeIf { it.isNotBlank() }, dayOfWeek.takeIf { it.isNotBlank() }
+                        startTime.takeIf { it.isNotBlank() }, endTime.takeIf { it.isNotBlank() }, dayOfWeek.takeIf { it.isNotBlank() }, isCancellationRejected
                     )
                 )
             }
@@ -249,7 +253,7 @@ class ReservationRepository(
         try {
             db.delete("reservations", "nic = ?", arrayOf(nic)) // Clear old data
             val stmt = db.compileStatement(
-                "INSERT INTO reservations (id, reservationId, stationId, slotId, reservationDate, energyAmountKwh, status, startTime, endTime, dayOfWeek, nic) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                "INSERT INTO reservations (id, reservationId, stationId, slotId, reservationDate, energyAmountKwh, status, startTime, endTime, dayOfWeek, nic, isCancellationRejected) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             )
             for (r in reservations) {
                 stmt.bindString(1, r.id)
@@ -263,6 +267,7 @@ class ReservationRepository(
                 stmt.bindString(9, r.endTime ?: "")
                 stmt.bindString(10, r.dayOfWeek ?: "")
                 stmt.bindString(11, nic)
+                stmt.bindLong(12, if (r.isCancellationRejected) 1L else 0L)
                 stmt.executeInsert()
                 stmt.clearBindings()
             }
@@ -288,11 +293,20 @@ class ReservationRepository(
                     callback(true, null)
                 } else {
                     val errorMessage = try {
-                        val errorStr = connection.errorStream.bufferedReader().use { it.readText() }
-                        try {
-                            val jsonObj = JSONObject(errorStr)
-                            jsonObj.optString("message", errorStr)
-                        } catch (e: Exception) { errorStr }
+                        val errorStream = connection.errorStream
+                        if (errorStream != null) {
+                            val errorStr = errorStream.bufferedReader().use { it.readText() }
+                            if (errorStr.isBlank()) {
+                                "HTTP $responseCode: ${connection.responseMessage}"
+                            } else {
+                                try {
+                                    val jsonObj = JSONObject(errorStr)
+                                    jsonObj.optString("message", errorStr)
+                                } catch (e: Exception) { errorStr }
+                            }
+                        } else {
+                            "HTTP $responseCode: ${connection.responseMessage}"
+                        }
                     } catch (e: Exception) { "Unknown error" }
                     callback(false, errorMessage)
                 }
@@ -318,11 +332,20 @@ class ReservationRepository(
                     callback(true, null)
                 } else {
                     val errorMessage = try {
-                        val errorStr = connection.errorStream.bufferedReader().use { it.readText() }
-                        try {
-                            val jsonObj = JSONObject(errorStr)
-                            jsonObj.optString("message", errorStr)
-                        } catch (e: Exception) { errorStr }
+                        val errorStream = connection.errorStream
+                        if (errorStream != null) {
+                            val errorStr = errorStream.bufferedReader().use { it.readText() }
+                            if (errorStr.isBlank()) {
+                                "HTTP $responseCode: ${connection.responseMessage}"
+                            } else {
+                                try {
+                                    val jsonObj = JSONObject(errorStr)
+                                    jsonObj.optString("message", errorStr)
+                                } catch (e: Exception) { errorStr }
+                            }
+                        } else {
+                            "HTTP $responseCode: ${connection.responseMessage}"
+                        }
                     } catch (e: Exception) { "Unknown error" }
                     callback(false, errorMessage)
                 }

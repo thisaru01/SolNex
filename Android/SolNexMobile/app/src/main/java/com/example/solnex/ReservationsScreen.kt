@@ -256,6 +256,16 @@ fun ReservationsScreen(
                             Text("Energy", style = MaterialTheme.typography.titleMedium, color = Color(0xFF4B5563), fontWeight = FontWeight.Medium)
                             Text("${res.energyAmountKwh} kWh", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color(0xFF1F2937))
                         }
+
+                        if (res.isCancellationRejected && res.status == "Approved") {
+                            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(dividerColor))
+                            
+                            // Row 8: Notice
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text("Notice", style = MaterialTheme.typography.titleMedium, color = Color(0xFF4B5563), fontWeight = FontWeight.Medium)
+                                Text("Cancellation request rejected", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color(0xFFEF4444))
+                            }
+                        }
                     }
                 }
             }

@@ -40,6 +40,9 @@ public class EnergyReservation
     [BsonElement("rejectedReason")]
     public string? RejectedReason { get; set; }
 
+    [BsonElement("isCancellationRejected")]
+    public bool IsCancellationRejected { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 

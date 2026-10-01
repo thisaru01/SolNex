@@ -4,7 +4,7 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
-class ReservationDatabaseHelper(context: Context) : SQLiteOpenHelper(context, "reservations.db", null, 1) {
+class ReservationDatabaseHelper(context: Context) : SQLiteOpenHelper(context, "reservations.db", null, 2) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
             """
@@ -19,7 +19,8 @@ class ReservationDatabaseHelper(context: Context) : SQLiteOpenHelper(context, "r
                 startTime TEXT,
                 endTime TEXT,
                 dayOfWeek TEXT,
-                nic TEXT
+                nic TEXT,
+                isCancellationRejected INTEGER DEFAULT 0
             )
             """.trimIndent()
         )

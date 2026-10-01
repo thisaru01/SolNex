@@ -86,6 +86,20 @@ export default function ReservationList() {
     }
   }
 
+  const handleRejectCancel = async (res) => {
+    try {
+      setActionLoading(true)
+      setActionError(null)
+      await reservationApi.updateReservation(res.reservationId, { status: "Approved", isCancellationRejected: true })
+      setReservations(prev => prev.map(r => r.reservationId === res.reservationId ? { ...r, status: "Approved", isCancellationRejected: true } : r))
+      setSelectedReservation(null)
+    } catch (err) {
+      setActionError(err.message || "Failed to reject cancellation.")
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
   const stats = {
     pending: reservations.filter(r => r.status === "Pending").length,
     approved: reservations.filter(r => r.status === "Approved").length,
@@ -339,23 +353,22 @@ export default function ReservationList() {
                   Close
                 </button>
 {selectedReservation.status === "CancellationRequested" && (
-
-  <button
-    onClick={() =>
-      handleApproveCancel(
-        selectedReservation
-      )
-    }
-    disabled={
-      actionLoading
-    }
-    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 font-medium"
-  >
-    {actionLoading
-      ? "Processing..."
-      : "Approve Cancellation"}
-  </button>
-
+  <>
+    <button
+      onClick={() => handleRejectCancel(selectedReservation)}
+      disabled={actionLoading}
+      className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors disabled:opacity-50 font-medium dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+    >
+      {actionLoading ? "Processing..." : "Reject Cancellation"}
+    </button>
+    <button
+      onClick={() => handleApproveCancel(selectedReservation)}
+      disabled={actionLoading}
+      className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 font-medium"
+    >
+      {actionLoading ? "Processing..." : "Approve Cancellation"}
+    </button>
+  </>
 )}
               </div>
             </div>
