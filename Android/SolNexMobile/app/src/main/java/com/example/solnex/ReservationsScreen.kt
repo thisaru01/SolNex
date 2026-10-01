@@ -112,8 +112,11 @@ fun ReservationsScreen(
                     if (selectedReservation != null) {
                         selectedReservation = reservations.find { it.id == selectedReservation!!.id }
                     } else if (MainActivity.pendingReservationIdToOpen != null) {
-                        selectedReservation = reservations.find { it.id == MainActivity.pendingReservationIdToOpen }
-                        MainActivity.pendingReservationIdToOpen = null
+                        val found = reservations.find { it.id == MainActivity.pendingReservationIdToOpen }
+                        if (found != null) {
+                            selectedReservation = found
+                            MainActivity.pendingReservationIdToOpen = null
+                        }
                     }
                     // Deliberately ignoring errMsg here to prevent the disruptive popup. 
                     // It will seamlessly fall back to cached data or show the empty state.
@@ -405,7 +408,13 @@ fun ReservationsScreen(
                 }
             )
         }
+        return
+    }
         
+    if (MainActivity.pendingReservationIdToOpen != null && selectedReservation == null) {
+        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
         return
     }
 
