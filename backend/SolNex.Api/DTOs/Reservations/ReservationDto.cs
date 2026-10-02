@@ -15,6 +15,7 @@ public class ReservationDto
     public string? ApprovedBy { get; set; }
     public DateTime? ApprovedAt { get; set; }
     public string? RejectedReason { get; set; }
+    public bool IsCancellationRejected { get; set; }
     public string? StartTime { get; set; }
     public string? EndTime { get; set; }
     public string? DayOfWeek { get; set; }

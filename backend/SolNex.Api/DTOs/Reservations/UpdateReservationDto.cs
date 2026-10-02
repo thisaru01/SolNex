@@ -10,4 +10,5 @@ public class UpdateReservationDto
     public string? ApprovedBy { get; set; }
     public DateTime? ApprovedAt { get; set; }
     public string? RejectedReason { get; set; }
+    public bool? IsCancellationRejected { get; set; }
 }

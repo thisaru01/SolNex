@@ -46,6 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -71,13 +72,28 @@ fun HomeScreen(
 
     val context = LocalContext.current
     val repository = remember { StationRepository(context) }
+    val reservationRepo = remember { ReservationRepository(context) }
+    val tokenStore = remember { com.example.solnex.auth.TokenStore(context) }
+    val token = tokenStore.token().orEmpty()
+    
     var favoriteStations by remember { mutableStateOf<List<Station>>(emptyList()) }
+    var pendingCount by remember { mutableStateOf(0) }
+    var approvedCount by remember { mutableStateOf(0) }
+    
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 favoriteStations = repository.getFavoriteStations()
+                if (user != null && user.nic.isNotEmpty()) {
+                    reservationRepo.getReservationsByNic(token, user.nic) { res, _ ->
+                        if (res != null) {
+                            pendingCount = res.count { it.status.equals("Pending", ignoreCase = true) }
+                            approvedCount = res.count { it.status.equals("Approved", ignoreCase = true) }
+                        }
+                    }
+                }
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -145,6 +161,47 @@ fun HomeScreen(
                 description = "Track your solar energy slot bookings and schedules",
                 buttonLabel = "View Reservations",
                 isPrimary = false,
+                extraContent = {
+                    Row(
+                        modifier = Modifier.padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFFFFF3E0)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color(0xFFE65100)))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Pending: $pendingCount",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color(0xFFE65100)
+                                )
+                            }
+                        }
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFFE8F5E9)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color(0xFF2E7D32)))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Approved: $approvedCount",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color(0xFF2E7D32)
+                                )
+                            }
+                        }
+                    }
+                },
                 onClick = { onNavigateToTab(BottomNavItem.Reservations) }
             )
             ServiceCard(
@@ -396,6 +453,7 @@ private fun ServiceCard(
     description: String,
     buttonLabel: String,
     isPrimary: Boolean,
+    extraContent: (@Composable () -> Unit)? = null,
     onClick: () -> Unit
 ) {
     ElevatedCard(
@@ -445,6 +503,9 @@ private fun ServiceCard(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
+                if (extraContent != null) {
+                    extraContent()
+                }
             }
         }
 

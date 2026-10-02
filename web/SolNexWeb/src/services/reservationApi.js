@@ -48,4 +48,9 @@ export const reservationApi = {
       method: "PUT",
       body: JSON.stringify({ status }),
     }),
+  updateReservation: (id, data) =>
+    request(`/api/reservations/${encodeURIComponent(id)}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
 }

@@ -147,7 +147,7 @@ public class EnergyReservationService : IEnergyReservationService
         {
             if (parsedStatus == ReservationStatus.Approved)
             {
-                if (previousStatus == ReservationStatus.CancellationRequested || previousStatus == ReservationStatus.Rejected || previousStatus == ReservationStatus.Cancelled)
+                if (previousStatus == ReservationStatus.Rejected || previousStatus == ReservationStatus.Cancelled)
                 {
                     throw new InvalidOperationException($"A reservation with status {previousStatus} cannot be approved.");
                 }
@@ -190,6 +190,12 @@ public class EnergyReservationService : IEnergyReservationService
         if (updateDto.RejectedReason != null)
         {
             reservation.RejectedReason = updateDto.RejectedReason;
+            updated = true;
+        }
+
+        if (updateDto.IsCancellationRejected.HasValue)
+        {
+            reservation.IsCancellationRejected = updateDto.IsCancellationRejected.Value;
             updated = true;
         }
 
@@ -283,6 +289,7 @@ public class EnergyReservationService : IEnergyReservationService
             ApprovedBy = reservation.ApprovedBy,
             ApprovedAt = reservation.ApprovedAt,
             RejectedReason = reservation.RejectedReason,
+            IsCancellationRejected = reservation.IsCancellationRejected,
             CreatedAt = reservation.CreatedAt,
             UpdatedAt = reservation.UpdatedAt
         };

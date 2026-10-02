@@ -50,6 +50,10 @@ enum class BottomNavItem(val title: String, val icon: androidx.compose.ui.graphi
     Profile("Profile", Icons.Default.Person)
 }
 class MainActivity : ComponentActivity() {
+    companion object {
+        var pendingReservationIdToOpen: String? = null
+    }
+
     private val tokenStore by lazy { TokenStore(this) }
     private val profileRepository by lazy { ApiProfileRepository() }
     private val deactivationRepository by lazy { ApiDeactivationRepository() }
@@ -127,12 +131,14 @@ class MainActivity : ComponentActivity() {
                             MapScreen(
                                 modifier = Modifier.padding(innerPadding),
                                 token = tokenStore.token().orEmpty(),
-                                role = tokenStore.role().orEmpty()
+                                role = tokenStore.role().orEmpty(),
+                                onNavigateToTab = { currentTab = it }
                             )
                         }
                         BottomNavItem.Reservations -> {
                             ReservationsScreen(
-                                modifier = Modifier.padding(innerPadding)
+                                modifier = Modifier.padding(innerPadding),
+                                onNavigateToTab = { currentTab = it }
                             )
                         }
                         BottomNavItem.QR -> {
