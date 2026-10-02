@@ -49,9 +49,6 @@ export const stationApi = {
   
   getStationById: (id) => fetchWithConfig(`/stations/${id}`),
   
-  getNearbyStations: (lat, lon, radius = 10.0) => 
-    fetchWithConfig(`/stations/nearby?lat=${lat}&lon=${lon}&radius=${radius}`),
-    
   getStationAvailability: (id) => fetchWithConfig(`/stations/${id}/availability`),
   
   getStationSchedule: (id) => fetchWithConfig(`/stations/${id}/schedule`),

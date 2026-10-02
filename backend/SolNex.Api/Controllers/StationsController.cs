@@ -154,13 +154,12 @@ public class StationsController : ControllerBase
         return Ok(new { message = "Station activated successfully.", station = activatedStation });
     }
 
-    // GET: api/stations/nearby?lat=...&lon=...&radius=...
-    // Finds and returns stations located within the specified radius of the coordinates.
-    [HttpGet("nearby")]
-    public async Task<ActionResult<IEnumerable<StationDto>>> GetNearbyStations([FromQuery] double lat, [FromQuery] double lon, [FromQuery] double radius = 10.0)
+    // GET: api/stations/closest?lat=...&lon=...&limit=...
+    // Finds and returns the closest active stations to the given coordinates.
+    [HttpGet("closest")]
+    public async Task<ActionResult<IEnumerable<StationWithDistanceDto>>> GetClosestStations([FromQuery] double lat, [FromQuery] double lon, [FromQuery] int limit = 3)
     {
-        // Default radius is 10km
-        var stations = await _stationService.GetNearbyStationsAsync(lat, lon, radius);
+        var stations = await _stationService.GetClosestStationsAsync(lat, lon, limit);
         return Ok(stations);
     }
 

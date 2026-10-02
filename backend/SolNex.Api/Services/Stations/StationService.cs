@@ -196,11 +196,15 @@ public class StationService : IStationService
         return true;
     }
 
-    // Finds and maps solar stations located within a given distance.
-    public async Task<IEnumerable<StationDto>> GetNearbyStationsAsync(double latitude, double longitude, double radiusInKm)
+    // Finds the closest stations and maps to StationWithDistanceDto.
+    public async Task<IEnumerable<StationWithDistanceDto>> GetClosestStationsAsync(double latitude, double longitude, int limit)
     {
-        var stations = await _stationRepository.GetNearbyStationsAsync(latitude, longitude, radiusInKm);
-        return stations.Select(MapToDto);
+        var closest = await _stationRepository.GetClosestStationsAsync(latitude, longitude, limit);
+        return closest.Select(c => new StationWithDistanceDto
+        {
+            Station = MapToDto(c.Station),
+            DistanceKm = c.Distance
+        });
     }
 
     // Retrieves the current available battery slots for a given station.

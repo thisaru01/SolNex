@@ -22,8 +22,8 @@ public interface IStationRepository
     // Replaces an existing solar station document with updated information.
     Task UpdateStationAsync(string id, SolarStationInfo station);
 
-    // Queries the database for stations within a specified geographic radius.
-    Task<IEnumerable<SolarStationInfo>> GetNearbyStationsAsync(double latitude, double longitude, double radiusInKm);
+    // Finds the closest active stations to a given coordinate.
+    Task<IEnumerable<(SolarStationInfo Station, double Distance)>> GetClosestStationsAsync(double latitude, double longitude, int limit);
 
     // Removes a solar station document from the database by its ObjectId.
     Task DeleteStationAsync(string id);

@@ -79,20 +79,22 @@ public class StationRepository : IStationRepository
         await _stations.DeleteOneAsync(s => s.Id == id);
     }
 
-    // Retrieves a list of active solar stations located within a given radius using Haversine formula calculation.
-    public async Task<IEnumerable<SolarStationInfo>> GetNearbyStationsAsync(double latitude, double longitude, double radiusInKm)
+    // Calculates the distance to all active stations using the Haversine formula
+    // and returns the top `limit` closest stations ordered by proximity.
+    public async Task<IEnumerable<(SolarStationInfo Station, double Distance)>> GetClosestStationsAsync(double latitude, double longitude, int limit)
     {
-
         var stations = await _stations.Find(s => s.Status == StationStatus.Active).ToListAsync();
         
-        var nearbyStations = stations.Where(s => 
-            CalculateDistance(latitude, longitude, s.Latitude, s.Longitude) <= radiusInKm
-        ).ToList();
+        var stationsWithDistance = stations.Select(s => 
+            (Station: s, Distance: CalculateDistance(latitude, longitude, s.Latitude, s.Longitude))
+        )
+        .OrderBy(s => s.Distance)
+        .Take(limit)
+        .ToList();
 
-        return nearbyStations;
+        return stationsWithDistance;
     }
 
-    // Haversine formula for calculating distance between two coordinates in kilometers
     private double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
     {
         var R = 6371; // Earth's radius in km

@@ -27,8 +27,8 @@ public interface IStationService
     // Activates a previously deactivated solar station.
     Task<StationDto?> ActivateStationAsync(string id);
 
-    // Finds solar stations within a certain radius (in kilometers) of a given latitude and longitude.
-    Task<IEnumerable<StationDto>> GetNearbyStationsAsync(double latitude, double longitude, double radiusInKm);
+    // Finds the closest stations to a given location.
+    Task<IEnumerable<StationWithDistanceDto>> GetClosestStationsAsync(double latitude, double longitude, int limit);
 
     // Gets the number of currently available battery slots for a specific station.
     Task<int?> GetStationAvailabilityAsync(string id);

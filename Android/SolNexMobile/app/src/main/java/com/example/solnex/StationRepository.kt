@@ -17,6 +17,11 @@ data class Station(
     val status: String
 )
 
+data class StationWithDistance(
+    val station: Station,
+    val distanceKm: Double
+)
+
 class StationRepository(
     private val context: Context,
     private val executor: ExecutorService = Executors.newSingleThreadExecutor(),
@@ -162,5 +167,47 @@ class StationRepository(
     fun getFavoriteStations(): List<Station> {
         val favIds = getFavoriteStationIds()
         return getCachedStations().filter { favIds.contains(it.stationId) }
+    }
+
+    fun getClosestStations(token: String, lat: Double, lon: Double, limit: Int = 3, callback: (List<StationWithDistance>?, String?) -> Unit) {
+        executor.execute {
+            try {
+                val url = URL("$apiBaseUrl/api/stations/closest?lat=$lat&lon=$lon&limit=$limit")
+                val connection = url.openConnection() as HttpURLConnection
+                connection.requestMethod = "GET"
+                connection.setRequestProperty("Authorization", "Bearer $token")
+                connection.setRequestProperty("Accept", "application/json")
+                connection.connectTimeout = 5000
+                connection.readTimeout = 5000
+
+                if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                    val response = connection.inputStream.bufferedReader().use { it.readText() }
+                    val jsonArray = JSONArray(response)
+                    val result = mutableListOf<StationWithDistance>()
+                    for (i in 0 until jsonArray.length()) {
+                        val obj = jsonArray.getJSONObject(i)
+                        val stationObj = obj.getJSONObject("station")
+                        val distanceKm = obj.getDouble("distanceKm")
+                        
+                        val id = stationObj.optString("id", "")
+                        val stationId = stationObj.optString("stationId", id)
+                        val name = stationObj.optString("stationName", "Unknown")
+                        val sLat = stationObj.optDouble("latitude", Double.NaN)
+                        val sLng = stationObj.optDouble("longitude", Double.NaN)
+                        val capacity = stationObj.optDouble("capacityKw", 0.0)
+                        val status = stationObj.optString("status", "Unknown")
+                        
+                        if (!sLat.isNaN() && !sLng.isNaN()) {
+                            result.add(StationWithDistance(Station(id, stationId, name, sLat, sLng, capacity, status), distanceKm))
+                        }
+                    }
+                    callback(result, null)
+                } else {
+                    callback(null, "Failed to load closest stations: HTTP ${connection.responseCode}")
+                }
+            } catch (e: Exception) {
+                callback(null, "Network error: ${e.message}")
+            }
+        }
     }
 }
