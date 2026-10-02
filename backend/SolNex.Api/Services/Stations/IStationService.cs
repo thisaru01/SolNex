@@ -9,6 +9,9 @@ public interface IStationService
     // Retrieves all solar stations from the database.
     Task<IEnumerable<StationDto>> GetAllStationsAsync();
 
+    // Searches and filters solar stations.
+    Task<IEnumerable<StationDto>> SearchStationsAsync(string? search, string? status);
+
     // Retrieves a specific solar station by its internal ID or custom StationId.
     Task<StationDto?> GetStationByIdAsync(string id);
 

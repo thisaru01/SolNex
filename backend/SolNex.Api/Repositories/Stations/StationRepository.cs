@@ -20,6 +20,31 @@ public class StationRepository : IStationRepository
         return await _stations.Find(_ => true).ToListAsync();
     }
 
+    public async Task<IEnumerable<SolarStationInfo>> SearchStationsAsync(string? search, string? status)
+    {
+        var builder = Builders<SolarStationInfo>.Filter;
+        var filter = builder.Empty;
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var searchFilter = builder.Or(
+                builder.Regex(s => s.StationId, new BsonRegularExpression(search, "i")),
+                builder.Regex(s => s.StationName, new BsonRegularExpression(search, "i"))
+            );
+            filter &= searchFilter;
+        }
+
+        if (!string.IsNullOrWhiteSpace(status) && status != "All")
+        {
+            if (Enum.TryParse<StationStatus>(status, true, out var parsedStatus))
+            {
+                filter &= builder.Eq(s => s.Status, parsedStatus);
+            }
+        }
+
+        return await _stations.Find(filter).ToListAsync();
+    }
+
     // Retrieves a single solar station by its MongoDB ObjectId string.
     public async Task<SolarStationInfo?> GetStationByIdAsync(string id)
     {

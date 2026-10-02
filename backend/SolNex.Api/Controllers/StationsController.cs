@@ -20,11 +20,11 @@ public class StationsController : ControllerBase
     }
 
     // GET: api/stations
-    // Returns a list of all stations in the system.
+    // Returns a list of all stations in the system, optionally filtered by search query and status.
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<StationDto>>> GetAllStations()
+    public async Task<ActionResult<IEnumerable<StationDto>>> GetAllStations([FromQuery] string? search = null, [FromQuery] string? status = null)
     {
-        var stations = await _stationService.GetAllStationsAsync();
+        var stations = await _stationService.SearchStationsAsync(search, status);
         return Ok(stations);
     }
 

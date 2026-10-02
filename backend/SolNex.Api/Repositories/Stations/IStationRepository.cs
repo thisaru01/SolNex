@@ -7,6 +7,9 @@ public interface IStationRepository
     // Retrieves all solar stations from the database collection.
     Task<IEnumerable<SolarStationInfo>> GetAllStationsAsync();
 
+    // Searches solar stations by name/id and filters by status.
+    Task<IEnumerable<SolarStationInfo>> SearchStationsAsync(string? search, string? status);
+
     // Retrieves a solar station by its MongoDB ObjectId.
     Task<SolarStationInfo?> GetStationByIdAsync(string id);
 

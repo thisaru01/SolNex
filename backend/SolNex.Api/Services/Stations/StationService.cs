@@ -26,6 +26,12 @@ public class StationService : IStationService
         return stations.Select(MapToDto);
     }
 
+    public async Task<IEnumerable<StationDto>> SearchStationsAsync(string? search, string? status)
+    {
+        var stations = await _stationRepository.SearchStationsAsync(search, status);
+        return stations.Select(MapToDto);
+    }
+
     // Retrieves a single solar station by ID and maps it to a DTO.
     public async Task<StationDto?> GetStationByIdAsync(string id)
     {
