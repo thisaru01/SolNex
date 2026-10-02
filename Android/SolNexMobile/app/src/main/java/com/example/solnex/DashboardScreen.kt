@@ -18,6 +18,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -87,6 +89,7 @@ fun DashboardScreen(
     var phoneError by remember { mutableStateOf<String?>(null) }
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showDeactivationDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
     val profileStatus = profile?.accountStatus ?: "Pending"
 
     val statusMessage = when (profileStatus) {
@@ -98,6 +101,10 @@ fun DashboardScreen(
         fullName = profile?.fullName ?: displayUser.fullName
         email = profile?.email.orEmpty()
         phone = formatPhoneNumber(profile?.phone.orEmpty())
+    }
+
+    LaunchedEffect(error, message) {
+        (message ?: error)?.let { snackbarHostState.showSnackbar(it) }
     }
 
     // Validate profile data and save changes
@@ -254,6 +261,7 @@ fun DashboardScreen(
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+        SnackbarHost(hostState = snackbarHostState)
     }
 
     // Logout confirmation dialog

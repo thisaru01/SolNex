@@ -5,6 +5,7 @@ import { ArrowRight, Eye, EyeOff, LockKeyhole, ShieldCheck, Sun } from "lucide-r
 import { Link, useLocation, useNavigate } from "react-router-dom"
 // Auth API
 import { login } from "../../services/authApi"
+import { toast } from "sonner"
 
 export default function Login() {
   const navigate = useNavigate()
@@ -14,7 +15,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const notice = location.state?.message
 
   // Handle login form submission
   async function handleSubmit(event) {
@@ -37,11 +37,13 @@ export default function Login() {
       localStorage.setItem("solnex_user", JSON.stringify(response))
 
       if (response.role === "Backoffice") {
+        toast.success("Signed in successfully")
         navigate("/dashboard", { replace: true })
         return
       }
 
       if (response.role === "GridOperator") {
+        toast.success("Signed in successfully")
         navigate("/stations", { replace: true })
         return
       }
@@ -51,6 +53,7 @@ export default function Login() {
       localStorage.removeItem("solnex_user")
     } catch (loginError) {
       setError(loginError.message)
+      toast.error(loginError.message)
     } finally {
       setIsSubmitting(false)
     }

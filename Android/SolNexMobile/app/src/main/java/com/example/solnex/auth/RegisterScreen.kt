@@ -1,6 +1,7 @@
 package com.example.solnex.auth
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,6 +13,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -23,8 +26,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 
 /**
  * Registration screen for new prosumer accounts.
@@ -49,6 +57,9 @@ fun RegisterScreen(
     var passwordError by remember { mutableStateOf<String?>(null) }
     var confirmPasswordError by remember { mutableStateOf<String?>(null) }
     var isSubmitting by remember { mutableStateOf(false) }
+    var showPassword by remember { mutableStateOf(false) }
+    var showConfirmPassword by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // Format phone number with spaces for display
     fun formatPhoneNumber(input: String): String {
@@ -76,6 +87,7 @@ fun RegisterScreen(
     LaunchedEffect(result) {
         if (result != null) {
             isSubmitting = false
+            snackbarHostState.showSnackbar(result.message)
         }
     }
 
@@ -101,6 +113,7 @@ fun RegisterScreen(
     }
 
     Surface(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -136,12 +149,12 @@ fun RegisterScreen(
             OutlinedTextField(password, { 
                 password = it
                 passwordError = null
-            }, label = { Text("Password") }, modifier = Modifier.fillMaxWidth(), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), isError = passwordError != null)
+            }, label = { Text("Password") }, modifier = Modifier.fillMaxWidth(), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(), trailingIcon = { androidx.compose.material3.IconButton(onClick = { showPassword = !showPassword }) { androidx.compose.material3.Icon(if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = if (showPassword) "Hide password" else "Show password") } }, isError = passwordError != null)
             passwordError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
             OutlinedTextField(confirmPassword, { 
                 confirmPassword = it
                 confirmPasswordError = null
-            }, label = { Text("Confirm password") }, modifier = Modifier.fillMaxWidth(), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), isError = confirmPasswordError != null)
+            }, label = { Text("Confirm password") }, modifier = Modifier.fillMaxWidth(), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), visualTransformation = if (showConfirmPassword) VisualTransformation.None else PasswordVisualTransformation(), trailingIcon = { androidx.compose.material3.IconButton(onClick = { showConfirmPassword = !showConfirmPassword }) { androidx.compose.material3.Icon(if (showConfirmPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = if (showConfirmPassword) "Hide password" else "Show password") } }, isError = confirmPasswordError != null)
             confirmPasswordError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
 
             result?.let {
@@ -157,6 +170,8 @@ fun RegisterScreen(
             TextButton(onClick = onBackToLogin, enabled = !isSubmitting, modifier = Modifier.fillMaxWidth()) {
                 Text("Already registered? Sign in")
             }
+        }
+        SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp))
         }
     }
 }

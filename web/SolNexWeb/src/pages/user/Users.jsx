@@ -8,6 +8,7 @@ import {
   getUsers,
   updateUserRole,
 } from "../../services/userApi"
+import { toast } from "sonner"
 
 /**
  * User management page for Backoffice users.
@@ -92,11 +93,13 @@ export default function Users() {
     try {
       if (user.accountStatus === "Active") await deactivateUser(user.nic)
       else await activateUser(user.nic)
+      toast.success(`User ${user.accountStatus === "Active" ? "deactivated" : "activated"} successfully`)
       await loadUsers()
     } catch (actionError) {
       setError(actionError.status === 401 || actionError.status === 403
         ? "Only a Backoffice user can activate or deactivate accounts. Sign in as Backoffice first."
         : actionError.message)
+      toast.error(actionError.message)
     } finally {
       setWorkingNic("")
     }
@@ -107,11 +110,13 @@ export default function Users() {
     setWorkingNic(user.nic)
     try {
       await updateUserRole(user.nic, role)
+      toast.success("User role updated successfully")
       await loadUsers()
     } catch (actionError) {
       setError(actionError.status === 401 || actionError.status === 403
         ? "Only a Backoffice user can change roles. Sign in as Backoffice first."
         : actionError.message)
+      toast.error(actionError.message)
     } finally {
       setWorkingNic("")
     }

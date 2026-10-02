@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Save } from "lucide-react"
 import { getUserByNic, updateUser } from "../../services/userApi"
+import { toast } from "sonner"
 
 /**
  * Edit prosumer page for Backoffice users.
@@ -85,9 +86,11 @@ export default function EditProsumer() {
 
     try {
       await updateUser(nic, { ...formData, phone: phoneDigits })
+      toast.success("Prosumer profile updated successfully")
       navigate(`/prosumers/${nic}`, { state: { message: "Profile updated successfully" } })
     } catch (err) {
       setError(err.message || "Failed to update profile")
+      toast.error(err.message || "Failed to update profile")
     } finally {
       setIsSubmitting(false)
     }

@@ -8,6 +8,7 @@ import {
   rejectDeactivation,
   getUsers,
 } from "../../services/userApi"
+import { toast } from "sonner"
 
 /**
  * Prosumer management page for Backoffice users.
@@ -101,11 +102,13 @@ export default function Prosumers() {
       }
       if (user.accountStatus === "Active") await deactivateUser(user.nic)
       else await activateUser(user.nic)
+      toast.success(`Prosumer ${user.accountStatus === "Active" ? "deactivated" : "activated"} successfully`)
       await loadUsers()
     } catch (actionError) {
       setError(actionError.status === 401 || actionError.status === 403
         ? "Only a Backoffice user can activate or deactivate accounts. Sign in as Backoffice first."
         : actionError.message)
+      toast.error(actionError.message)
     } finally {
       setWorkingNic("")
     }

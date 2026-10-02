@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { ArrowLeft, UserPlus } from "lucide-react"
+import { ArrowLeft, Eye, EyeOff, UserPlus } from "lucide-react"
 import { registerWebUser } from "../../services/userApi"
+import { toast } from "sonner"
 
 /**
  * Create user page for Backoffice users.
@@ -20,6 +21,8 @@ export default function CreateUser() {
   })
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   // Format phone number with spaces for display
   function formatPhoneNumber(value) {
@@ -87,9 +90,11 @@ export default function CreateUser() {
         password: formData.password,
         role: formData.role
       })
+      toast.success("User created successfully")
       navigate("/users", { state: { message: "User created successfully" } })
     } catch (err) {
       setError(err.message || "Failed to create user")
+      toast.error(err.message || "Failed to create user")
     } finally {
       setIsSubmitting(false)
     }
@@ -205,32 +210,12 @@ export default function CreateUser() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium">Password</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                minLength={8}
-                placeholder="Enter password"
-                className="h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              />
+              <div className="relative"><input id="password" name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleChange} required minLength={8} placeholder="Enter password" className="h-10 w-full rounded-md border bg-background px-3 pr-10 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring" /><button type="button" onClick={() => setShowPassword((current) => !current)} aria-label={showPassword ? "Hide password" : "Show password"} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground">{showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button></div>
             </div>
 
             <div className="space-y-2">
               <label htmlFor="confirmPassword" className="text-sm font-medium">Confirm password</label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                required
-                minLength={8}
-                placeholder="Confirm password"
-                className="h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              />
+              <div className="relative"><input id="confirmPassword" name="confirmPassword" type={showConfirmPassword ? "text" : "password"} value={formData.confirmPassword} onChange={handleChange} required minLength={8} placeholder="Confirm password" className="h-10 w-full rounded-md border bg-background px-3 pr-10 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring" /><button type="button" onClick={() => setShowConfirmPassword((current) => !current)} aria-label={showConfirmPassword ? "Hide password" : "Show password"} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground">{showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button></div>
             </div>
           </div>
 
