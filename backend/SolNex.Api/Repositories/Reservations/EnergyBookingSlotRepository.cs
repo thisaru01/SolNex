@@ -1,3 +1,13 @@
+/*
+ * ------------------------------------------------------------------
+ * File Name: EnergyBookingSlotRepository.cs
+ * Author: Kavindi P.D.I
+ * Student ID: IT23234666
+ * Date: 2026-09-25
+ * Description: Repository implementation for data access operations related to EnergyBookingSlot.
+ * ------------------------------------------------------------------
+ */
+
 using MongoDB.Driver;
 using SolNex.Api.Data;
 using SolNex.Api.Models;
