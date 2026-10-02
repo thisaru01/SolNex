@@ -1,3 +1,13 @@
+/*
+ * ------------------------------------------------------------------
+ * File Name: SlotsController.cs
+ * Author: Kavindi P.D.I
+ * Student ID: IT23234666
+ * Date: 2026-09-25
+ * Description: Controller for handling Slots-related HTTP requests.
+ * ------------------------------------------------------------------
+ */
+
 using SolNex.Api.DTOs.Reservations;
 using SolNex.Api.Services.Reservations;
 using SolNex.Api.Repositories.Reservations;

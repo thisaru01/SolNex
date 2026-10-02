@@ -1,3 +1,13 @@
+/*
+ * ------------------------------------------------------------------
+ * File Name: ReservationsController.cs
+ * Author: Kavindi P.D.I
+ * Student ID: IT23234666
+ * Date: 2026-09-25
+ * Description: Controller for handling Reservations-related HTTP requests.
+ * ------------------------------------------------------------------
+ */
+
 using SolNex.Api.DTOs.Reservations;
 using SolNex.Api.Services.Reservations;
 using SolNex.Api.Repositories.Reservations;
