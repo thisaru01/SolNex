@@ -155,11 +155,13 @@ fun MapScreen(
     }
 
     LaunchedEffect(token) {
-        favoriteIds = repository.getFavoriteStationIds()
-        repository.getStations(token) { fetchedStations, errMsg ->
-            stations = fetchedStations ?: emptyList()
-            error = errMsg
-            loading = false
+        repository.syncFavoritesFromServer(token) {
+            favoriteIds = repository.getFavoriteStationIds()
+            repository.getStations(token) { fetchedStations, errMsg ->
+                stations = fetchedStations ?: emptyList()
+                error = errMsg
+                loading = false
+            }
         }
     }
 
@@ -686,7 +688,7 @@ fun MapScreen(
                                     var isFav by remember(station.stationId) { mutableStateOf(repository.isFavorite(station.stationId)) }
                                     IconButton(onClick = {
                                         isFav = !isFav
-                                        repository.toggleFavorite(station.stationId, isFav)
+                                        repository.toggleFavorite(station.stationId, isFav, token)
                                         favoriteIds = repository.getFavoriteStationIds()
                                     }) {
                                         Icon(

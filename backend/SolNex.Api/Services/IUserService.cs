@@ -21,4 +21,10 @@ public interface IUserService
     Task<UserListItem?> UpdateUserAsync(string nic, UpdateUserRequest request, CancellationToken cancellationToken = default);
     Task<UserListItem?> UpdateRoleAsync(string nic, UpdateUserRoleRequest request, CancellationToken cancellationToken = default);
     Task<UserListItem?> SetStatusAsync(string nic, AccountStatus status, CancellationToken cancellationToken = default);
+    
+    // Retrieves the list of favorite station IDs for a given user.
+    Task<List<string>?> GetFavoritesAsync(string nic, CancellationToken cancellationToken = default);
+    
+    // Updates the list of favorite station IDs for a given user.
+    Task<bool> UpdateFavoritesAsync(string nic, List<string> favoriteIds, CancellationToken cancellationToken = default);
 }

@@ -194,6 +194,26 @@ public sealed class UserService : IUserService
         return Map(user);
     }
 
+    // Get user favorites
+    public async Task<List<string>?> GetFavoritesAsync(string nic, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByNicAsync(nic.Trim(), cancellationToken);
+        if (user is null) return null;
+
+        return user.FavoriteStationIds ?? new List<string>();
+    }
+
+    // Update user favorites
+    public async Task<bool> UpdateFavoritesAsync(string nic, List<string> favoriteIds, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByNicAsync(nic.Trim(), cancellationToken);
+        if (user is null) return false;
+
+        user.FavoriteStationIds = favoriteIds ?? new List<string>();
+        user.UpdatedAt = DateTime.UtcNow;
+        return await _userRepository.UpdateAsync(user, cancellationToken);
+    }
+
     // Map User entity to UserListItem DTO
     private static UserListItem Map(User user) => new(
         user.Nic,
