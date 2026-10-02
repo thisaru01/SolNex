@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -32,10 +33,12 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -47,8 +50,10 @@ import androidx.compose.runtime.setValue
 import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -91,6 +96,9 @@ fun MapScreen(
     var showSearchResults by remember { mutableStateOf(false) }
     var showFavoritesOnly by remember { mutableStateOf(false) }
     var favoriteIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+
+    var closestStations by remember { mutableStateOf<List<StationWithDistance>?>(null) }
+    var fetchingClosest by remember { mutableStateOf(false) }
 
     val repository = remember { StationRepository(context) }
 
@@ -147,11 +155,13 @@ fun MapScreen(
     }
 
     LaunchedEffect(token) {
-        favoriteIds = repository.getFavoriteStationIds()
-        repository.getStations(token) { fetchedStations, errMsg ->
-            stations = fetchedStations ?: emptyList()
-            error = errMsg
-            loading = false
+        repository.syncFavoritesFromServer(token) {
+            favoriteIds = repository.getFavoriteStationIds()
+            repository.getStations(token) { fetchedStations, errMsg ->
+                stations = fetchedStations ?: emptyList()
+                error = errMsg
+                loading = false
+            }
         }
     }
 
@@ -285,7 +295,7 @@ fun MapScreen(
 
                     // Add station markers with click listeners
                     val filteredStations = stations.filter { 
-                        !it.status.equals("Deactivated", ignoreCase = true) &&
+                        it.status.equals("Active", ignoreCase = true) &&
                         (!showFavoritesOnly || favoriteIds.contains(it.stationId))
                     }
                     filteredStations.forEach { station ->
@@ -354,27 +364,81 @@ fun MapScreen(
                     )
                 )
 
-                Button(
-                    onClick = { showFavoritesOnly = !showFavoritesOnly },
-                    modifier = Modifier.padding(top = 8.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                        containerColor = if (showFavoritesOnly)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.surface,
-                        contentColor = if (showFavoritesOnly)
-                            MaterialTheme.colorScheme.onPrimary
-                        else
-                            MaterialTheme.colorScheme.primary
-                    )
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        imageVector = if (showFavoritesOnly) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                        contentDescription = "Favorites",
-                        modifier = Modifier.padding(end = 6.dp)
-                    )
-                    Text("Favorites Only")
+                    Button(
+                        onClick = { showFavoritesOnly = !showFavoritesOnly },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = if (showFavoritesOnly)
+                                Color(0xFF194D33)
+                            else
+                                Color.White,
+                            contentColor = if (showFavoritesOnly)
+                                Color.White
+                            else
+                                Color(0xFF194D33)
+                        )
+                    ) {
+                        Icon(
+                            imageVector = if (showFavoritesOnly) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                            contentDescription = "Favorites",
+                            modifier = Modifier.padding(end = 6.dp)
+                        )
+                        Text(
+                            "Favorites Only", 
+                            maxLines = 1, 
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    Button(
+                        onClick = {
+                            val loc = locationOverlayRef.value?.lastFix
+                            if (loc != null) {
+                                fetchingClosest = true
+                                repository.getClosestStations(token, loc.latitude, loc.longitude, 3) { result, err ->
+                                    fetchingClosest = false
+                                    if (result != null) {
+                                        closestStations = result
+                                        selectedStation = null
+                                    } else {
+                                        error = err
+                                    }
+                                }
+                            } else {
+                                error = "Current location not available"
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = Color.White,
+                            contentColor = Color(0xFF194D33)
+                        )
+                    ) {
+                        if (fetchingClosest) {
+                            CircularProgressIndicator(
+                                color = Color(0xFF194D33), 
+                                modifier = Modifier.padding(end = 6.dp).size(18.dp), 
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = "Nearby stations",
+                                modifier = Modifier.padding(end = 6.dp)
+                            )
+                        }
+                        Text(
+                            "Nearby stations", 
+                            maxLines = 1, 
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
 
                 // Offline banner — inline below Favorites so it never overlaps
@@ -414,7 +478,7 @@ fun MapScreen(
                     visible = showSearchResults && searchQuery.isNotBlank()
                 ) {
                     val filtered = stations.filter { 
-                        !it.status.equals("Deactivated", ignoreCase = true) && 
+                        it.status.equals("Active", ignoreCase = true) && 
                         it.stationName.contains(searchQuery, ignoreCase = true) 
                     }
                     if (filtered.isNotEmpty()) {
@@ -425,7 +489,7 @@ fun MapScreen(
                             shape = RoundedCornerShape(16.dp),
                             elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surface
+                                containerColor = Color.White
                             )
                         ) {
                             LazyColumn(
@@ -460,7 +524,7 @@ fun MapScreen(
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = 16.dp, bottom = if (selectedStation != null) 220.dp else 16.dp),
+                    .padding(end = 16.dp, bottom = if (selectedStation != null || closestStations != null) 250.dp else 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.End
             ) {
@@ -468,7 +532,7 @@ fun MapScreen(
                 Card(
                     shape = RoundedCornerShape(8.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
                 ) {
                     Column(modifier = Modifier.width(48.dp)) {
                         IconButton(
@@ -502,13 +566,89 @@ fun MapScreen(
                             mapViewRef.value?.controller?.setZoom(14.0)
                         }
                     },
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.primary
+                    containerColor = Color.White,
+                    contentColor = Color(0xFF194D33)
                 ) {
                     Icon(
                         imageVector = Icons.Default.LocationOn,
                         contentDescription = "My Location"
                     )
+                }
+            }
+
+            // Bottom card for closest stations list
+            AnimatedVisibility(
+                visible = closestStations != null && selectedStation == null,
+                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
+                closestStations?.let { closestList ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Nearest Stations",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF194D33)
+                                )
+                                TextButton(onClick = { closestStations = null }) {
+                                    Text("✕")
+                                }
+                            }
+                            LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f, fill = false)) {
+                                itemsIndexed(closestList) { index, item ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                selectedStation = item.station
+                                                closestStations = null
+                                                mapViewRef.value?.controller?.animateTo(
+                                                    GeoPoint(item.station.latitude, item.station.longitude)
+                                                )
+                                                mapViewRef.value?.controller?.setZoom(16.0)
+                                            }
+                                            .padding(vertical = 8.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(text = item.station.stationName, fontWeight = FontWeight.Bold, color = Color(0xFF194D33))
+                                            Text(
+                                                text = "${item.station.capacityKw} kW • ${item.station.status}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                        Text(
+                                            text = String.format("%.1f km", item.distanceKm),
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF194D33)
+                                        )
+                                    }
+                                    if (index < closestList.lastIndex) {
+                                        HorizontalDivider()
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -525,7 +665,8 @@ fun MapScreen(
                             .fillMaxWidth()
                             .padding(12.dp),
                         shape = RoundedCornerShape(16.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -540,19 +681,20 @@ fun MapScreen(
                                     text = station.stationName,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF194D33),
                                     modifier = Modifier.weight(1f)
                                 )
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     var isFav by remember(station.stationId) { mutableStateOf(repository.isFavorite(station.stationId)) }
                                     IconButton(onClick = {
                                         isFav = !isFav
-                                        repository.toggleFavorite(station.stationId, isFav)
+                                        repository.toggleFavorite(station.stationId, isFav, token)
                                         favoriteIds = repository.getFavoriteStationIds()
                                     }) {
                                         Icon(
                                             imageVector = if (isFav) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                                             contentDescription = "Favorite",
-                                            tint = if (isFav) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                            tint = if (isFav) Color(0xFF194D33) else MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                     TextButton(onClick = { selectedStation = null }) {
@@ -573,7 +715,11 @@ fun MapScreen(
                                 Button(
                                     onClick = { showReservationForm = true },
                                     modifier = Modifier.fillMaxWidth(),
-                                    enabled = station.status == "Active"
+                                    enabled = station.status.equals("Active", ignoreCase = true),
+                                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFF194D33),
+                                        contentColor = Color.White
+                                    )
                                 ) {
                                     Text("Submit Reservation")
                                 }

@@ -176,4 +176,34 @@ public sealed class UserManagementController : ControllerBase
     private bool IsCurrentProsumer(string nic) =>
         User.IsInRole("Prosumer")
         && string.Equals(User.FindFirstValue(ClaimTypes.NameIdentifier), nic, StringComparison.OrdinalIgnoreCase);
+
+    // GET: api/users/me/favorites
+    // Retrieves the currently authenticated user's favorite station IDs.
+    [HttpGet("me/favorites")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<string>>> GetFavorites(CancellationToken cancellationToken)
+    {
+        var nic = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(nic)) return Unauthorized();
+
+        var favorites = await _userService.GetFavoritesAsync(nic, cancellationToken);
+        if (favorites == null) return NotFound();
+
+        return Ok(favorites);
+    }
+
+    // PUT: api/users/me/favorites
+    // Replaces the currently authenticated user's favorite station IDs with the provided list.
+    [HttpPut("me/favorites")]
+    [Authorize]
+    public async Task<IActionResult> UpdateFavorites([FromBody] List<string> favoriteIds, CancellationToken cancellationToken)
+    {
+        var nic = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(nic)) return Unauthorized();
+
+        var success = await _userService.UpdateFavoritesAsync(nic, favoriteIds, cancellationToken);
+        if (!success) return NotFound();
+
+        return NoContent();
+    }
 }

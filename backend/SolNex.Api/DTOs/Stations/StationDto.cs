@@ -1,3 +1,13 @@
+/*
+ * ------------------------------------------------------------------
+ * File Name: StationDto.cs
+ * Author: Rajapaksha T.M
+ * Student ID: IT23235892
+ * Date: 2026-09-24
+ * Description: Data transfer object representing a station.
+ * ------------------------------------------------------------------
+ */
+
 namespace SolNex.Api.DTOs.Stations;
 
 public class StationDto

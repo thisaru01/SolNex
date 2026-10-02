@@ -24,7 +24,7 @@ function getStoredUser() {
 }
 
 export default function Dashboard() {
-  const [stations, setStations] = useState([])
+  const [dashboardData, setDashboardData] = useState({ metrics: {}, recentStations: [] })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const navigate = useNavigate()
@@ -32,19 +32,19 @@ export default function Dashboard() {
   const isBackoffice = currentUser?.role === "Backoffice"
 
   useEffect(() => {
-    const fetchStations = async () => {
+    const fetchDashboardData = async () => {
       try {
         setLoading(true)
-        const data = await stationApi.getStations()
-        setStations(data)
+        const data = await stationApi.getDashboardData()
+        setDashboardData(data)
       } catch (err) {
-        setError(err.message || "Failed to load stations")
+        setError(err.message || "Failed to load dashboard data")
       } finally {
         setLoading(false)
       }
     }
 
-    fetchStations()
+    fetchDashboardData()
   }, [])
 
   if (error) {
@@ -56,12 +56,13 @@ export default function Dashboard() {
     )
   }
 
-  // Calculate metrics
-  const totalStations = stations.length
-  const activeStations = stations.filter(s => s.status === "Active").length
-  const inactiveStations = totalStations - activeStations
-  const totalSlots = stations.reduce((acc, s) => acc + (s.totalBatterySlots || 0), 0)
-  const availableSlots = stations.reduce((acc, s) => acc + (s.availableBatterySlots || 0), 0)
+  // Use metrics from backend
+  const { metrics, recentStations } = dashboardData
+  const totalStations = metrics.totalStations || 0
+  const activeStations = metrics.activeStations || 0
+  const inactiveStations = metrics.inactiveStations || 0
+  const totalSlots = metrics.totalBatterySlots || 0
+  const availableSlots = metrics.availableBatterySlots || 0
 
   return (
     <div className="space-y-6">
@@ -129,7 +130,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{availableSlots} / {totalSlots}</div>
-              <p className="text-xs text-muted-foreground mt-1">Available Slots</p>
+              <p className="text-xs text-muted-foreground mt-1">Available / Total</p>
             </CardContent>
           </Card>
         </div>
@@ -144,7 +145,7 @@ export default function Dashboard() {
             <div className="space-y-2">
               {[1, 2, 3].map(i => <Skeleton key={i} className="h-12 w-full" />)}
             </div>
-          ) : stations.length === 0 ? (
+          ) : recentStations.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No stations found. Create one to get started.
             </div>
@@ -162,7 +163,7 @@ export default function Dashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {stations.slice(0, 5).map((station) => (
+                  {recentStations.map((station) => (
                     <TableRow key={station.id}>
                       <TableCell className="font-medium">{station.stationId}</TableCell>
                       <TableCell>{station.stationName}</TableCell>

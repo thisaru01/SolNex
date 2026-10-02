@@ -37,14 +37,18 @@ async function fetchWithConfig(endpoint, options = {}) {
 }
 
 export const stationApi = {
-  getStations: () => fetchWithConfig('/stations'),
+  getStations: (search = '', status = '') => {
+    const query = new URLSearchParams()
+    if (search) query.append('search', search)
+    if (status && status !== 'All') query.append('status', status)
+    const queryString = query.toString() ? `?${query.toString()}` : ''
+    return fetchWithConfig(`/stations${queryString}`)
+  },
+  getDashboardData: () => fetchWithConfig('/stations/dashboard'),
   getNextStationId: () => fetchWithConfig('/stations/next-id'),
   
   getStationById: (id) => fetchWithConfig(`/stations/${id}`),
   
-  getNearbyStations: (lat, lon, radius = 10.0) => 
-    fetchWithConfig(`/stations/nearby?lat=${lat}&lon=${lon}&radius=${radius}`),
-    
   getStationAvailability: (id) => fetchWithConfig(`/stations/${id}/availability`),
   
   getStationSchedule: (id) => fetchWithConfig(`/stations/${id}/schedule`),

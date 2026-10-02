@@ -1,5 +1,16 @@
+/*
+ * ------------------------------------------------------------------
+ * File Name: StationService.cs
+ * Author: Rajapaksha T.M
+ * Student ID: IT23235892
+ * Date: 2026-09-24
+ * Description: Service implementation for station operations.
+ * ------------------------------------------------------------------
+ */
+
 using SolNex.Api.DTOs;
 using SolNex.Api.DTOs.Stations;
+using SolNex.Api.DTOs.Dashboard;
 using SolNex.Api.Models;
 using SolNex.Api.Repositories;
 using SolNex.Api.Repositories.Stations;
@@ -22,6 +33,12 @@ public class StationService : IStationService
     public async Task<IEnumerable<StationDto>> GetAllStationsAsync()
     {
         var stations = await _stationRepository.GetAllStationsAsync();
+        return stations.Select(MapToDto);
+    }
+
+    public async Task<IEnumerable<StationDto>> SearchStationsAsync(string? search, string? status)
+    {
+        var stations = await _stationRepository.SearchStationsAsync(search, status);
         return stations.Select(MapToDto);
     }
 
@@ -189,11 +206,15 @@ public class StationService : IStationService
         return true;
     }
 
-    // Finds and maps solar stations located within a given distance.
-    public async Task<IEnumerable<StationDto>> GetNearbyStationsAsync(double latitude, double longitude, double radiusInKm)
+    // Finds the closest stations and maps to StationWithDistanceDto.
+    public async Task<IEnumerable<StationWithDistanceDto>> GetClosestStationsAsync(double latitude, double longitude, int limit)
     {
-        var stations = await _stationRepository.GetNearbyStationsAsync(latitude, longitude, radiusInKm);
-        return stations.Select(MapToDto);
+        var closest = await _stationRepository.GetClosestStationsAsync(latitude, longitude, limit);
+        return closest.Select(c => new StationWithDistanceDto
+        {
+            Station = MapToDto(c.Station),
+            DistanceKm = c.Distance
+        });
     }
 
     // Retrieves the current available battery slots for a given station.
@@ -273,6 +294,35 @@ public class StationService : IStationService
             Schedule = station.Schedule,
             CreatedAt = station.CreatedAt,
             UpdatedAt = station.UpdatedAt
+        };
+    }
+
+    // Retrieves dashboard metrics and recent stations.
+    public async Task<DashboardDto> GetDashboardDataAsync()
+    {
+        var stations = await _stationRepository.GetAllStationsAsync();
+        var stationList = stations.ToList();
+        var activeStationList = stationList.Where(s => s.Status == StationStatus.Active).ToList();
+        
+        var metrics = new DashboardMetricsDto
+        {
+            TotalStations = stationList.Count,
+            ActiveStations = activeStationList.Count,
+            InactiveStations = stationList.Count - activeStationList.Count,
+            TotalBatterySlots = activeStationList.Sum(s => s.TotalBatterySlots),
+            AvailableBatterySlots = activeStationList.Sum(s => s.AvailableBatterySlots)
+        };
+
+        var recentStations = stationList
+            .OrderByDescending(s => s.CreatedAt)
+            .Take(5)
+            .Select(MapToDto)
+            .ToList();
+
+        return new DashboardDto
+        {
+            Metrics = metrics,
+            RecentStations = recentStations
         };
     }
 }

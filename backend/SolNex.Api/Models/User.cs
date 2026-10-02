@@ -38,6 +38,9 @@ public class User
 
     [BsonElement("updatedAt")]
     public DateTime UpdatedAt { get; set; }
+
+    [BsonElement("favoriteStationIds")]
+    public List<string> FavoriteStationIds { get; set; } = new();
 }
 
 public enum UserRole

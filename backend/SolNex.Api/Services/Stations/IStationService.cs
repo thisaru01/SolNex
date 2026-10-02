@@ -1,5 +1,16 @@
+/*
+ * ------------------------------------------------------------------
+ * File Name: IStationService.cs
+ * Author: Rajapaksha T.M
+ * Student ID: IT23235892
+ * Date: 2026-09-24
+ * Description: Interface for station service operations.
+ * ------------------------------------------------------------------
+ */
+
 using SolNex.Api.DTOs;
 using SolNex.Api.DTOs.Stations;
+using SolNex.Api.DTOs.Dashboard;
 
 namespace SolNex.Api.Services.Stations;
 
@@ -7,6 +18,9 @@ public interface IStationService
 {
     // Retrieves all solar stations from the database.
     Task<IEnumerable<StationDto>> GetAllStationsAsync();
+
+    // Searches and filters solar stations.
+    Task<IEnumerable<StationDto>> SearchStationsAsync(string? search, string? status);
 
     // Retrieves a specific solar station by its internal ID or custom StationId.
     Task<StationDto?> GetStationByIdAsync(string id);
@@ -23,8 +37,8 @@ public interface IStationService
     // Activates a previously deactivated solar station.
     Task<StationDto?> ActivateStationAsync(string id);
 
-    // Finds solar stations within a certain radius (in kilometers) of a given latitude and longitude.
-    Task<IEnumerable<StationDto>> GetNearbyStationsAsync(double latitude, double longitude, double radiusInKm);
+    // Finds the closest stations to a given location.
+    Task<IEnumerable<StationWithDistanceDto>> GetClosestStationsAsync(double latitude, double longitude, int limit);
 
     // Gets the number of currently available battery slots for a specific station.
     Task<int?> GetStationAvailabilityAsync(string id);
@@ -43,5 +57,8 @@ public interface IStationService
 
     // Calculates and returns the next available custom StationId (e.g., ST031).
     Task<string> GetNextStationIdAsync();
+
+    // Retrieves dashboard metrics and recent stations.
+    Task<DashboardDto> GetDashboardDataAsync();
 }
 

@@ -1,3 +1,13 @@
+/*
+ * ------------------------------------------------------------------
+ * File Name: StationRepository.cs
+ * Author: Rajapaksha T.M
+ * Student ID: IT23235892
+ * Date: 2026-09-24
+ * Description: Repository implementation for station operations.
+ * ------------------------------------------------------------------
+ */
+
 using MongoDB.Driver;
 using SolNex.Api.Data;
 using SolNex.Api.Models;
@@ -18,6 +28,31 @@ public class StationRepository : IStationRepository
     public async Task<IEnumerable<SolarStationInfo>> GetAllStationsAsync()
     {
         return await _stations.Find(_ => true).ToListAsync();
+    }
+
+    public async Task<IEnumerable<SolarStationInfo>> SearchStationsAsync(string? search, string? status)
+    {
+        var builder = Builders<SolarStationInfo>.Filter;
+        var filter = builder.Empty;
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var searchFilter = builder.Or(
+                builder.Regex(s => s.StationId, new BsonRegularExpression(search, "i")),
+                builder.Regex(s => s.StationName, new BsonRegularExpression(search, "i"))
+            );
+            filter &= searchFilter;
+        }
+
+        if (!string.IsNullOrWhiteSpace(status) && status != "All")
+        {
+            if (Enum.TryParse<StationStatus>(status, true, out var parsedStatus))
+            {
+                filter &= builder.Eq(s => s.Status, parsedStatus);
+            }
+        }
+
+        return await _stations.Find(filter).ToListAsync();
     }
 
     // Retrieves a single solar station by its MongoDB ObjectId string.
@@ -54,20 +89,22 @@ public class StationRepository : IStationRepository
         await _stations.DeleteOneAsync(s => s.Id == id);
     }
 
-    // Retrieves a list of active solar stations located within a given radius using Haversine formula calculation.
-    public async Task<IEnumerable<SolarStationInfo>> GetNearbyStationsAsync(double latitude, double longitude, double radiusInKm)
+    // Calculates the distance to all active stations using the Haversine formula
+    // and returns the top `limit` closest stations ordered by proximity.
+    public async Task<IEnumerable<(SolarStationInfo Station, double Distance)>> GetClosestStationsAsync(double latitude, double longitude, int limit)
     {
-
         var stations = await _stations.Find(s => s.Status == StationStatus.Active).ToListAsync();
         
-        var nearbyStations = stations.Where(s => 
-            CalculateDistance(latitude, longitude, s.Latitude, s.Longitude) <= radiusInKm
-        ).ToList();
+        var stationsWithDistance = stations.Select(s => 
+            (Station: s, Distance: CalculateDistance(latitude, longitude, s.Latitude, s.Longitude))
+        )
+        .OrderBy(s => s.Distance)
+        .Take(limit)
+        .ToList();
 
-        return nearbyStations;
+        return stationsWithDistance;
     }
 
-    // Haversine formula for calculating distance between two coordinates in kilometers
     private double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
     {
         var R = 6371; // Earth's radius in km

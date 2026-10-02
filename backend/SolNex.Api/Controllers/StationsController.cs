@@ -1,6 +1,17 @@
+/*
+ * ------------------------------------------------------------------
+ * File Name: StationsController.cs
+ * Author: Rajapaksha T.M
+ * Student ID: IT23235892
+ * Date: 2026-09-20
+ * Description: Controller for handling station-related HTTP requests.
+ * ------------------------------------------------------------------
+ */
+
 using Microsoft.AspNetCore.Mvc;
 using SolNex.Api.DTOs;
 using SolNex.Api.DTOs.Stations;
+using SolNex.Api.DTOs.Dashboard;
 using Microsoft.AspNetCore.Authorization;
 using SolNex.Api.Services;
 using SolNex.Api.Services.Stations;
@@ -19,12 +30,21 @@ public class StationsController : ControllerBase
     }
 
     // GET: api/stations
-    // Returns a list of all stations in the system.
+    // Returns a list of all stations in the system, optionally filtered by search query and status.
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<StationDto>>> GetAllStations()
+    public async Task<ActionResult<IEnumerable<StationDto>>> GetAllStations([FromQuery] string? search = null, [FromQuery] string? status = null)
     {
-        var stations = await _stationService.GetAllStationsAsync();
+        var stations = await _stationService.SearchStationsAsync(search, status);
         return Ok(stations);
+    }
+
+    // GET: api/stations/dashboard
+    // Returns dashboard metrics and recent stations for the frontend.
+    [HttpGet("dashboard")]
+    public async Task<ActionResult<DashboardDto>> GetDashboardData()
+    {
+        var dashboardData = await _stationService.GetDashboardDataAsync();
+        return Ok(dashboardData);
     }
 
     // GET: api/stations/next-id
@@ -144,13 +164,12 @@ public class StationsController : ControllerBase
         return Ok(new { message = "Station activated successfully.", station = activatedStation });
     }
 
-    // GET: api/stations/nearby?lat=...&lon=...&radius=...
-    // Finds and returns stations located within the specified radius of the coordinates.
-    [HttpGet("nearby")]
-    public async Task<ActionResult<IEnumerable<StationDto>>> GetNearbyStations([FromQuery] double lat, [FromQuery] double lon, [FromQuery] double radius = 10.0)
+    // GET: api/stations/closest?lat=...&lon=...&limit=...
+    // Finds and returns the closest active stations to the given coordinates.
+    [HttpGet("closest")]
+    public async Task<ActionResult<IEnumerable<StationWithDistanceDto>>> GetClosestStations([FromQuery] double lat, [FromQuery] double lon, [FromQuery] int limit = 3)
     {
-        // Default radius is 10km
-        var stations = await _stationService.GetNearbyStationsAsync(lat, lon, radius);
+        var stations = await _stationService.GetClosestStationsAsync(lat, lon, limit);
         return Ok(stations);
     }
 

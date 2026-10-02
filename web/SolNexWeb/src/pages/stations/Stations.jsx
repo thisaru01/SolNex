@@ -39,7 +39,7 @@ export default function Stations() {
   const fetchStations = async () => {
     try {
       setLoading(true)
-      const data = await stationApi.getStations()
+      const data = await stationApi.getStations(searchQuery, statusFilter)
       setStations(data)
       setError(null)
     } catch (err) {
@@ -49,10 +49,13 @@ export default function Stations() {
     }
   }
 
-  // Trigger side effects like fetching initial station data on mount
+  // Fetch stations when search or status filters change, with debounce
   useEffect(() => {
-    fetchStations()
-  }, [])
+    const timer = setTimeout(() => {
+      fetchStations()
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchQuery, statusFilter])
 
   const handleActivate = async (id) => {
     try {
@@ -74,16 +77,8 @@ export default function Stations() {
     }
   }
 
-  // Filter logic
-  const filteredStations = stations.filter(station => {
-    const matchesSearch = 
-      station.stationId.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      station.stationName.toLowerCase().includes(searchQuery.toLowerCase())
-    
-    const matchesStatus = statusFilter === "All" || station.status === statusFilter
-    
-    return matchesSearch && matchesStatus
-  })
+  // Filtering is now handled on the server
+
 
   return (
     <div className="space-y-6">
@@ -142,7 +137,7 @@ export default function Stations() {
             <div className="space-y-2">
               {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-16 w-full" />)}
             </div>
-          ) : filteredStations.length === 0 ? (
+          ) : stations.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground border border-dashed rounded-lg">
               No stations found matching your criteria.
             </div>
@@ -160,7 +155,7 @@ export default function Stations() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredStations.map((station) => (
+                  {stations.map((station) => (
                     <TableRow key={station.id}>
                       <TableCell>
                         <div className="font-medium">{station.stationName}</div>
