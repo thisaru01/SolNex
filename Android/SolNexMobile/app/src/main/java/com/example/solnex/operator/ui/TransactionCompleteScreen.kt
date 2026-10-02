@@ -24,7 +24,9 @@ import com.example.solnex.operator.model.Transaction
 @Composable
 fun TransactionCompleteScreen(
     transaction: Transaction,
-    onScanAnother: () -> Unit
+    onScanAnother: () -> Unit,
+    actionText: String = "Scan Another Transaction",
+    error: String? = null
 ) {
 
     Column(
@@ -69,6 +71,15 @@ fun TransactionCompleteScreen(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+
+        if (!error.isNullOrBlank()) {
+            Text(
+                text = error,
+                modifier = Modifier.padding(top = 8.dp),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
 
         ElevatedCard(
             modifier = Modifier
@@ -131,7 +142,7 @@ fun TransactionCompleteScreen(
             shape = RoundedCornerShape(14.dp)
         ) {
             Text(
-                text = "Scan Another Transaction",
+                text = actionText,
                 fontWeight = FontWeight.SemiBold
             )
         }

@@ -37,12 +37,14 @@ public class TransactionService :
 
     public async Task<
         IEnumerable<TransactionDto>>
-        GetPendingAsync()
+        GetPendingAsync(
+            string? operatorNic = null)
     {
         // Returns pending and verified active transactions.
         var transactions =
             await _transactionRepository
-                .GetPendingAsync();
+                .GetPendingAsync(
+                    operatorNic);
 
         return transactions
             .Select(
@@ -51,12 +53,48 @@ public class TransactionService :
 
     public async Task<
         IEnumerable<TransactionDto>>
-        GetCompletedAsync()
+        GetCompletedAsync(
+            string? operatorNic = null)
     {
         // Returns completed transactions.
         var transactions =
             await _transactionRepository
-                .GetCompletedAsync();
+                .GetCompletedAsync(
+                    operatorNic);
+
+        return transactions
+            .Select(
+                MapToDto);
+    }
+
+    public async Task<
+        IEnumerable<TransactionDto>>
+        GetOperationalHistoryAsync(
+            string? operatorNic = null)
+    {
+        var transactions =
+            await _transactionRepository
+                .GetOperationalHistoryAsync(
+                    operatorNic);
+
+        return transactions
+            .Select(
+                MapToDto)
+            .OrderByDescending(
+                transaction =>
+                    transaction.CompletedAt ??
+                    transaction.VerifiedAt);
+    }
+
+    public async Task<
+        IEnumerable<TransactionDto>>
+        GetScannedByOperatorAsync(
+            string operatorNic)
+    {
+        var transactions =
+            await _transactionRepository
+                .GetScannedByOperatorAsync(
+                    operatorNic);
 
         return transactions
             .Select(

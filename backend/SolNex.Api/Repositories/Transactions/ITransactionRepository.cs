@@ -28,11 +28,22 @@ public interface ITransactionRepository
 
     // Retrieves transactions awaiting verification or completion.
     Task<IEnumerable<EnergyTransaction>>
-        GetPendingAsync();
+        GetPendingAsync(
+            string? operatorNic = null);
 
     // Retrieves completed transactions.
     Task<IEnumerable<EnergyTransaction>>
-        GetCompletedAsync();
+        GetCompletedAsync(
+            string? operatorNic = null);
+
+    // Retrieves verified and completed operational records.
+    Task<IEnumerable<EnergyTransaction>>
+        GetOperationalHistoryAsync(
+            string? operatorNic = null);
+
+    Task<IEnumerable<EnergyTransaction>>
+        GetScannedByOperatorAsync(
+            string operatorNic);
 
     // Retrieves active transactions for a Prosumer.
     Task<IEnumerable<EnergyTransaction>>

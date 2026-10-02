@@ -178,9 +178,9 @@ fun TransactionDetailsScreen(
         ) {
             Text(
                 if (loading) {
-                    "Finalizing..."
+                    "Completing..."
                 } else {
-                    "Finalize Energy Transfer"
+                    "Complete Transaction"
                 }
             )
         }
