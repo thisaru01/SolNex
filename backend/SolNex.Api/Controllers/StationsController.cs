@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SolNex.Api.DTOs;
 using SolNex.Api.DTOs.Stations;
+using SolNex.Api.DTOs.Dashboard;
 using Microsoft.AspNetCore.Authorization;
 using SolNex.Api.Services;
 using SolNex.Api.Services.Stations;
@@ -25,6 +26,15 @@ public class StationsController : ControllerBase
     {
         var stations = await _stationService.GetAllStationsAsync();
         return Ok(stations);
+    }
+
+    // GET: api/stations/dashboard
+    // Returns dashboard metrics and recent stations for the frontend.
+    [HttpGet("dashboard")]
+    public async Task<ActionResult<DashboardDto>> GetDashboardData()
+    {
+        var dashboardData = await _stationService.GetDashboardDataAsync();
+        return Ok(dashboardData);
     }
 
     // GET: api/stations/next-id

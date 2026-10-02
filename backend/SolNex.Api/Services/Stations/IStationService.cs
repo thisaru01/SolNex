@@ -1,5 +1,6 @@
 using SolNex.Api.DTOs;
 using SolNex.Api.DTOs.Stations;
+using SolNex.Api.DTOs.Dashboard;
 
 namespace SolNex.Api.Services.Stations;
 
@@ -43,5 +44,8 @@ public interface IStationService
 
     // Calculates and returns the next available custom StationId (e.g., ST031).
     Task<string> GetNextStationIdAsync();
+
+    // Retrieves dashboard metrics and recent stations.
+    Task<DashboardDto> GetDashboardDataAsync();
 }
 

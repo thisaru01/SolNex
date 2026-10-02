@@ -38,6 +38,7 @@ async function fetchWithConfig(endpoint, options = {}) {
 
 export const stationApi = {
   getStations: () => fetchWithConfig('/stations'),
+  getDashboardData: () => fetchWithConfig('/stations/dashboard'),
   getNextStationId: () => fetchWithConfig('/stations/next-id'),
   
   getStationById: (id) => fetchWithConfig(`/stations/${id}`),

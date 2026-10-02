@@ -1,5 +1,6 @@
 using SolNex.Api.DTOs;
 using SolNex.Api.DTOs.Stations;
+using SolNex.Api.DTOs.Dashboard;
 using SolNex.Api.Models;
 using SolNex.Api.Repositories;
 using SolNex.Api.Repositories.Stations;
@@ -273,6 +274,35 @@ public class StationService : IStationService
             Schedule = station.Schedule,
             CreatedAt = station.CreatedAt,
             UpdatedAt = station.UpdatedAt
+        };
+    }
+
+    // Retrieves dashboard metrics and recent stations.
+    public async Task<DashboardDto> GetDashboardDataAsync()
+    {
+        var stations = await _stationRepository.GetAllStationsAsync();
+        var stationList = stations.ToList();
+        var activeStationList = stationList.Where(s => s.Status == StationStatus.Active).ToList();
+        
+        var metrics = new DashboardMetricsDto
+        {
+            TotalStations = stationList.Count,
+            ActiveStations = activeStationList.Count,
+            InactiveStations = stationList.Count - activeStationList.Count,
+            TotalBatterySlots = activeStationList.Sum(s => s.TotalBatterySlots),
+            AvailableBatterySlots = activeStationList.Sum(s => s.AvailableBatterySlots)
+        };
+
+        var recentStations = stationList
+            .OrderByDescending(s => s.CreatedAt)
+            .Take(5)
+            .Select(MapToDto)
+            .ToList();
+
+        return new DashboardDto
+        {
+            Metrics = metrics,
+            RecentStations = recentStations
         };
     }
 }
