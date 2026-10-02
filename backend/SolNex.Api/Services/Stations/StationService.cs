@@ -1,3 +1,13 @@
+/*
+ * ------------------------------------------------------------------
+ * File Name: StationService.cs
+ * Author: Rajapaksha T.M
+ * Student ID: IT23235892
+ * Date: 2026-09-24
+ * Description: Service implementation for station operations.
+ * ------------------------------------------------------------------
+ */
+
 using SolNex.Api.DTOs;
 using SolNex.Api.DTOs.Stations;
 using SolNex.Api.DTOs.Dashboard;

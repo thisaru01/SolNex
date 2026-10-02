@@ -1,3 +1,13 @@
+/*
+ * ------------------------------------------------------------------
+ * File Name: StationsController.cs
+ * Author: Rajapaksha T.M
+ * Student ID: IT23235892
+ * Date: 2026-09-20
+ * Description: Controller for handling station-related HTTP requests.
+ * ------------------------------------------------------------------
+ */
+
 using Microsoft.AspNetCore.Mvc;
 using SolNex.Api.DTOs;
 using SolNex.Api.DTOs.Stations;

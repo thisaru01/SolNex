@@ -1,3 +1,13 @@
+/*
+ * ------------------------------------------------------------------
+ * File Name: IStationRepository.cs
+ * Author: Rajapaksha T.M
+ * Student ID: IT23235892
+ * Date: 2026-09-24
+ * Description: Interface for station repository operations.
+ * ------------------------------------------------------------------
+ */
+
 using SolNex.Api.Models;
 
 namespace SolNex.Api.Repositories.Stations;

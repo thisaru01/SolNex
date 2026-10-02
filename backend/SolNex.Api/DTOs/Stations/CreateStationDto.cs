@@ -1,3 +1,13 @@
+/*
+ * ------------------------------------------------------------------
+ * File Name: CreateStationDto.cs
+ * Author: Rajapaksha T.M
+ * Student ID: IT23235892
+ * Date: 2026-09-24
+ * Description: Data transfer object for creating a station.
+ * ------------------------------------------------------------------
+ */
+
 using System.ComponentModel.DataAnnotations;
 using SolNex.Api.Attributes;
 

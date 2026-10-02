@@ -1,3 +1,13 @@
+/*
+ * ------------------------------------------------------------------
+ * File Name: StationRepository.cs
+ * Author: Rajapaksha T.M
+ * Student ID: IT23235892
+ * Date: 2026-09-24
+ * Description: Repository implementation for station operations.
+ * ------------------------------------------------------------------
+ */
+
 using MongoDB.Driver;
 using SolNex.Api.Data;
 using SolNex.Api.Models;
