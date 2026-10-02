@@ -1,3 +1,13 @@
+/*
+ * ------------------------------------------------------------------
+ * File Name: CreateSlotDto.cs
+ * Author: Kavindi P.D.I
+ * Student ID: IT23234666
+ * Date: 2026-09-25
+ * Description: Data Transfer Object for CreateSlot operations.
+ * ------------------------------------------------------------------
+ */
+
 using System.ComponentModel.DataAnnotations;
 
 namespace SolNex.Api.DTOs.Reservations;

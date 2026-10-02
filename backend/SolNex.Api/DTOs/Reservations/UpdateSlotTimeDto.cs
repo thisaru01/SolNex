@@ -1,3 +1,13 @@
+/*
+ * ------------------------------------------------------------------
+ * File Name: UpdateSlotTimeDto.cs
+ * Author: Kavindi P.D.I
+ * Student ID: IT23234666
+ * Date: 2026-09-28
+ * Description: Data Transfer Object for UpdateSlotTime operations.
+ * ------------------------------------------------------------------
+ */
+
 using System.ComponentModel.DataAnnotations;
 
 namespace SolNex.Api.DTOs.Reservations;

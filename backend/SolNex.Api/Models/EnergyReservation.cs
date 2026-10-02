@@ -1,3 +1,13 @@
+/*
+ * ------------------------------------------------------------------
+ * File Name: EnergyReservation.cs
+ * Author: Kavindi P.D.I
+ * Student ID: IT23234666
+ * Date: 2026-09-19
+ * Description: Domain model representing EnergyReservation.
+ * ------------------------------------------------------------------
+ */
+
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 

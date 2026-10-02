@@ -1,3 +1,13 @@
+/*
+ * ------------------------------------------------------------------
+ * File Name: EnergyBookingSlotService.cs
+ * Author: Kavindi P.D.I
+ * Student ID: IT23234666
+ * Date: 2026-09-25
+ * Description: Service implementation for business logic related to EnergyBookingSlot.
+ * ------------------------------------------------------------------
+ */
+
 using SolNex.Api.DTOs.Reservations;
 using SolNex.Api.Services.Reservations;
 using SolNex.Api.Repositories.Reservations;
