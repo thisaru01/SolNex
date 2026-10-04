@@ -1,3 +1,9 @@
+/*
+ * File Name: AuthController.cs
+ * Author: Vidanapathirana L S
+ * Student ID: IT23442498
+ * Description: Controller for user authentication and registration endpoints.
+ */
 using Microsoft.AspNetCore.Mvc;
 using SolNex.Api.DTOs;
 using SolNex.Api.Services;

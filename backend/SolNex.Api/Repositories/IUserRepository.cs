@@ -1,3 +1,9 @@
+/*
+ * File Name: IUserRepository.cs
+ * Author: Vidanapathirana L S
+ * Student ID: IT23442498
+ * Description: Interface for user repository data access operations.
+ */
 using SolNex.Api.Models;
 
 namespace SolNex.Api.Repositories;

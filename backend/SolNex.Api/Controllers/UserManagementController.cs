@@ -1,3 +1,9 @@
+/*
+ * File Name: UserManagementController.cs
+ * Author: Vidanapathirana L S
+ * Student ID: IT23442498
+ * Description: Controller for user and prosumer management endpoints.
+ */
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

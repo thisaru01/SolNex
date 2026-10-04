@@ -1,3 +1,9 @@
+/*
+ * File Name: JwtTokenService.cs
+ * Author: Vidanapathirana L S
+ * Student ID: IT23442498
+ * Description: Service implementation for JWT token generation.
+ */
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;

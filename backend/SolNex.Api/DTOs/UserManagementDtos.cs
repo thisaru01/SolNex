@@ -1,3 +1,9 @@
+/*
+ * File Name: UserManagementDtos.cs
+ * Author: Vidanapathirana L S
+ * Student ID: IT23442498
+ * Description: Data transfer objects for user management operations.
+ */
 // User management DTOs
 using System.ComponentModel.DataAnnotations;
 

@@ -1,3 +1,9 @@
+/*
+ * File Name: IUserService.cs
+ * Author: Vidanapathirana L S
+ * Student ID: IT23442498
+ * Description: Interface for user and prosumer management service operations.
+ */
 using SolNex.Api.DTOs;
 using SolNex.Api.Models;
 

@@ -1,3 +1,9 @@
+/*
+ * File Name: IAuthService.cs
+ * Author: Vidanapathirana L S
+ * Student ID: IT23442498
+ * Description: Interface for user authentication service operations.
+ */
 using SolNex.Api.DTOs;
 
 namespace SolNex.Api.Services;

@@ -1,3 +1,9 @@
+/*
+ * File Name: UserService.cs
+ * Author: Vidanapathirana L S
+ * Student ID: IT23442498
+ * Description: Service implementation for user and prosumer management business logic.
+ */
 using Microsoft.AspNetCore.Identity;
 using MongoDB.Driver;
 using SolNex.Api.DTOs;
