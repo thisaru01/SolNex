@@ -24,18 +24,19 @@ import ReservationList from "./pages/reservations/ReservationList"
 import ReservationHistory from "./pages/reservations/ReservationHistory"
 import BookingSlots from "./pages/reservations/BookingSlots"
 import { Toaster } from "@/components/ui/sonner"
+import Home from "./pages/Home"
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<Home />} />
         {/* Public / Standalone Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
         {/* Main Application Routes (with Sidebar Layout) */}
-        <Route path="/" element={<AppLayout />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route element={<AppLayout />}>
           <Route path="dashboard" element={<ProtectedRoute allowedRoles={["Backoffice", "GridOperator"]}><Dashboard /></ProtectedRoute>} />
           <Route path="users" element={<ProtectedRoute allowedRoles={["Backoffice"]}><Users /></ProtectedRoute>} />
           <Route path="users/create" element={<ProtectedRoute allowedRoles={["Backoffice"]}><CreateUser /></ProtectedRoute>} />
