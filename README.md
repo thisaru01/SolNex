@@ -1,606 +1,226 @@
 # SolNex
 
-**Smart Solar Microgrid Trading System**
+SolNex is a smart solar microgrid management system. It provides a browser-based operations console and a native Android client backed by a central ASP.NET Core REST API and MongoDB.
 
-## 1. Project Information
+## What is implemented
 
-A client-server based Smart Solar Microgrid Trading System consisting of:
+### Web console
 
-- Web application
-- Native Android mobile application
-- Central C# REST Web API
-- MongoDB NoSQL database
+The React/Vite web application is intended for **Backoffice** and **GridOperator** users. It currently includes:
 
-The system allows back-office users, grid operators, and solar prosumers to manage solar microgrid stations, energy booking slots, reservations, and energy-transfer transactions.
+- JWT login and prosumer registration
+- Role-protected routes
+- Dashboard
+- User and prosumer management
+- User activation, deactivation, role changes, and deactivation-request review
+- Solar station creation, editing, activation/deactivation, details, schedules, battery slots, and map views
+- Booking slot and reservation views, history, search, and reservation actions
+- Reservation approval and rejection
+- Transaction list, details, and operational history
 
-## 2. System Architecture
+### Android application
 
-The project follows a client-server architecture.
+The native Android app is built with Kotlin and Jetpack Compose. It includes:
+
+- Prosumer login, registration, password reset, profile management, and deactivation requests
+- Home, map, reservations, QR, and profile navigation
+- Google Maps station discovery
+- Reservation creation, editing, cancellation, and history
+- Prosumer transaction QR display
+- Grid operator QR scanning, transaction verification, and completion
+- Local SQLite helpers for user, station, reservation, and transaction data
+
+### API and data
+
+The ASP.NET Core API provides authentication and server-side business logic for:
+
+- Users and account lifecycle
+- Solar stations, schedules, availability, and battery slots
+- Energy booking slots and reservations
+- Reservation approval/rejection
+- Energy transaction verification and completion
+
+MongoDB is accessed only by the API. Web and Android clients communicate with the API over HTTP and do not connect directly to MongoDB.
+
+## Architecture
 
 ```text
-                    ┌───────────────────────┐
-                    │      Web Client       │
-                    │ React.js + Bootstrap  │
-                    └───────────┬───────────┘
-                                │
-                                │ REST API
-                                ▼
-                    ┌───────────────────────┐
-                    │   Central Web API     │
-                    │   ASP.NET Core / C#   │
-                    │                       │
-                    │ Controllers           │
-                    │ Services              │
-                    │ Business Logic        │
-                    │ Validation            │
-                    └───────────┬───────────┘
-                                │
-                                │ MongoDB Driver
-                                ▼
-                    ┌───────────────────────┐
-                    │     MongoDB Atlas     │
-                    │      NoSQL Database   │
-                    └───────────────────────┘
-                                ▲
-                                │
-                                │ REST API
-                                │
-                    ┌───────────┴───────────┐
-                    │   Native Android      │
-                    │ Kotlin + SQLite       │
-                    │ Google Maps           │
-                    │ QR Scanner            │
-                    └───────────────────────┘
+┌──────────────────────────┐       REST/JSON       ┌──────────────────────────┐
+│ React + Vite web console │ ────────────────────► │ ASP.NET Core 10 API      │
+└──────────────────────────┘                      │ JWT authentication       │
+                                                  │ Services/repositories    │
+┌──────────────────────────┐       REST/JSON       └────────────┬─────────────┘
+│ Kotlin + Compose Android│ ────────────────────────────────────┘
+└──────────────────────────┘                                   │ MongoDB.Driver
+                                                               ▼
+                                                        ┌──────────────┐
+                                                        │ MongoDB       │
+                                                        │ SolNexDb      │
+                                                        └──────────────┘
 ```
 
-### Architecture Rules
+The API is the source of truth for reservations, approvals, and transaction verification. Android SQLite storage is local client data and does not replace the server database.
 
-- The project must follow the FAT Service pattern required by the assignment.
-- Business logic must reside in the central Web API.
-- The Web and Android applications are UI/client layers and must communicate with the system through the REST API.
-- Clients must not directly access MongoDB.
-- The Android application may use SQLite for the local persistence required by the assignment.
-- The central service will eventually be deployed on Windows IIS.
-- The assignment requires a C# Web API with a server-side NoSQL database such as MongoDB.
+## Repository layout
 
-## 3. Technology Stack
+```text
+SolNex/
+├── backend/
+│   ├── SolNex.Api/
+│   │   ├── Controllers/
+│   │   ├── Data/
+│   │   ├── DTOs/
+│   │   ├── Extensions/
+│   │   ├── Models/
+│   │   ├── Repositories/
+│   │   ├── Services/
+│   │   ├── Program.cs
+│   │   └── SolNex.Api.csproj
+│   ├── SolNex_Reservations_Postman.json
+│   └── SolNex_Stations_Postman.json
+├── web/
+│   └── SolNexWeb/
+│       ├── src/
+│       │   ├── components/
+│       │   ├── pages/
+│       │   └── services/
+│       ├── package.json
+│       └── vite.config.js
+├── Android/
+│   └── SolNexMobile/
+│       ├── app/
+│       ├── gradle/
+│       └── settings.gradle.kts
+└── README.md
+```
 
-### Backend
-- C#
-- ASP.NET Core Web API
-- REST API
-- MongoDB.Driver
-- MongoDB Atlas
-- Swagger / OpenAPI
-- Windows IIS for deployment
+## Technology stack
+
+- **Backend:** C#, ASP.NET Core 10, JWT bearer authentication, OpenAPI, MongoDB.Driver 3.12
+- **Web:** React 19, React Router 7, Vite 8, Tailwind CSS 4, Lucide icons, Google Maps
+- **Android:** Kotlin 2.0, Jetpack Compose, Android Gradle Plugin 8.9, Google Maps Compose, ZXing
+- **Database:** MongoDB or MongoDB Atlas
+- **Target Android SDK:** 35; minimum Android SDK: 24
+
+## Prerequisites
+
+- .NET 10 SDK
+- Node.js and npm
+- Android Studio with an Android SDK and emulator, or a physical Android device
+- MongoDB instance (local or Atlas)
+- Google Maps API key for Android map features
+
+## Configuration
+
+### API
+
+The API reads database and JWT settings from `backend/SolNex.Api/appsettings.json` and environment-specific configuration. Set `DatabaseSettings:ConnectionString` to a MongoDB connection string and keep credentials out of source control. The default database name is `SolNexDb`.
+
+The API listens on `http://localhost:5097` when launched with the included development profile used by the clients. OpenAPI is exposed in development.
 
 ### Web
-- React.js
-- Bootstrap 5
-- JavaScript / HTML / CSS
-- REST API communication
+
+The web client defaults to `http://localhost:5097`. To use another API URL, create `web/SolNexWeb/.env.local`:
+
+```dotenv
+VITE_API_URL=http://localhost:5097
+```
+
+Do not commit local `.env` files or credentials.
 
 ### Android
-- Native Android
-- Kotlin
-- Android Studio
-- SQLite
-- Google Maps API
-- QR code scanning
 
-### Development Tools
-- Visual Studio Code
-- Android Studio
-- Git
-- GitHub
-- MongoDB Atlas
-- MongoDB Compass
-- Postman
-- Swagger
+1. Add `MAPS_API_KEY=your_key_here` to `Android/SolNexMobile/local.properties`.
+2. For an Android emulator, the API base URL is `http://10.0.2.2:5097`.
+3. For a physical device, update `ApiConfig.kt` with an IP address reachable from the device, or use:
 
-### Important
+   ```text
+   adb reverse tcp:5097 tcp:5097
+   ```
 
-**Do not use:**
-- Flutter
-- React Native
-- Xamarin
-- .NET MAUI
-- Other cross-platform Android frameworks
+   and configure the device to use the development API address.
 
-> The assignment specifically requires a pure native Android application with SQLite.
+The Android app requires network access and uses camera permission for QR scanning and location permission for map features.
 
-## 4. Repository Structure
+## Running locally
 
-The project uses a single monorepo.
+### 1. Start the API
 
-```text
-smart-solar-microgrid/
-│
-├── README.md
-│
-├── backend/
-│ └── SmartSolarMicrogrid.Api/
-│     ├── Controllers/
-│     ├── Models/
-│     ├── DTOs/
-│     ├── Services/
-│     ├── Repositories/
-│     ├── Data/
-│     ├── Program.cs
-│     ├── appsettings.json
-│     └── SmartSolarMicrogrid.Api.csproj
-│
-├── web/
-│ └── smart-solar-web/
-│
-├── android/
-│ └── SmartSolarMobile/
-│
-├── database/
-│ ├── collections/
-│ └── seed/
-│
-├── docs/
-│ ├── diagrams/
-│ ├── screenshots/
-│ └── api/
-│
-└── .gitignore 
+From the repository root:
+
+```powershell
+dotnet run --project .\backend\SolNex.Api\SolNex.Api.csproj
 ```
 
-## 5. Backend Structure
+The API will use the configured MongoDB connection and listen on the development URL.
 
-The central API should eventually follow this structure:
+### 2. Start the web console
 
-```text
-SmartSolarMicrogrid.Api/
-│
-├── Controllers/
-│   ├── AuthController.cs
-│   ├── UsersController.cs
-│   ├── StationsController.cs
-│   ├── ReservationsController.cs
-│   └── TransactionsController.cs
-│
-├── Models/
-│   ├── User.cs
-│   ├── SolarStationInfo.cs
-│   ├── EnergyBookingSlot.cs
-│   ├── EnergyReservation.cs
-│   └── Transaction.cs
-│
-├── DTOs/
-│   ├── LoginRequest.cs
-│   ├── RegisterUserRequest.cs
-│   └── ...
-│
-├── Services/
-│   ├── AuthService.cs
-│   ├── UserService.cs
-│   ├── StationService.cs
-│   ├── ReservationService.cs
-│   └── TransactionService.cs
-│
-├── Repositories/
-│   ├── UserRepository.cs
-│   ├── StationRepository.cs
-│   ├── ReservationRepository.cs
-│   └── TransactionRepository.cs
-│
-├── Data/
-│   └── MongoDbContext.cs
-│
-├── Program.cs
-├── appsettings.json
-└── SmartSolarMicrogrid.Api.csproj
+```powershell
+cd .\web\SolNexWeb
+npm install
+npm run dev
 ```
 
-This structure is a planned architecture. Individual implementation decisions may be refined during development.
+Useful web commands:
 
-## 6. Database
-
-The project uses MongoDB Atlas as the server-side NoSQL database.
-
-The assignment marking scheme specifically requires the following four data areas:
-- User's detail
-- SolarStationInfo
-- EnergyBookingSlots
-- Energy Reservation
-
-All four should contain the required fields and consistent references between related data.
-
-Additional transaction data may be introduced where required by the transaction workflow.
-
-### Planned Collections
-- Users
-- SolarStationInfo
-- EnergyBookingSlots
-- EnergyReservation
-- Transactions 
-
-## 7. User Roles
-
-The system contains three main user types.
-
-### Backoffice
-Responsible for administration functions.
-
-**Main responsibilities:**
-- User management
-- Prosumer management
-- User activation/deactivation
-- Microgrid station management
-- Station schedule management
-
-*Only Backoffice users should access administrative functions.*
-
-### Grid Operator
-Responsible for operational functions.
-
-**Main responsibilities:**
-- View operational reservations
-- Approve/reject reservations
-- Monitor energy transactions
-- Use Android operator mode
-- Scan transaction QR codes
-- Verify transactions
-- Finalize energy transfers
-
-### Solar Prosumer
-Uses the Android application.
-
-**Main responsibilities:**
-- Register account
-- Login
-- Manage personal profile
-- Request account deactivation
-- View nearby microgrid stations
-- View available slots
-- Create reservations
-- Modify reservations
-- Cancel reservations
-- View booking history
-- Receive approved reservation details
-- Use transaction QR workflow 
-
-## 8. Group Responsibilities
-
-### Member 1 — User & Authentication
-
-**Web**
-- Login
-- Role-based access control
-- User management
-- Prosumer management
-- Activate/deactivate users
-- Pending user activation
-- Search/view prosumers
-
-**Android**
-- Prosumer registration
-- Login
-- Account status
-- Modify own account
-- Request account deactivation
-
-**API**
-- `POST /api/auth/login`
-- `POST /api/users/register`
-- `GET /api/users`
-- `GET /api/users/{nic}`
-- `PUT /api/users/{nic}`
-- `PUT /api/users/{nic}/activate`
-- `PUT /api/users/{nic}/deactivate`
-- `GET /api/users/pending`
-- `PUT /api/users/{nic}/role`
-
-**Database**
-- User's detail 
-
-### 9. Member 2 — Microgrid / Station Management
-
-**Web**
-- Station list
-- Create station/node
-- Edit station/node
-- Deactivate station/node
-- Manage GPS/location
-- Manage capacity
-- Manage battery slots
-- Manage station schedules
-
-**Android**
-- Nearby grid nodes
-- Google Maps
-- Station details
-- Station availability
-- Available slots
-
-**API**
-- `GET /api/stations`
-- `GET /api/stations/{id}`
-- `POST /api/stations`
-- `PUT /api/stations/{id}`
-- `PUT /api/stations/{id}/deactivate`
-- `GET /api/stations/nearby`
-- `GET /api/stations/{id}/availability`
-- `GET /api/stations/{id}/schedule`
-- `PUT /api/stations/{id}/schedule`
-
-**Database**
-- SolarStationInfo 
-
-### 10. Member 3 — Reservation Management
-
-**Web**
-- Reservation list
-- Current/upcoming reservations
-- Reservation history
-- Search and filter reservations
-- Reservations dashboard
-- View reservation details
-
-**Android**
-- View available slots
-- Create reservation
-- Reservation summary
-- Update reservation
-- Cancel reservation
-- View current/pending bookings
-- View booking history
-- Search/filter reservations
-
-**API**
-- `GET /api/slots`
-- `GET /api/slots/{stationId}`
-- `GET /api/slots/available`
-- `POST /api/reservations`
-- `GET /api/reservations/{id}`
-- `GET /api/reservations/user/{nic}`
-- `PUT /api/reservations/{id}`
-- `DELETE /api/reservations/{id}`
-- `GET /api/reservations/pending`
-- `GET /api/reservations/current`
-- `GET /api/reservations/history`
-- `GET /api/reservations/search`
-
-**Database**
-- EnergyBookingSlots
-- EnergyReservation
-
-**Business Rules**
-Reservations must:
-- Be scheduled within 7 days.
-- Respect the required notice period for modifications.
-- Respect the required notice period for cancellations.
-
-> The assignment specifically states that reservations must be scheduled within 7 days and updates/cancellations require at least 12 hours' notice.
-
-### 11. Member 4 — Operator, Approval & Energy Transaction
-
-**Web**
-- Pending reservation approval
-- Approve reservation
-- Reject reservation
-- Transaction/transfer list
-- Transaction details
-- Operational history
-
-**Android**
-- Operator Mode
-- QR scanning
-- Server verification
-- Transaction details after scanning
-- Finalize energy transfer
-
-**API**
-- `GET /api/reservations/pending`
-- `PUT /api/reservations/{id}/approve`
-- `PUT /api/reservations/{id}/reject`
-- `POST /api/transactions/verify`
-- `GET /api/transactions/{id}`
-- `POST /api/transactions/{id}/complete`
-- `GET /api/transactions/pending`
-- `GET /api/transactions/completed`
-
-**Important API Ownership**
-`GET /api/reservations/pending` currently appears in both Member 3 and Member 4 plans.
-This endpoint ownership must be agreed by the team before implementation.
-
-Recommended responsibility:
-- **Member 3:** `GET /api/reservations/pending`
-- **Member 4:** `PUT /api/reservations/{id}/approve`, `PUT /api/reservations/{id}/reject` 
-
-## 12. Core Business Workflow
-
-### Prosumer Reservation
-```text
-Prosumer
-│
-▼
-Android App
-│
-▼
-GET available slots
-│
-▼
-Central API
-│
-▼
-MongoDB
-│
-▼
-Available slots
-│
-▼
-Prosumer selects slot
-│
-▼
-POST reservation
-│
-▼
-API validates business rules
-│
-▼
-Reservation stored
+```powershell
+npm run build   # production build
+npm run lint    # ESLint
+npm run preview # preview the production build
 ```
 
-### Reservation Approval
-```text
-Reservation
-│
-▼
-Grid Operator / Backoffice
-│
-▼
-Pending Reservations
-│
-├── Approve
-│
-└── Reject
-```
-Once approved, the prosumer can proceed with the transaction workflow.
+### 3. Run the Android app
 
-## 13. QR Transaction Workflow
+Open `Android/SolNexMobile` in Android Studio, configure `local.properties`, sync Gradle, and run the `app` configuration on an emulator or connected device. From PowerShell, a debug APK can also be built with:
 
-The planned transaction flow is:
-
-```text
-Approved Reservation
-│
-▼
-Prosumer Android App
-│
-▼
-Generate Transaction QR
-│
-▼
-Grid Operator scans QR
-│
-▼
-Central API verifies transaction
-│
-▼
-Transaction details returned
-│
-▼
-Operator confirms energy transfer
-│
-▼
-Central API finalizes transaction
-│
-▼
-Transaction marked completed
+```powershell
+cd .\Android\SolNexMobile
+.\gradlew.bat assembleDebug
 ```
 
-The assignment requires the operator to scan the prosumer's transaction QR code, verify it against the server, and finalize the job.
+The APK is generated under `app/build/outputs/apk/debug/`.
 
-## 14. Android Local Storage
+## API areas
 
-SQLite is required for the native Android application.
+The API is organized around these route groups:
 
-SQLite should be used for appropriate local persistence such as:
-- Login/reference information
-- Required local user information
-- Reference data
+| Area | Base routes | Examples |
+| --- | --- | --- |
+| Authentication | `/api/auth` | Login, registration, password reset |
+| Users | `/api/users` | User search, profile, roles, activation, deactivation |
+| Stations | `/api/stations` | CRUD, map/closest stations, availability, schedules |
+| Slots | `/api/slots` | Slot listing, availability, status, reservation |
+| Reservations | `/api/reservations` | Create, update, cancel, history, search |
+| Approval | `/api/reservations` | Approve or reject a reservation |
+| Transactions | `/api/transactions` | Pending/completed history, QR verification, completion |
 
-However, MongoDB must remain server-side.
-The Android client must not connect directly to MongoDB.
+The API also includes development connectivity endpoints such as `/test-db`. Do not expose diagnostic endpoints publicly without reviewing their access and error responses.
 
-The assignment specifically assesses SQLite local persistence and requires clients to communicate through the central Web API.
+## Typical workflows
 
-## 15. Google Maps
+### Reservation
 
-The Android application should use Google Maps API to display nearby solar microgrid nodes.
+1. A prosumer signs in through Android and views stations or available slots.
+2. The app creates a reservation through the API.
+3. Backoffice or a grid operator reviews pending reservations in the web console.
+4. An approved reservation becomes available to the prosumer for the transaction flow.
 
-Station locations should come from the API/database rather than hard-coded station locations.
+### Energy transaction
 
-Each station should provide appropriate location information such as:
-- Latitude
-- Longitude
-- Station details
-- Capacity
-- Availability
+1. The prosumer opens the QR section in the Android app.
+2. A grid operator scans the QR code in Operator Mode.
+3. The API verifies the transaction and returns its details.
+4. The operator confirms the transfer and the API marks it complete.
 
-The assignment requires nearby grid nodes to be plotted using their stored latitude and longitude.
+## Development notes
 
-## 16. API Communication Rule
+- Keep business rules in the API services, not in the web or Android clients.
+- Keep MongoDB credentials and Google Maps keys in local configuration.
+- Clients must use the API rather than connecting directly to MongoDB.
+- Generated directories such as `bin/`, `obj/`, `node_modules/`, and Android build output should not be committed.
+- The Postman collections in `backend/` can be imported for manual API checks.
 
-Both clients communicate with the central API.
+## License
 
-```text
-Web ───────────────► REST API ◄────────────── Android
-                        │
-                        ▼
-                     MongoDB
-```
-
-**Do not implement:**
-- `Web ───────────────► MongoDB`
-- `Android ────────────► MongoDB`
-
-Business rules must be implemented centrally in the API rather than duplicated in the clients.
-
-## 17. Authentication
-
-Authentication should be handled by the central API.
-
-The API determines the user's role and returns the appropriate authentication result.
-The clients use the result to display the appropriate UI.
-
-**Example roles:**
-- `BACKOFFICE`
-- `GRID_OPERATOR`
-- `PROSUMER`
-
-Role-specific authorization should be enforced by the API rather than relying only on hiding UI elements.
-
-## 22. Error Handling
-
-The API should return appropriate HTTP responses.
-
-**Examples:**
-- `200 OK`
-- `201 Created`
-- `400 Bad Request`
-- `401 Unauthorized`
-- `403 Forbidden`
-- `404 Not Found`
-- `409 Conflict`
-- `500 Internal Server Error`
-
-Clients should display meaningful error messages rather than exposing raw server errors.
-
-## 25. Deployment
-
-The central Web API is intended to be deployed on:
-- **Windows IIS Server**
-
-### Target architecture:
-
-```text
-Web Browser
-│
-▼
-Web Application
-│
-▼
-Hosted C# Web API
-│
-▼
-MongoDB Atlas
-```
-
-and:
-
-```text
-Android Application
-│
-▼
-Hosted C# Web API
-│
-▼
-MongoDB Atlas
-```
-
-Both clients must be able to reach the deployed service.
+No license has been declared for this repository yet.

@@ -1,10 +1,51 @@
+using SolNex.Api.Services.Reservations;
+using SolNex.Api.Repositories.Reservations;
 using MongoDB.Driver;
+using Microsoft.AspNetCore.Identity;
 using SolNex.Api.Data;
+using SolNex.Api.Extensions;
+using SolNex.Api.Models;
+using SolNex.Api.Repositories;
+using SolNex.Api.Repositories.Stations;
+using SolNex.Api.Repositories.Transactions;
+using SolNex.Api.Services;
+using SolNex.Api.Services.Stations;
+using SolNex.Api.Services.Transactions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Register the MongoDbContext as a Singleton service
 builder.Services.AddSingleton<MongoDbContext>();
+
+// Register Repositories and Services
+builder.Services.AddScoped<IStationRepository, StationRepository>();
+builder.Services.AddScoped<IStationService, StationService>();
+builder.Services.AddScoped<IEnergyBookingSlotRepository, EnergyBookingSlotRepository>();
+builder.Services.AddScoped<IEnergyReservationRepository, EnergyReservationRepository>();
+builder.Services.AddScoped<IEnergyBookingSlotService, EnergyBookingSlotService>();
+builder.Services.AddScoped<IEnergyReservationService, EnergyReservationService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.AddSolNexJwtAuthentication(builder.Configuration);
+builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+builder.Services.AddScoped<IReservationApprovalRepository, ReservationApprovalRepository>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<IReservationApprovalService, ReservationApprovalService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
+
+// Configure CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -18,7 +59,10 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseCors("AllowAll");
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 var summaries = new[]
@@ -61,3 +105,4 @@ record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
+

@@ -1,0 +1,167 @@
+import { NavLink, useLocation, useNavigate } from "react-router-dom"
+import { BatteryCharging, LayoutDashboard, Calendar, QrCode, Users, UserSquare, History, Sun, Zap, ChevronDown, ChevronUp, UserX, LogOut } from "lucide-react"
+
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
+  SidebarFooter,
+} from "@/components/ui/sidebar"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+
+function getStoredUser() {
+  try {
+    return JSON.parse(localStorage.getItem("solnex_user") || "null")
+  } catch {
+    return null
+  }
+}
+
+const backofficeItems = [
+  { title: "Dashboard", url: "/dashboard", icon: <LayoutDashboard /> },
+  { title: "Users", url: "/users", icon: <Users /> },
+  { title: "Deactivation Requests", url: "/deactivation-requests", icon: <UserX /> },
+  { title: "Prosumers", url: "/prosumers", icon: <UserSquare /> },
+  { 
+    title: "Stations", url: "/stations", icon: <BatteryCharging />,
+    subItems: [
+      { title: "Station List", url: "/stations" },
+      { title: "Station Map", url: "/stations/map" }
+    ]
+  },
+  { 
+    title: "Reservations", url: "/reservations", icon: <Calendar />,
+    subItems: [
+      { title: "Reservation List", url: "/reservations" },
+      { title: "Reservation History", url: "/reservations/history" },
+      { title: "Booking Slots", url: "/reservations/slots" }
+    ]
+  },
+  { title: "Transactions", url: "/transactions", icon: <QrCode /> },
+  { title: "Operational History", url: "/history", icon: <History /> },
+]
+
+const operatorItems = [
+  { title: "Dashboard", url: "/dashboard", icon: <LayoutDashboard /> },
+  { 
+    title: "Stations", url: "/stations", icon: <BatteryCharging />,
+    subItems: [
+      { title: "Station List", url: "/stations" },
+      { title: "Station Map", url: "/stations/map" }
+    ]
+  },
+  { title: "Transactions", url: "/transactions", icon: <QrCode /> },
+  { title: "Operational History", url: "/history", icon: <History /> },
+]
+
+export function AppSidebar() {
+  const user = getStoredUser()
+  const role = user?.role || "Guest"
+  const isBackoffice = role === "Backoffice"
+  const items = isBackoffice ? backofficeItems : operatorItems
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    localStorage.removeItem("solnex_token")
+    localStorage.removeItem("solnex_user")
+    navigate("/login")
+  }
+
+  return (
+    <Sidebar>
+      <SidebarHeader className="p-4 border-b">
+        <div className="flex items-center gap-2">
+          {isBackoffice ? <Sun className="h-6 w-6 text-amber-500" /> : <Zap className="h-6 w-6 text-amber-500" />}
+          <h2 className="text-xl font-bold tracking-tight">Solar Microgrid</h2>
+        </div>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>{role} Menu</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {items.map((item) => {
+                const isActiveMain = location.pathname.startsWith(item.url)
+                
+                if (item.subItems) {
+                  return (
+                    <Collapsible key={item.title} asChild defaultOpen={isActiveMain} className="group/collapsible">
+                      <SidebarMenuItem>
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton tooltip={item.title}>
+                            {item.icon}
+                            <span>{item.title}</span>
+                            <ChevronDown className="ml-auto group-data-[state=open]/collapsible:hidden" />
+                            <ChevronUp className="ml-auto hidden group-data-[state=open]/collapsible:block" />
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <SidebarMenuSub>
+                            {item.subItems.map((sub) => (
+                              <SidebarMenuSubItem key={sub.title}>
+                                <SidebarMenuSubButton 
+                                  isActive={location.pathname === sub.url}
+                                  render={
+                                    <NavLink 
+                                      to={sub.url} 
+                                      end 
+                                      className={({ isActive }) => isActive ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground" : ""}
+                                    >
+                                      <span>{sub.title}</span>
+                                    </NavLink>
+                                  }
+                                />
+                              </SidebarMenuSubItem>
+                            ))}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </SidebarMenuItem>
+                    </Collapsible>
+                  )
+                }
+
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton 
+                      isActive={isActiveMain}
+                      render={
+                        <NavLink 
+                          to={item.url} 
+                          end
+                          className={({ isActive }) => isActive ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground" : ""}
+                        >
+                          {item.icon}
+                          <span>{item.title}</span>
+                        </NavLink>
+                      } 
+                    />
+                  </SidebarMenuItem>
+                )
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarFooter className="p-4 border-t mt-auto">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={handleLogout} className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50">
+              <LogOut className="h-4 w-4" />
+              <span>Logout</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
+  )
+}

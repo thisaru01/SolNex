@@ -1,3 +1,13 @@
+/*
+ * ------------------------------------------------------------------
+ * File Name: SolarStationInfo.cs
+ * Author: Rajapaksha T.M
+ * Student ID: IT23235892
+ * Date: 2026-09-19
+ * Description: Model representing solar station information.
+ * ------------------------------------------------------------------
+ */
+
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 

@@ -1,3 +1,10 @@
+/*
+ * File Name: User.cs
+ * Author: Vidanapathirana L S
+ * Student ID: IT23442498
+ * Description: Entity model representing an application user.
+ */
+// User entity model
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -37,6 +44,9 @@ public class User
 
     [BsonElement("updatedAt")]
     public DateTime UpdatedAt { get; set; }
+
+    [BsonElement("favoriteStationIds")]
+    public List<string> FavoriteStationIds { get; set; } = new();
 }
 
 public enum UserRole
@@ -50,5 +60,6 @@ public enum AccountStatus
 {
     Pending,
     Active,
-    Inactive
+    Inactive,
+    DeactivationRequested
 }

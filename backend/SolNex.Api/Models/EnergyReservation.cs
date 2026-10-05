@@ -1,3 +1,13 @@
+/*
+ * ------------------------------------------------------------------
+ * File Name: EnergyReservation.cs
+ * Author: Kavindi P.D.I
+ * Student ID: IT23234666
+ * Date: 2026-09-19
+ * Description: Domain model representing EnergyReservation.
+ * ------------------------------------------------------------------
+ */
+
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -40,6 +50,9 @@ public class EnergyReservation
     [BsonElement("rejectedReason")]
     public string? RejectedReason { get; set; }
 
+    [BsonElement("isCancellationRejected")]
+    public bool IsCancellationRejected { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 
@@ -53,5 +66,6 @@ public enum ReservationStatus
     Approved,
     Rejected,
     Cancelled,
+    CancellationRequested,
     Completed
 }
