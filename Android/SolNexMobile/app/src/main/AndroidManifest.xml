@@ -20,6 +20,9 @@
         android:theme="@style/Theme.SolNex"
         android:networkSecurityConfig="@xml/network_security_config"
         tools:targetApi="31">
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyBMxSzJvGnIpQNnIjfmuEEPdLuGXBrPfgk" />
 
         <activity
             android:name=".MainActivity"
