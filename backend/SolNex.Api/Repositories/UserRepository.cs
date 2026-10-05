@@ -1,3 +1,9 @@
+/*
+ * File Name: UserRepository.cs
+ * Author: Vidanapathirana L S
+ * Student ID: IT23442498
+ * Description: Repository implementation for user data access operations.
+ */
 using MongoDB.Driver;
 using SolNex.Api.Data;
 using SolNex.Api.Models;

@@ -1,3 +1,9 @@
+/*
+ * File Name: JwtAuthenticationExtensions.cs
+ * Author: Vidanapathirana L S
+ * Student ID: IT23442498
+ * Description: Extension methods for configuring JWT authentication.
+ */
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;

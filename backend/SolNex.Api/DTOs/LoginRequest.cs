@@ -1,3 +1,9 @@
+/*
+ * File Name: LoginRequest.cs
+ * Author: Vidanapathirana L S
+ * Student ID: IT23442498
+ * Description: Data transfer object for login requests.
+ */
 using System.ComponentModel.DataAnnotations;
 
 namespace SolNex.Api.DTOs;

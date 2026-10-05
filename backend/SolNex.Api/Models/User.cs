@@ -1,3 +1,9 @@
+/*
+ * File Name: User.cs
+ * Author: Vidanapathirana L S
+ * Student ID: IT23442498
+ * Description: Entity model representing an application user.
+ */
 // User entity model
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;

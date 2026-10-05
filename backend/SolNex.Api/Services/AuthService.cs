@@ -1,3 +1,9 @@
+/*
+ * File Name: AuthService.cs
+ * Author: Vidanapathirana L S
+ * Student ID: IT23442498
+ * Description: Service implementation for user authentication business logic.
+ */
 using Microsoft.AspNetCore.Identity;
 using SolNex.Api.DTOs;
 using SolNex.Api.Models;

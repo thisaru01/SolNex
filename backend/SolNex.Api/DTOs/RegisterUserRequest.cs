@@ -1,3 +1,9 @@
+/*
+ * File Name: RegisterUserRequest.cs
+ * Author: Vidanapathirana L S
+ * Student ID: IT23442498
+ * Description: Data transfer object for user registration requests.
+ */
 // User registration DTOs
 using System.ComponentModel.DataAnnotations;
 
