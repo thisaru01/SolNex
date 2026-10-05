@@ -30,9 +30,9 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import org.osmdroid.config.Configuration
-import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.rememberCameraPositionState
 
 @Composable
 fun MapScreen(
@@ -58,29 +58,6 @@ fun MapScreen(
 
     val repository = remember { StationRepository(context) }
 
-    // Initialize osmdroid config ONCE before anything renders
-    remember {
-        val osmConfig = Configuration.getInstance()
-        val prefs = context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE)
-        osmConfig.load(context, prefs)
-        osmConfig.userAgentValue = "SolNexMobile/1.0 (Android)"
-
-        osmConfig.additionalHttpRequestProperties["Referer"] = "https://solnex.app"
-        osmConfig.additionalHttpRequestProperties["Accept"] = "image/png,image/*;q=0.9,*/*;q=0.8"
-
-        val baseDir = java.io.File(context.cacheDir, "osmdroid")
-        baseDir.mkdirs()
-        osmConfig.osmdroidBasePath = baseDir
-        val tileDir = java.io.File(baseDir, "tiles")
-        tileDir.mkdirs()
-        osmConfig.osmdroidTileCache = tileDir
-
-        osmConfig.tileFileSystemThreads = 4
-        osmConfig.tileDownloadThreads = 4
-        osmConfig.tileFileSystemCacheMaxBytes = 100L * 1024 * 1024 // 100 MB cache
-        
-        true
-    }
 
     var locationPermissionGranted by remember { 
         mutableStateOf(
@@ -134,17 +111,17 @@ fun MapScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        val mapViewRef = remember { mutableStateOf<MapView?>(null) }
-        val locationOverlayRef = remember { mutableStateOf<MyLocationNewOverlay?>(null) }
+        val cameraPositionState = rememberCameraPositionState {
+            position = CameraPosition.fromLatLngZoom(LatLng(7.8731, 80.7718), 7.5f)
+        }
 
-        OsmMapView(
+        GoogleMapView(
             modifier = Modifier.fillMaxSize(),
             stations = stations,
             favoriteIds = favoriteIds,
             showFavoritesOnly = showFavoritesOnly,
             locationPermissionGranted = locationPermissionGranted,
-            mapViewRef = mapViewRef,
-            locationOverlayRef = locationOverlayRef,
+            cameraPositionState = cameraPositionState,
             onStationSelected = { station -> selectedStation = station }
         )
 
@@ -158,7 +135,12 @@ fun MapScreen(
             onShowFavoritesOnlyChange = { showFavoritesOnly = it },
             fetchingClosest = fetchingClosest,
             onFetchClosest = {
-                val loc = locationOverlayRef.value?.lastFix
+                val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as android.location.LocationManager
+                val loc = try { 
+                    locationManager.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER) ?: 
+                    locationManager.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER)
+                } catch(e: SecurityException) { null }
+
                 if (loc != null) {
                     fetchingClosest = true
                     repository.getClosestStations(token, loc.latitude, loc.longitude, 3) { result, err ->
@@ -180,15 +162,15 @@ fun MapScreen(
                 selectedStation = station
                 closestStations = null
             },
-            mapView = mapViewRef.value
+            cameraPositionState = cameraPositionState
         )
 
         MapControls(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = if (selectedStation != null || closestStations != null) 250.dp else 16.dp),
-            mapView = mapViewRef.value,
-            locationOverlay = locationOverlayRef.value
+            cameraPositionState = cameraPositionState,
+            context = context
         )
 
         AnimatedVisibility(
@@ -205,7 +187,7 @@ fun MapScreen(
                         selectedStation = station 
                         closestStations = null
                     },
-                    mapView = mapViewRef.value
+                    cameraPositionState = cameraPositionState
                 )
             }
         }

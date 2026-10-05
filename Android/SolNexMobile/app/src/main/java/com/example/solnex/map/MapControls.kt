@@ -15,15 +15,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import android.content.Context
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.CameraPositionState
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 
 @Composable
 fun MapControls(
     modifier: Modifier = Modifier,
-    mapView: MapView?,
-    locationOverlay: MyLocationNewOverlay?
+    cameraPositionState: CameraPositionState,
+    context: Context
 ) {
+    val coroutineScope = rememberCoroutineScope()
     Column(
         modifier = modifier,
         verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp),
@@ -37,7 +42,12 @@ fun MapControls(
         ) {
             Column(modifier = Modifier.width(48.dp)) {
                 IconButton(
-                    onClick = { mapView?.controller?.zoomIn() }
+                    onClick = { 
+                        coroutineScope.launch {
+                            val currentZoom = cameraPositionState.position.zoom
+                            cameraPositionState.animate(com.google.android.gms.maps.CameraUpdateFactory.zoomTo(currentZoom + 1f))
+                        }
+                    }
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
@@ -47,7 +57,12 @@ fun MapControls(
                 }
                 HorizontalDivider()
                 IconButton(
-                    onClick = { mapView?.controller?.zoomOut() }
+                    onClick = { 
+                        coroutineScope.launch {
+                            val currentZoom = cameraPositionState.position.zoom
+                            cameraPositionState.animate(com.google.android.gms.maps.CameraUpdateFactory.zoomTo(currentZoom - 1f))
+                        }
+                    }
                 ) {
                     Text(
                         text = "−",
@@ -62,9 +77,20 @@ fun MapControls(
         // FAB to re-center on location
         FloatingActionButton(
             onClick = {
-                locationOverlay?.myLocation?.let { location ->
-                    mapView?.controller?.animateTo(location)
-                    mapView?.controller?.setZoom(14.0)
+                val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as android.location.LocationManager
+                val loc = try { 
+                    locationManager.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER) ?: 
+                    locationManager.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER)
+                } catch(e: SecurityException) { null }
+                
+                if (loc != null) {
+                    coroutineScope.launch {
+                        cameraPositionState.animate(
+                            com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(
+                                LatLng(loc.latitude, loc.longitude), 14f
+                            )
+                        )
+                    }
                 }
             },
             containerColor = Color.White,

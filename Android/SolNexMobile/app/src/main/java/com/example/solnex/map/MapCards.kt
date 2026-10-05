@@ -17,8 +17,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.MapView
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.CameraPositionState
+import kotlinx.coroutines.launch
 
 @Composable
 fun ClosestStationsCard(
@@ -26,8 +28,9 @@ fun ClosestStationsCard(
     closestList: List<StationWithDistance>,
     onClose: () -> Unit,
     onStationSelected: (Station) -> Unit,
-    mapView: MapView?
+    cameraPositionState: CameraPositionState
 ) {
+    val coroutineScope = rememberCoroutineScope()
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -62,10 +65,13 @@ fun ClosestStationsCard(
                             .fillMaxWidth()
                             .clickable {
                                 onStationSelected(item.station)
-                                mapView?.controller?.animateTo(
-                                    GeoPoint(item.station.latitude, item.station.longitude)
-                                )
-                                mapView?.controller?.setZoom(16.0)
+                                coroutineScope.launch {
+                                    cameraPositionState.animate(
+                                        com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(
+                                            LatLng(item.station.latitude, item.station.longitude), 16f
+                                        )
+                                    )
+                                }
                             }
                             .padding(vertical = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,

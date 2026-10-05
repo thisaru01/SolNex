@@ -22,8 +22,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.MapView
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.CameraPositionState
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 
 @Composable
 fun MapSearchBar(
@@ -39,8 +42,9 @@ fun MapSearchBar(
     error: String?,
     stations: List<Station>,
     onStationSelected: (Station) -> Unit,
-    mapView: MapView?
+    cameraPositionState: CameraPositionState
 ) {
+    val coroutineScope = rememberCoroutineScope()
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -205,10 +209,13 @@ fun MapSearchBar(
                                         onSearchQueryChange(station.stationName)
                                         onShowSearchResultsChange(false)
                                         onStationSelected(station)
-                                        mapView?.controller?.animateTo(
-                                            GeoPoint(station.latitude, station.longitude)
-                                        )
-                                        mapView?.controller?.setZoom(16.0)
+                                        coroutineScope.launch {
+                                            cameraPositionState.animate(
+                                                com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(
+                                                    LatLng(station.latitude, station.longitude), 16f
+                                                )
+                                            )
+                                        }
                                     }
                                     .padding(horizontal = 16.dp, vertical = 12.dp)
                             )
