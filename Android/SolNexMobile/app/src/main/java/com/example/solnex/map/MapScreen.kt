@@ -115,6 +115,16 @@ fun MapScreen(
             position = CameraPosition.fromLatLngZoom(LatLng(7.8731, 80.7718), 7.5f)
         }
 
+        LaunchedEffect(selectedStation) {
+            selectedStation?.let { station ->
+                cameraPositionState.animate(
+                    com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(
+                        LatLng(station.latitude, station.longitude), 16f
+                    )
+                )
+            }
+        }
+
         GoogleMapView(
             modifier = Modifier.fillMaxSize(),
             stations = stations,
